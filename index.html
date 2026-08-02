@@ -1,0 +1,3658 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Magische Belohnungen</title>
+<!-- PWA / iOS-Installation -->
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Magie">
+<link rel="apple-touch-icon" href="icon-192.jpg">
+<link rel="icon" type="image/png" href="icon-192.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CSS – Magische Belohnungen
+   ============================================================ */
+:root {
+  --parchment: #f5f0e8;
+  --parchment-dark: #e8dfd0;
+  --burgundy: #7a1a1a;
+  --burgundy-light: #9a2a2a;
+  --gold: #c5a55a;
+  --gold-light: #e0c878;
+  --gold-dark: #a08040;
+  --dark: #2c1810;
+  --dark-light: #4a3020;
+  --cream: #faf6ef;
+  --white: #ffffff;
+  --shadow: rgba(44,24,16,0.15);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --font-serif: 'Cinzel', 'Georgia', 'Times New Roman', serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  background: var(--parchment);
+  color: var(--dark);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* App Container */
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
+  margin: 0 auto;
+  position: relative;
+  background: var(--parchment);
+}
+
+/* Screens */
+.screen {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px 90px;
+  -webkit-overflow-scrolling: touch;
+}
+.screen.active { display: block; }
+.screen.album-screen.active { display: flex; }
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  background: var(--white);
+  border-top: 2px solid var(--gold);
+  display: flex;
+  justify-content: space-around;
+  padding: 6px 0 env(safe-area-inset-bottom, 6px);
+  z-index: 100;
+  box-shadow: 0 -2px 12px var(--shadow);
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.2s;
+  gap: 2px;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-item .nav-icon { font-size: 24px; line-height: 1.2; }
+.nav-item.active { color: var(--burgundy); font-weight: 600; }
+.nav-item.active .nav-icon { color: var(--gold); }
+
+/* ========== Welcome Screen ========== */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 40px 20px;
+}
+.welcome h1 {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  color: var(--burgundy);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.welcome .subtitle {
+  font-size: 16px;
+  color: var(--dark-light);
+  margin-bottom: 32px;
+  text-align: center;
+}
+.welcome .hogwarts-star {
+  font-size: 64px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 8px var(--gold-light));
+}
+.profile-grid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 360px;
+}
+.profile-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 20px 16px;
+  background: var(--white);
+  border: 2px solid var(--gold);
+  border-radius: var(--radius);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--burgundy);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px var(--shadow);
+  font-family: var(--font-serif);
+}
+.profile-btn:active { transform: scale(0.96); background: var(--gold-light); color: var(--white); }
+.profile-btn.add-profile {
+  border-style: dashed;
+  color: var(--gold-dark);
+  font-weight: 400;
+  font-size: 14px;
+}
+
+/* ========== Dashboard ========== */
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--gold);
+}
+.dash-header h2 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--burgundy);
+}
+.dash-stars {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--white);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--gold);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--burgundy);
+}
+.dash-welcome {
+  font-size: 16px;
+  color: var(--dark-light);
+  margin-bottom: 20px;
+}
+.dash-welcome strong { color: var(--burgundy); }
+.pack-reminder {
+  background: linear-gradient(135deg, var(--burgundy), var(--burgundy-light));
+  color: var(--white);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 4px 12px rgba(122,26,26,0.3);
+}
+.pack-reminder:active { transform: scale(0.97); }
+.pack-reminder .emoji { font-size: 32px; display: block; margin-bottom: 4px; }
+.pack-reminder .count { font-size: 26px; font-weight: 700; }
+
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: var(--burgundy);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.task-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Familien-Wochenchallenge */
+.week-challenge {
+  margin: 14px 0 4px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #2c1810 0%, #4a1a3a 60%, #2c1810 100%);
+  border: 2px solid var(--gold);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px var(--shadow), inset 0 0 24px rgba(197,165,90,0.08);
+}
+.wc-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.wc-icon { font-size: 20px; }
+.wc-title {
+  flex: 1;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--gold-light);
+  text-shadow: 0 0 8px rgba(197,165,90,0.4);
+}
+.wc-status {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold-light);
+  padding: 3px 10px;
+  border: 1px solid var(--gold-dark);
+  border-radius: 12px;
+  background: rgba(197,165,90,0.12);
+}
+.wc-bar {
+  width: 100%;
+  height: 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--gold-dark);
+  border-radius: 7px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.wc-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold));
+  border-radius: 7px;
+  transition: width 0.6s ease;
+  box-shadow: 0 0 10px rgba(197,165,90,0.6);
+}
+.wc-hint {
+  font-size: 12px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.4;
+}
+.week-challenge.done {
+  border-color: #7fd14f;
+  box-shadow: 0 0 20px rgba(127,209,79,0.25), inset 0 0 24px rgba(127,209,79,0.08);
+  animation: doneGlow 1.5s ease-in-out infinite;
+}
+.week-challenge.done .wc-title,
+.week-challenge.done .wc-status { color: #a5e87a; text-shadow: 0 0 10px rgba(127,209,79,0.6); }
+.week-challenge.done .wc-fill {
+  background: linear-gradient(90deg, #5da832, #8fd45e, #5da832);
+  box-shadow: 0 0 12px rgba(127,209,79,0.7);
+}
+@keyframes doneGlow {
+  0%, 100% { box-shadow: 0 0 16px rgba(127,209,79,0.2), inset 0 0 20px rgba(127,209,79,0.06); }
+  50% { box-shadow: 0 0 28px rgba(127,209,79,0.45), inset 0 0 28px rgba(127,209,79,0.12); }
+}
+.task-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  background: var(--white);
+  border: 2px solid var(--parchment-dark);
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--dark);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  box-shadow: 0 1px 4px var(--shadow);
+  font-family: var(--font-sans);
+}
+.task-btn:active { transform: scale(0.98); border-color: var(--gold); background: var(--cream); }
+.task-btn .task-icon { font-size: 28px; flex-shrink: 0; }
+.task-btn .task-label { flex: 1; }
+.task-btn .task-arrow { color: var(--gold); font-size: 20px; }
+
+/* Stats row */
+.stats-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  flex: 1;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  text-align: center;
+  border: 1px solid var(--parchment-dark);
+}
+.stat-card .stat-num { font-size: 28px; font-weight: 700; color: var(--burgundy); }
+.stat-card .stat-label { font-size: 12px; color: var(--dark-light); margin-top: 2px; }
+
+/* ========== Task Confirm Modal ========== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal-box {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.modal-box h3 { font-family: var(--font-serif); color: var(--burgundy); margin-bottom: 8px; font-size: 20px; }
+.modal-box p { color: var(--dark-light); margin-bottom: 16px; font-size: 15px; line-height: 1.5; }
+.modal-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--parchment-dark);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  margin-bottom: 16px;
+  font-family: var(--font-sans);
+  resize: none;
+}
+.modal-input:focus { outline: none; border-color: var(--gold); }
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.btn-primary, .btn-secondary, .btn-danger {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-sans);
+}
+.btn-primary { background: var(--burgundy); color: var(--white); }
+.btn-primary:active { background: var(--burgundy-light); }
+.btn-secondary { background: var(--parchment-dark); color: var(--dark); }
+.btn-secondary:active { background: #d5c8b0; }
+.btn-danger { background: #cc3333; color: var(--white); }
+.btn-danger:active { background: #aa2222; }
+.btn-small { padding: 8px 16px; font-size: 14px; }
+
+/* ========== Pack Opening ========== */
+.pack-screen {
+  text-align: center;
+  padding-top: 20px;
+}
+.pack-screen h2 {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  color: var(--burgundy);
+  margin-bottom: 8px;
+}
+.pack-count-big {
+  font-size: 18px;
+  color: var(--dark-light);
+  margin-bottom: 24px;
+}
+.pack-closed {
+  width: 200px;
+  height: 260px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, var(--burgundy), #4a0a0a);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 3px solid var(--gold);
+  box-shadow: 0 8px 24px var(--shadow);
+  transition: transform 0.3s;
+  color: var(--white);
+  user-select: none;
+}
+.pack-closed:active { transform: scale(0.95); }
+.pack-closed .pack-icon { font-size: 64px; margin-bottom: 8px; }
+.pack-closed .pack-label { font-size: 16px; font-weight: 600; letter-spacing: 1px; }
+.pack-closed .pack-sub { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+
+/* Pack opening animation */
+.pack-opening {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+}
+.pack-opening.active { display: flex; }
+.pack-opening .pack-burst { font-size: 80px; animation: burst 0.6s ease-out; }
+@keyframes burst {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.pack-opening .open-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 12px 0;
+  animation: fadeIn 0.4s 0.3s both;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Revealed cards */
+.card-reveal {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+.card-reveal.active { display: flex; }
+
+.reveal-cards {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 0;
+}
+
+.mini-card { position: relative;
+  width: 130px;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 4px 12px var(--shadow);
+  animation: cardFlip 0.5s ease-out both;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.mini-card:active { transform: scale(0.95); }
+.mini-card:nth-child(1) { animation-delay: 0.2s; }
+.mini-card:nth-child(2) { animation-delay: 0.5s; }
+.mini-card:nth-child(3) { animation-delay: 0.8s; }
+@keyframes cardFlip {
+  0% { transform: rotateY(90deg) scale(0.8); opacity: 0; }
+  100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+}
+.mini-card-img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  background: var(--parchment-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: var(--gold-dark);
+  overflow: hidden;
+}
+.mini-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mini-card-info {
+  padding: 8px;
+  text-align: center;
+}
+.mini-card-info .mini-name { font-size: 12px; font-weight: 600; color: var(--dark); }
+.mini-card-info .mini-rarity { font-size: 10px; color: var(--dark-light); margin-top: 2px; }
+.mini-card.rarity-common { border: 2px solid #888; }
+.mini-card.rarity-rare { border: 2px solid #2e7d32; }
+.mini-card.rarity-legendary { border: 2px solid var(--gold); box-shadow: 0 4px 16px rgba(197,165,90,0.4); }
+
+/* New badge */
+.new-badge {
+  display: inline-block;
+  background: var(--gold);
+  color: var(--white);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+
+/* ========== Album ========== */
+.album-screen {
+  flex-direction: column;
+  padding: 0 0 64px !important;
+  overflow: hidden !important;
+  background: #1a120c;
+}
+.screen.album-screen.active {
+  display: flex;
+}
+.album-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, #2a1a10 0%, #201408 100%);
+  flex-shrink: 0;
+}
+.album-header h2 {
+  font-family: var(--font-serif);
+  color: var(--gold-light);
+  text-shadow: 0 0 12px rgba(197,165,90,0.5);
+  font-size: 19px;
+}
+.album-header span {
+  color: #c9b37a;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid #a08040;
+  border-radius: 12px;
+  padding: 3px 10px;
+}
+.album-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.album-count-toggle {
+  background: rgba(0,0,0,0.5);
+  border: 1px solid #a08040;
+  border-radius: 10px;
+  color: #c9b37a;
+  font-size: 14px;
+  padding: 3px 8px;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: all 0.2s;
+}
+.album-count-toggle.active {
+  opacity: 1;
+  border-color: var(--gold-light);
+  color: var(--gold-light);
+  box-shadow: 0 0 8px rgba(224,200,120,0.4);
+}
+.album-count {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  z-index: 2;
+}
+.album-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  overflow-x: auto;
+  background: #201408;
+  border-bottom: 1px solid #3a2a1a;
+  flex-shrink: 0;
+}
+.album-tabs::-webkit-scrollbar { display: none; }
+.album-tab {
+  flex-shrink: 0;
+  padding: 7px 13px;
+  border-radius: 14px;
+  border: 1px solid #4a3520;
+  background: rgba(60,40,25,0.7);
+  color: #b8a070;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.album-tab.active {
+  background: linear-gradient(135deg, #6b4a1a, #8a6a2a);
+  border-color: var(--gold-light);
+  color: #fff8e0;
+  box-shadow: 0 0 10px rgba(224,200,120,0.4);
+}
+.album-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: url('album/bg-band1.jpg') center/cover no-repeat;
+  background-size: cover;
+}
+.album-area::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(10,5,2,0.18);
+  z-index: 1;
+  pointer-events: none;
+}
+.album-pages {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.album-page {
+  position: absolute;
+  inset: 0;
+  padding: 12px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.45s ease, opacity 0.3s ease;
+}
+.album-page.left { transform: translateX(-100%); opacity: 0; }
+.album-page.right { transform: translateX(100%); opacity: 0; }
+.album-page.active { transform: translateX(0); opacity: 1; }
+.album-band-head {
+  text-align: center;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+.album-band-title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: #f0d890;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.95);
+}
+.album-band-sub {
+  font-size: 11px;
+  color: #d8c89a;
+  margin-top: 2px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.95);
+}
+.album-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 10px;
+  min-height: 0;
+  padding: 0 4px;
+}
+.album-slot {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(10,5,2,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.12);
+  transition: transform 0.2s;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.45);
+}
+.album-slot:nth-child(4n+1) { transform: rotate(-1.5deg) translateY(2px); }
+.album-slot:nth-child(4n+2) { transform: rotate(1deg); }
+.album-slot:nth-child(4n+3) { transform: rotate(-1deg) translateY(-2px); }
+.album-slot:nth-child(4n) { transform: rotate(1.3deg) translateY(1px); }
+.album-slot:nth-child(even) { margin-top: 6px; }
+.album-slot:active { transform: scale(0.96); }
+.album-slot.empty-common { border: 2px dashed #9a9a9a; background: rgba(10,5,2,0.3); }
+.album-slot.empty-rare { border: 2px dashed #2e7d32; background: rgba(20,50,20,0.35); }
+.album-slot.empty-legendary { border: 2px dashed #c5a55a; background: rgba(50,40,15,0.35); }
+.album-slot.empty-relikt { border: 2px dashed #9b59b6; background: rgba(50,20,60,0.35); }
+.album-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.album-slot-reward {
+  position: relative;
+  border-radius: 8px;
+  border: 3px solid var(--gold-light);
+  background: linear-gradient(135deg, rgba(60,40,15,0.5), rgba(20,10,5,0.5));
+  box-shadow: 0 0 18px rgba(224,200,120,0.4), inset 0 0 18px rgba(224,200,120,0.15), 0 3px 10px rgba(0,0,0,0.45);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.album-slot-reward:nth-child(even) { margin-top: 6px; }
+.album-slot-reward img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
+.album-slot-reward:active { transform: scale(0.96); }
+.album-slot-reward.locked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+}
+.album-nav {
+  position: absolute;
+  bottom: 64px;
+  left: 0;
+  right: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  pointer-events: none;
+}
+.album-nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-light);
+  background: rgba(20,10,5,0.7);
+  color: var(--gold-light);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.album-nav-btn:active { transform: scale(0.92); }
+.album-nav-btn.disabled { opacity: 0.3; pointer-events: none; }
+.album-indicator {
+  font-size: 12px;
+  color: var(--gold-light);
+  background: rgba(20,10,5,0.7);
+  border: 1px solid #a08040;
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-weight: 600;
+}
+
+/* ========== Collection ========== */
+.collection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.collection-header h2 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--burgundy);
+}
+.collection-filter {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--parchment-dark);
+  background: var(--white);
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all 0.2s;
+  color: var(--dark-light);
+}
+.filter-btn.active { background: var(--burgundy); color: var(--white); border-color: var(--burgundy); }
+.filter-btn:active { transform: scale(0.95); }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding-bottom: 10px;
+}
+.collection-card { position: relative;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 2px 8px var(--shadow);
+  cursor: pointer;
+  transition: transform 0.2s;
+  position: relative;
+}
+.collection-card:active { transform: scale(0.95); }
+.collection-card-img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  background: var(--parchment-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: var(--gold-dark);
+  overflow: hidden;
+}
+.collection-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.collection-card-name {
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.collection-card .count-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--burgundy);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  z-index: 2;
+}
+.collection-card .anim-badge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  font-size: 14px;
+  z-index: 2;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+}
+
+.collection-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--dark-light);
+}
+.collection-empty .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+/* ========== Card Detail ========== */
+.card-detail-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 300;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.card-detail-overlay.active { display: flex; }
+.card-detail-box { position: relative;
+  background: var(--white);
+  border-radius: var(--radius);
+  max-width: 340px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  animation: fadeIn 0.3s ease-out;
+}
+.card-detail-box .detail-img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  background: var(--parchment-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 60px;
+  overflow: hidden;
+}
+.card-detail-box .detail-img img,
+.card-detail-box .detail-img video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.detail-body { padding: 16px 20px 20px; }
+.detail-body .detail-name {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--dark);
+  margin-bottom: 4px;
+}
+.detail-body .detail-rarity {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.detail-body .detail-type {
+  font-size: 14px;
+  color: var(--dark-light);
+  margin-bottom: 4px;
+  font-style: italic;
+}
+.detail-body .detail-house {
+  display: inline-block;
+  font-size: 12px;
+  background: var(--parchment-dark);
+  padding: 2px 10px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.detail-body .detail-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--dark-light);
+  font-style: italic;
+  border-top: 1px solid var(--parchment-dark);
+  padding-top: 12px;
+}
+.detail-body .detail-copies {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--gold-dark);
+  font-weight: 600;
+}
+.detail-body .detail-close {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px;
+  background: var(--burgundy);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+/* ========== Parent Login ========== */
+.parent-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 20px;
+}
+.parent-login h2 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--burgundy);
+  margin-bottom: 20px;
+}
+.pin-dots {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.pin-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-dark);
+  background: var(--white);
+  transition: background 0.2s;
+}
+.pin-dot.filled { background: var(--burgundy); border-color: var(--burgundy); }
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 240px;
+  width: 100%;
+}
+.pin-key {
+  padding: 18px;
+  font-size: 24px;
+  font-weight: 600;
+  border: none;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  box-shadow: 0 2px 6px var(--shadow);
+  transition: transform 0.1s;
+  font-family: var(--font-sans);
+}
+.pin-key:active { transform: scale(0.92); background: var(--parchment-dark); }
+.pin-key.empty { background: transparent; box-shadow: none; cursor: default; }
+.pin-error {
+  color: #cc3333;
+  font-size: 14px;
+  margin-top: 12px;
+  min-height: 20px;
+}
+
+/* ========== Parent Area ========== */
+.parent-area h2 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--burgundy);
+  margin-bottom: 16px;
+}
+.parent-section {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.parent-section h3 {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--burgundy);
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--parchment-dark);
+  padding-bottom: 6px;
+}
+.parent-section .profile-select {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.parent-section .profile-select button {
+  padding: 8px 16px;
+  border: 1px solid var(--gold);
+  background: var(--cream);
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all 0.2s;
+}
+.parent-section .profile-select button.active {
+  background: var(--burgundy);
+  color: var(--white);
+  border-color: var(--burgundy);
+}
+.activity-log {
+  max-height: 200px;
+  overflow-y: auto;
+}
+.log-entry {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--parchment-dark);
+  font-size: 13px;
+}
+.log-entry:last-child { border-bottom: none; }
+.log-date { color: var(--dark-light); font-size: 12px; }
+.log-action { color: var(--dark); }
+.parent-section .pin-change-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.parent-section .pin-change-row input {
+  padding: 8px 12px;
+  border: 2px solid var(--parchment-dark);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  width: 120px;
+  text-align: center;
+  letter-spacing: 4px;
+  font-family: var(--font-sans);
+}
+.parent-section .pin-change-row input:focus { outline: none; border-color: var(--gold); }
+
+/* Scrollbar */
+.screen::-webkit-scrollbar { width: 4px; }
+.screen::-webkit-scrollbar-track { background: transparent; }
+.screen::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
+/* Empty state for pack screen */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--dark-light);
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+/* Task confirmation success */
+.success-flash {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--burgundy);
+  color: var(--white);
+  padding: 24px 32px;
+  border-radius: var(--radius);
+  font-size: 20px;
+  font-weight: 700;
+  z-index: 250;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  text-align: center;
+  animation: flashIn 0.3s ease-out;
+  display: none;
+}
+.success-flash .flash-icon { font-size: 48px; display: block; margin-bottom: 8px; }
+@keyframes flashIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Logout button */
+.logout-btn {
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  background: none;
+  border: 1px solid var(--gold);
+  color: var(--burgundy);
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all 0.2s;
+}
+.logout-btn:active { background: var(--parchment-dark); }
+
+/* Streak display */
+.streak-box {
+  background: linear-gradient(135deg, #fff8e1, #fff3cd);
+  border: 2px solid var(--gold);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.streak-box .streak-icon { font-size: 28px; }
+.streak-box .streak-info { flex: 1; }
+.streak-box .streak-num { font-size: 22px; font-weight: 700; color: var(--burgundy); }
+.streak-box .streak-label { font-size: 13px; color: var(--dark-light); }
+.streak-box .streak-progress { font-size: 12px; color: var(--gold-dark); }
+
+/* Album collection card (unowned) */
+.collection-card.unowned {
+  opacity: 0.6;
+  filter: grayscale(0.8);
+}
+.collection-card.unowned .collection-card-img {
+  background: var(--parchment-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: var(--gold-dark);
+}
+.collection-card.unowned .collection-card-name {
+  color: var(--dark-light);
+}
+.collection-card.unowned { cursor: default; }
+
+/* Relikt rarity glow */
+.rarity-relikt { border-color: #9b59b6; }
+.rarity-relikt .mini-card-img { box-shadow: 0 0 20px rgba(155,89,182,0.5); }
+.mini-card.rarity-relikt { border: 2px solid #9b59b6; box-shadow: 0 4px 20px rgba(155,89,182,0.5); }
+
+/* Parent assign section */
+.assign-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.assign-row select, .assign-row input {
+  padding: 8px 12px;
+  border: 2px solid var(--parchment-dark);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  background: var(--white);
+}
+.assign-row select:focus, .assign-row input:focus { outline: none; border-color: var(--gold); }
+.assign-row input[type=number] { width: 60px; text-align: center; }
+.assign-row select { flex: 1; min-width: 140px; }
+.assign-msg { font-size: 12px; color: var(--gold-dark); margin-top: 4px; min-height: 18px; }
+
+/* Trade/upgrade button in card detail */
+.trade-btn { width:100%; margin-top:4px; }
+.trade-info { font-size:12px; }
+.detail-trade .btn-primary { width:100%; }
+.btn-magic-upgrade {
+  width: 100%;
+  padding: 14px 24px;
+  border: 2px solid var(--gold);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-serif);
+  background: linear-gradient(135deg, #2c1810 0%, #4a1a4a 50%, #2c1810 100%);
+  color: var(--gold-light);
+  text-shadow: 0 0 8px rgba(197,165,90,0.5);
+  box-shadow: 0 0 16px rgba(197,165,90,0.3), inset 0 0 20px rgba(197,165,90,0.1);
+  transition: all 0.3s ease;
+  animation: magicPulse 2s ease-in-out infinite;
+}
+.btn-magic-upgrade:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 24px rgba(197,165,90,0.6), inset 0 0 30px rgba(197,165,90,0.2);
+}
+@keyframes magicPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(197,165,90,0.3), inset 0 0 20px rgba(197,165,90,0.1); }
+  50% { box-shadow: 0 0 24px rgba(197,165,90,0.6), inset 0 0 30px rgba(197,165,90,0.2); }
+}
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--parchment-dark);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* Trade screen */
+.trades-header { display:flex;align-items:center;padding:16px;padding-bottom:0; }
+.trades-header h2 { margin:0;font-size:18px; }
+.trades-section { margin:12px 16px; }
+.trades-section h3 { font-size:14px;color:var(--dark-light);margin-bottom:8px; }
+.trade-card { display:flex;align-items:center;gap:10px;padding:10px;background:var(--parchment);border-radius:8px;margin-bottom:8px;border:1px solid var(--parchment-dark); }
+.trade-offer-img { width:40px;height:56px;border-radius:4px;overflow:hidden;flex-shrink:0;background:var(--parchment-dark);display:flex;align-items:center;justify-content:center;font-size:20px; }
+.trade-offer-img img { width:100%;height:100%;object-fit:cover; }
+.trade-offer-info { flex:1;font-size:13px; }
+.trade-offer-name { font-weight:600;font-size:14px; }
+.trade-offer-from { font-size:11px;color:var(--dark-light); }
+.trade-want-list { display:flex;flex-wrap:wrap;gap:4px;margin-top:4px; }
+.trade-want-tag { display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:12px;font-size:11px;background:var(--parchment-dark); }
+.trade-want-tag.owned { background:#d4edda;color:#155724; }
+.trade-want-connector { font-size:11px;color:var(--dark-light);padding:0 4px; }
+
+/* ===== MAGISCHE EFFEKTE NACH RARITÄT ===== */
+
+/* Selten - Sternschnuppen */
+.effect-rare { border-color: #5dade2; }
+.effect-rare .spark {
+  position: absolute; width: 2px; height: 2px;
+  border-radius: 50%; z-index: 2; pointer-events: none;
+  animation: rareSpark 3s ease-in-out infinite;
+  opacity: 0.6;
+}
+.effect-rare .spark:nth-child(1) { top: 8%;  left: 25%; animation-delay: 0s;   background: #5dade2; }
+.effect-rare .spark:nth-child(2) { top: 15%; left: 70%; animation-delay: 0.5s; background: #aed6f1; }
+.effect-rare .spark:nth-child(3) { top: 35%; left: 10%; animation-delay: 1.0s; background: #fff; }
+.effect-rare .spark:nth-child(4) { top: 50%; left: 80%; animation-delay: 1.5s; background: #5dade2; }
+.effect-rare .spark:nth-child(5) { top: 70%; left: 15%; animation-delay: 2.0s; background: #aed6f1; }
+.effect-rare .spark:nth-child(6) { top: 80%; left: 65%; animation-delay: 2.5s; background: #fff; }
+@keyframes rareSpark {
+  0%, 100% { transform: scale(0); opacity: 0; }
+  40% { transform: scale(1.8); opacity: 0.7; }
+  60% { transform: scale(1.5); opacity: 0.5; }
+  100% { transform: scale(0.2); opacity: 0; }
+}
+
+/* Legendär - Gold-Glow + Partikel */
+.effect-legendary {
+  border-color: #f1c40f;
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(241,196,15,0.15); }
+  50% { box-shadow: 0 0 40px rgba(241,196,15,0.5), 0 0 80px rgba(241,196,15,0.08); }
+}
+.effect-legendary .spark {
+  position: absolute; width: 2px; height: 2px;
+  border-radius: 50%; z-index: 2; pointer-events: none;
+  animation: sparkPop 2s ease-in-out infinite;
+}
+.effect-legendary .spark:nth-child(1) { top: 8%; left: 20%; animation-delay: 0s; background: #f1c40f; box-shadow: 0 0 6px #f1c40f; }
+.effect-legendary .spark:nth-child(2) { top: 5%; left: 65%; animation-delay: 0.2s; background: #fff; }
+.effect-legendary .spark:nth-child(3) { top: 22%; left: 8%; animation-delay: 0.4s; background: #e74c3c; box-shadow: 0 0 6px #e74c3c; }
+.effect-legendary .spark:nth-child(4) { top: 18%; left: 78%; animation-delay: 0.6s; background: #f1c40f; box-shadow: 0 0 6px #f1c40f; }
+.effect-legendary .spark:nth-child(5) { top: 40%; left: 4%; animation-delay: 0.8s; background: #fff; }
+.effect-legendary .spark:nth-child(6) { top: 44%; left: 84%; animation-delay: 1.0s; background: #f1c40f; box-shadow: 0 0 6px #f1c40f; }
+.effect-legendary .spark:nth-child(7) { top: 60%; left: 12%; animation-delay: 1.2s; background: #e74c3c; box-shadow: 0 0 6px #e74c3c; }
+.effect-legendary .spark:nth-child(8) { top: 56%; left: 74%; animation-delay: 1.4s; background: #f1c40f; box-shadow: 0 0 6px #f1c40f; }
+.effect-legendary .spark:nth-child(9) { top: 76%; left: 25%; animation-delay: 1.6s; background: #fff; }
+.effect-legendary .spark:nth-child(10){ top: 82%; left: 70%; animation-delay: 1.8s; background: #f1c40f; box-shadow: 0 0 6px #f1c40f; }
+@keyframes sparkPop {
+  0%, 100% { transform: scale(0); opacity: 0; }
+  35% { transform: scale(2); opacity: 1; }
+  55% { transform: scale(1.5); opacity: 0.8; }
+  100% { transform: scale(0.2); opacity: 0; }
+}
+
+/* Relikt - Atmender Rand + Partikel */
+.effect-relikt {
+  border-color: #9b59b6;
+  animation: breatheGlow 3s ease-in-out infinite;
+}
+@keyframes breatheGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(155,89,182,0.15); }
+  50% { box-shadow: 0 0 35px rgba(155,89,182,0.5), 0 0 70px rgba(155,89,182,0.08); }
+}
+.effect-relikt .spark {
+  position: absolute; width: 2px; height: 2px;
+  border-radius: 50%; z-index: 2; pointer-events: none;
+  animation: sparkPop 2.5s ease-in-out infinite;
+}
+.effect-relikt .spark:nth-child(1) { top: 10%; left: 18%; animation-delay: 0s;   background: #9b59b6; box-shadow: 0 0 6px #9b59b6; }
+.effect-relikt .spark:nth-child(2) { top: 6%; left: 62%; animation-delay: 0.3s; background: #fff; }
+.effect-relikt .spark:nth-child(3) { top: 24%; left: 8%;  animation-delay: 0.6s; background: #8e44ad; box-shadow: 0 0 6px #8e44ad; }
+.effect-relikt .spark:nth-child(4) { top: 20%; left: 80%; animation-delay: 0.9s; background: #fff; }
+.effect-relikt .spark:nth-child(5) { top: 42%; left: 4%;  animation-delay: 1.2s; background: #9b59b6; box-shadow: 0 0 6px #9b59b6; }
+.effect-relikt .spark:nth-child(6) { top: 46%; left: 84%; animation-delay: 1.5s; background: #8e44ad; box-shadow: 0 0 6px #8e44ad; }
+.effect-relikt .spark:nth-child(7) { top: 62%; left: 12%; animation-delay: 1.8s; background: #fff; }
+.effect-relikt .spark:nth-child(8) { top: 58%; left: 74%; animation-delay: 2.1s; background: #9b59b6; box-shadow: 0 0 6px #9b59b6; }
+.effect-relikt .spark:nth-child(9) { top: 78%; left: 28%; animation-delay: 2.4s; background: #8e44ad; box-shadow: 0 0 6px #8e44ad; }
+.effect-relikt .spark:nth-child(10){ top: 84%; left: 68%; animation-delay: 2.7s; background: #fff; }
+
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+<!-- ==================== SCREEN: WELCOME ==================== -->
+<div class="screen" id="screen-welcome">
+  <div class="welcome">
+    <div class="hogwarts-star">🪄</div>
+    <h1>Magische Belohnungen</h1>
+    <p class="subtitle">Ein Harry-Potter-Kartenspiel für fleißige Zauberer!</p>
+    <p style="margin-bottom:12px;color:var(--dark-light);font-size:14px;">Wer bist du?</p>
+    <div class="profile-grid" id="profileGrid"></div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: DASHBOARD ==================== -->
+<div class="screen" id="screen-dashboard">
+  <div class="dash-header">
+    <h2>📜 Übersicht</h2>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="logout-btn" onclick="logout()">🚪</button>
+    </div>
+  </div>
+  <div class="dash-welcome">Hallo, <strong id="dashName">Zauberer</strong>! 👋</div>
+
+  <div class="pack-reminder" id="packReminder" onclick="navigateTo('packs')">
+    <span class="emoji">🎁</span>
+    <span>Du hast <span class="count" id="dashPackCount">0</span> Pack<span id="dashPackPlural">s</span> zu öffnen!</span>
+  </div>
+
+  <div class="streak-box" id="streakBox" style="display:none;">
+  <span class="streak-icon">🔥</span>
+  <div class="streak-info">
+    <div class="streak-num"><span id="instrumentStreakNum">0</span> Tage</div>
+    <div class="streak-label">Üben am Stück</div>
+  </div>
+</div>
+<div class="streak-box" id="weekStreakBox" style="display:none;">
+  <span class="streak-icon">📅</span>
+  <div class="streak-info">
+    <div class="streak-num"><span id="weekStreakNum">0</span> Tage</div>
+    <div class="streak-label">Serie</div>
+    <div class="streak-progress" id="weekStreakHint">Alle 7 Tage gibt's ein Bonus-Pack!</div>
+  </div>
+</div>
+<div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="statTasks">0</div>
+      <div class="stat-label">Aufgaben erledigt</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statCards">0</div>
+      <div class="stat-label">Karten gesammelt</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statUnique">0/30</div>
+      <div class="stat-label">verschiedene</div>
+    </div>
+  </div>
+
+  <div class="week-challenge" id="weekChallenge">
+    <div class="wc-header">
+      <span class="wc-icon">📅</span>
+      <div class="wc-title">Familien-Challenge</div>
+      <span class="wc-status" id="wcStatus">0/20</span>
+    </div>
+    <div class="wc-bar"><div class="wc-fill" id="wcFill" style="width:0%"></div></div>
+    <div class="wc-hint" id="wcHint">Gemeinsam 20 Aufgaben schaffen – dann gibt's für alle ein Familien-Pack! 🎁</div>
+  </div>
+
+  <div class="section-title">⚡ Erledigte Aufgabe eintragen</div>
+  <div class="task-grid" id="taskGrid"></div>
+</div>
+
+<!-- ==================== SCREEN: PACKS ==================== -->
+<div class="screen pack-screen" id="screen-packs">
+  <h2>🎁 Packs öffnen</h2>
+  <div class="pack-count-big" id="packCountBig">Du hast 0 Packs</div>
+
+  <div id="packIdle">
+    <div class="pack-closed" id="packClosed" onclick="openPack()">
+        <div class="pack-icon">🎁</div>
+        <div class="pack-label">PACK ÖFFNEN</div>
+        <div class="pack-sub">Tippen zum Öffnen</div>
+      </div>
+      <div id="bonusPackIndicator" style="display:none;color:var(--gold);font-weight:600;font-size:14px;margin-bottom:8px;">⭐ Bonus-Pack mit extra seltenen Karten!</div>
+  </div>
+
+  <div class="pack-opening" id="packOpening">
+    <div class="pack-burst">✨</div>
+    <div class="open-text">Deine neuen Karten!</div>
+  </div>
+
+
+
+  <div class="card-reveal" id="cardReveal">
+    <div class="reveal-cards" id="revealCards"></div>
+    <button class="btn-primary" onclick="afterPackOpen()" style="margin-top:8px;">🃏 In die Sammlung</button>
+  </div>
+
+  <div class="empty-state" id="packEmpty" style="display:none;">
+    <div class="empty-icon">📭</div>
+    <p>Du hast keine Packs mehr.<br>Erledige Aufgaben, um neue zu verdienen!</p>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: ALBUM ==================== -->
+<div class="screen album-screen" id="screen-album">
+  <div class="album-header">
+    <h2>📖 Sammelalbum</h2>
+    <div class="album-header-right">
+      <span id="albumCount" style="font-size:14px;color:var(--dark-light);">0/0</span>
+      <button class="album-count-toggle" id="albumCountToggle" title="Anzahl anzeigen">🔢</button>
+    </div>
+  </div>
+  <div class="album-tabs" id="albumTabs"></div>
+  <div class="album-area" id="albumArea">
+    <div class="album-pages" id="albumPages"></div>
+    <div class="album-nav" id="albumNav" style="display:none;">
+      <button class="album-nav-btn" id="albumPrev">◀</button>
+      <span class="album-indicator" id="albumIndicator">1 / 1</span>
+      <button class="album-nav-btn" id="albumNext">▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: PARENT LOGIN ==================== -->
+<div class="screen" id="screen-parent-login">
+  <div class="parent-login">
+    <h2>🔐 Elternbereich</h2>
+    <p style="color:var(--dark-light);margin-bottom:16px;text-align:center;">Bitte PIN eingeben</p>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" data-i="0"></div>
+      <div class="pin-dot" data-i="1"></div>
+      <div class="pin-dot" data-i="2"></div>
+      <div class="pin-dot" data-i="3"></div>
+    </div>
+    <div class="pin-pad" id="pinPad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key empty"></button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <button class="pin-key" onclick="pinClear()">⌫</button>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: PARENT AREA ==================== -->
+<div class="screen" id="screen-parent-area">
+  <div class="parent-area">
+    <h2>⚙️ Elternbereich</h2>
+
+    <div class="parent-section">
+      <h3>👤 Kinderübersicht</h3>
+      <div class="profile-select" id="parentProfileSelect"></div>
+      <div id="parentProfileStats"></div>
+    </div>
+
+    <div class="parent-section">
+      <h3>📋 Aktivitäten</h3>
+      <div class="activity-log" id="parentActivityLog">
+        <p style="color:var(--dark-light);font-size:14px;">Wähle ein Kind aus.</p>
+      </div>
+    </div>
+
+    <div class="parent-section">
+      <h3>🔑 PIN ändern</h3>
+      <div class="pin-change-row">
+        <input type="password" id="newPinInput" maxlength="4" placeholder="Neue PIN" inputmode="numeric">
+        <button class="btn-primary btn-small" onclick="changePin()">Ändern</button>
+      </div>
+      <p id="pinChangeMsg" style="font-size:13px;margin-top:6px;color:var(--dark-light);"></p>
+    </div>
+
+    <div class="parent-section">
+      <h3>🎁 Packs zuweisen</h3>
+      <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Wähle ein Kind und gib zusätzliche Packs:</p>
+      <div class="assign-row">
+        <select id="assignPackProfile"></select>
+        <input type="number" id="assignPackCount" value="1" min="1" max="99">
+        <button class="btn-primary btn-small" onclick="assignPacks(false)">Packs geben</button>
+        <button class="btn-primary btn-small" onclick="assignPacks(true)" style="background:var(--gold);color:var(--dark);">⭐ Bonus-Packs</button>
+      </div>
+      <p class="assign-msg" id="assignPackMsg"></p>
+    </div>
+
+    <div class="parent-section">
+      <h3>🃏 Karte zuweisen</h3>
+      <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Wähle Kind und Karte (auch Strandparty):</p>
+      <div class="assign-row">
+        <select id="assignCardProfile"></select>
+        <select id="assignCardSelect"></select>
+        <button class="btn-primary btn-small" onclick="assignCard()">Karte geben</button>
+      </div>
+      <p class="assign-msg" id="assignCardMsg"></p>
+    </div>
+
+    <div class="parent-section">
+      <h3>🗑️ Karte entfernen</h3>
+      <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Wähle Kind und Karte zum Entfernen:</p>
+      <div class="assign-row">
+        <select id="removeCardProfile" onchange="updateRemoveCardList()"></select>
+        <select id="removeCardSelect"></select>
+        <button class="btn-danger btn-small" onclick="removeCard()">Entfernen</button>
+      </div>
+      <p class="assign-msg" id="removeCardMsg"></p>
+    </div>
+
+    <div class="parent-section">
+      <h3>🔥 Streak setzen</h3>
+      <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Wähle Kind und setze den Übe-Streak (Tage):</p>
+      <div class="assign-row">
+        <select id="streakProfileSelect"></select>
+        <input type="number" id="streakDaysInput" value="7" min="0" max="999">
+        <button class="btn-primary btn-small" onclick="setStreak()">Streak setzen</button>
+      </div>
+      <p class="assign-msg" id="streakMsg"></p>
+    </div>
+
+    <div class="parent-section">
+      <h3>💾 Datensicherung</h3>
+      <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Sichert alle Profile, Karten und Aufgaben als Datei – oder stellt sie wieder her. Empfohlen: mindestens 1× pro Woche!</p>
+      <div class="assign-row">
+        <button class="btn-primary btn-small" onclick="exportData()">📤 Daten sichern</button>
+        <button class="btn-primary btn-small" onclick="document.getElementById('importFileInput').click()" style="background:var(--gold);color:var(--dark);">📥 Daten einspielen</button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importData(event)">
+      </div>
+      <p id="backupMsg" style="font-size:13px;margin-top:6px;color:var(--dark-light);"></p>
+    </div>
+
+    <div class="parent-section">
+      <h3>⚠️ Daten zurücksetzen</h3>
+      <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Löscht alle Profile, Karten und Aufgaben. Nicht rückgängig machbar!</p>
+      <button class="btn-danger btn-small" onclick="resetAllData()">Alle Daten löschen</button>
+    </div>
+
+    <button class="btn-secondary" onclick="parentLogout()" style="width:100%;margin-top:8px;">🔙 Zurück zum Kind</button>
+  </div>
+</div>
+
+<!-- ==================== MODAL: Task Confirm ==================== -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal-box">
+    <h3 id="taskModalTitle">Aufgabe bestätigen</h3>
+    <p id="taskModalText">Hast du diese Aufgabe erledigt?</p>
+    <div id="taskModalExtra" style="display:none;">
+      <textarea class="modal-input" id="taskModalInput" rows="2" placeholder="Was hast du gemacht?"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Abbrechen</button>
+      <button class="btn-primary" id="taskModalConfirm" onclick="confirmTask()">✅ Erledigt!</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== MODAL: Trade Create ==================== -->
+<div class="modal-overlay" id="tradeModal">
+  <div class="modal-box">
+    <h3>🔄 Tausch anbieten</h3>
+    <p style="font-size:14px;margin-bottom:8px;">Du bietest: <strong id="tradeOfferCardName"></strong></p>
+    <p style="font-size:13px;color:var(--dark-light);margin-bottom:6px;">Ich möchte dafür:</p>
+    <div id="tradeWantCards" style="max-height:200px;overflow-y:auto;border:1px solid var(--parchment-dark);border-radius:8px;padding:4px;"></div>
+    <div style="margin:8px 0;">
+      <label style="font-size:13px;cursor:pointer;">
+        <input type="radio" name="tradeMode" value="any" checked> Eine davon reicht (ODER)
+      </label>
+      <br>
+      <label style="font-size:13px;cursor:pointer;">
+        <input type="radio" name="tradeMode" value="all"> Alle müssen es sein (UND)
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeTradeModal()">Abbrechen</button>
+      <button class="btn-primary" id="tradeCreateBtn" onclick="submitTradeOffer()">Angebot erstellen</button>
+    </div>
+    <p id="tradeModalError" style="color:#cc3333;font-size:13px;margin-top:8px;min-height:18px;"></p>
+  </div>
+</div>
+
+<!-- ==================== MODAL: Trade Confirm ==================== -->
+<div class="modal-overlay" id="tradeConfirmModal">
+  <div class="modal-box">
+    <h3>🔄 Tausch bestätigen</h3>
+    <p id="tradeConfirmText" style="font-size:14px;margin-bottom:12px;"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeTradeConfirm()">Abbrechen</button>
+      <button class="btn-primary" onclick="confirmTradeAccept()">✅ Tauschen!</button>
+    </div>
+    <p id="tradeConfirmError" style="color:#cc3333;font-size:13px;margin-top:8px;min-height:18px;"></p>
+  </div>
+</div>
+<!-- ==================== MODAL: Parent PIN for Sonstiges ==================== -->
+<div class="modal-overlay" id="parentConfirmModal">
+  <div class="modal-box">
+    <h3>👩‍👩‍👧‍👧 Eltern-Bestätigung</h3>
+    <p id="parentConfirmText">Bitte PIN eingeben, um zu bestätigen:</p>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">
+      <input type="password" id="parentConfirmPin" maxlength="4" placeholder="PIN" inputmode="numeric" style="width:100px;padding:8px;text-align:center;font-size:20px;letter-spacing:4px;border:2px solid var(--parchment-dark);border-radius:8px;font-family:var(--font-sans);">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeParentConfirmModal()">Abbrechen</button>
+      <button class="btn-primary" onclick="submitParentConfirm()">✅ Bestätigen</button>
+    </div>
+    <p id="parentConfirmError" style="color:#cc3333;font-size:13px;margin-top:8px;min-height:18px;"></p>
+  </div>
+</div>
+
+<!-- ==================== MODAL: Card Detail ==================== -->
+<div class="card-detail-overlay" id="cardDetailOverlay">
+  <div class="card-detail-box">
+    <div class="detail-img" id="detailImg">🃏</div>
+    <div class="detail-body">
+      <div class="detail-name" id="detailName">Kartenname</div>
+      <div class="detail-rarity" id="detailRarity">Selten</div>
+      <div class="detail-type" id="detailType">Charakter · Hogwarts</div>
+      <div class="detail-house" id="detailHouse">Gryffindor</div>
+      <div class="detail-desc" id="detailDesc">Beschreibungstext</div>
+      <div class="detail-copies" id="detailCopies"></div>
+      <div class="detail-trade" id="detailTrade" style="display:none;margin-top:8px;">
+        <button class="btn-primary btn-small" id="detailTradeBtn" onclick="executeTrade()"></button>
+        <p class="trade-info" id="detailTradeInfo" style="font-size:12px;color:var(--dark-light);margin-top:4px;"></p>
+              </div>
+              <div id="detailTradeOffer" style="display:none;margin-top:8px;">
+                <button class="btn-primary" onclick="openCreateTradeModal(document.getElementById('cardDetailOverlay').dataset.cardId)" style="width:100%;font-size:13px;">🔄 Zum Tausch anbieten</button>
+              </div>
+      <button class="detail-close" onclick="closeCardDetail()">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Success Flash ==================== -->
+<div class="success-flash" id="successFlash">
+  <span class="flash-icon">⭐</span>
+  <span id="successFlashText">Aufgabe erledigt! Du erhältst ein Pack!</span>
+</div>
+
+
+<!-- ==================== SCREEN: TRADES ==================== -->
+<div class="screen" id="screen-trades">
+  <div class="trades-header">
+    <h2>🔄 Tauschbörse</h2>
+  </div>
+  <div id="tradesContent">
+    <div class="trades-section">
+      <h3>📩 Angebote von anderen</h3>
+      <div id="incomingTrades"><p style="color:var(--dark-light);font-size:14px;">Lade Angebote...</p></div>
+    </div>
+    <div class="trades-section">
+      <h3>📤 Eigene Angebote</h3>
+      <div id="myTrades"><p style="color:var(--dark-light);font-size:14px;">Lade Angebote...</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== BOTTOM NAV ==================== -->
+<div class="bottom-nav" id="bottomNav">
+  <button class="nav-item active" data-screen="dashboard" onclick="navigateTo('dashboard')">
+    <span class="nav-icon">🏠</span>
+    <span>Start</span>
+  </button>
+  <button class="nav-item" data-screen="packs" onclick="navigateTo('packs')">
+    <span class="nav-icon">🎁</span>
+    <span>Packs</span>
+  </button>
+  <button class="nav-item" data-screen="album" onclick="navigateTo('album')">
+    <span class="nav-icon">📖</span>
+    <span>Album</span>
+  </button>
+  <button class="nav-item" data-screen="trades" onclick="navigateTo('trades')">
+    <span class="nav-icon">🔄</span>
+    <span>Tauschen</span>
+  </button>
+  <button class="nav-item" data-screen="parent-login" onclick="navigateTo('parent-login')">
+    <span class="nav-icon">⚙️</span>
+    <span>Eltern</span>
+  </button>
+</div>
+
+</div><!-- /app -->
+
+<script>
+/* ============================================================
+   JAVASCRIPT – Magische Belohnungen
+   ============================================================ */
+
+// ===================== CARD DATABASE =====================
+const CARD_DB = [
+  { id:'hp-001', name:'Severus Snape', rarity:'rare', type:'Charakter', subtype:'Professor fuer Zaubertraenke', house:'Slytherin', desc:'Severus Snape, Meister der Zaubertraenke und undurchdringlicher Doppelagent.', image:'cards/hp-001.jpg' },
+  { id:'hp-002', name:'Harry Potter', rarity:'legendary', type:'Charakter', subtype:'Der Auserwaehlte', house:'Gryffindor', desc:'Der Junge, der ueberlebte - Harry Potter.', image:'cards/hp-002.jpg' },
+  { id:'hp-003', name:'Albus Dumbledore', rarity:'legendary', type:'Charakter', subtype:'Schulleiter von Hogwarts', house:'Gryffindor', desc:'Der weiseste Zauberer seiner Zeit.', image:'cards/hp-003.jpg' },
+  { id:'hp-004', name:'Lord Voldemort', rarity:'legendary', type:'Charakter', subtype:'Der Dunkle Lord', house:'Slytherin', desc:'Der gefaehrlichste dunkle Zauberer aller Zeiten.', image:'cards/hp-004.jpg' },
+  { id:'hp-005', name:'Hermine Granger', rarity:'rare', type:'Charakter', subtype:'Die Kluegste ihrer Zeit', house:'Gryffindor', desc:'Die brillanteste Hexe ihres Jahrgangs.', image:'cards/hp-005.jpg' },
+  { id:'hp-006', name:'Ron Weasley', rarity:'rare', type:'Charakter', subtype:'Treuer Freund', house:'Gryffindor', desc:'Ron Weasley, der beste Freund.', image:'cards/hp-006.jpg' },
+  { id:'hp-007', name:'Rubeus Hagrid', rarity:'rare', type:'Charakter', subtype:'Huter der Schluessel', house:'Gryffindor', desc:'Der freundliche Riese.', image:'cards/hp-007.jpg' },
+  { id:'hp-008', name:'Minerva McGonagall', rarity:'rare', type:'Charakter', subtype:'Stellvertretende Schulleiterin', house:'Gryffindor', desc:'Streng aber gerecht.', image:'cards/hp-008.jpg' },
+  { id:'hp-009', name:'Sirius Black', rarity:'rare', type:'Charakter', subtype:'Patenonkel', house:'Gryffindor', desc:'Harrys treuer Patenonkel.', image:'cards/hp-009.jpg' },
+  { id:'hp-010', name:'Draco Malfoy', rarity:'rare', type:'Charakter', subtype:'Der Slytherin-Erbe', house:'Slytherin', desc:'Harrys Widersacher aus Slytherin.', image:'cards/hp-010.jpg' },
+  { id:'hp-011', name:'Dumbledores Armee', rarity:'rare', type:'Gruppe', subtype:'Widerstand', house:'-', desc:'Gemeinsam stark gegen die dunklen Maechte.', image:'cards/hp-011.jpg' },
+  { id:'hp-012', name:'Luna Lovegood', rarity:'common', type:'Charakter', subtype:'Die Traeumerin', house:'Ravenclaw', desc:'Luna sieht die Welt mit anderen Augen.', image:'cards/hp-012.jpg' },
+  { id:'hp-013', name:'Ginny Weasley', rarity:'common', type:'Charakter', subtype:'Die Mutige', house:'Gryffindor', desc:'Ginny erwies sich als furchtlose Kaempferin.', image:'cards/hp-013.jpg' },
+  { id:'hp-014', name:'Neville Longbottom', rarity:'common', type:'Charakter', subtype:'Der Verborgene Held', house:'Gryffindor', desc:'Vom schuechternen Jungen zum Helden.', image:'cards/hp-014.jpg' },
+  { id:'hp-015', name:'Fred Weasley', rarity:'common', type:'Charakter', subtype:'Der Spassmacher', house:'Gryffindor', desc:'Meister der Streiche.', image:'cards/hp-015.jpg' },
+  { id:'hp-016', name:'George Weasley', rarity:'common', type:'Charakter', subtype:'Der Spassmacher', house:'Gryffindor', desc:'Gemeinsam mit Fred revolutionierte er die Scherzartikel.', image:'cards/hp-016.jpg' },
+  { id:'hp-017', name:'Dobby', rarity:'common', type:'Charakter', subtype:'Freier Hauself', house:'-', desc:'Der treue Hauself, mutiger als so mancher Zauberer.', image:'cards/hp-017.jpg' },
+  { id:'hp-018', name:'Hedwig', rarity:'common', type:'Tier', subtype:'Briefeule', house:'-', desc:'Harrys treue Schnee-Eule.', image:'cards/hp-018.jpg' },
+  { id:'hp-019', name:'Expecto Patronum', rarity:'common', type:'Zauber', subtype:'Schutzzauber', house:'-', desc:'Ein maechtiger Schutzzauber gegen Dementoren.', image:'cards/hp-019.jpg' },
+  { id:'hp-020', name:'Wingardium Leviosa', rarity:'common', type:'Zauber', subtype:'Schwebezauber', house:'-', desc:'Der erste Zauber, den viele lernen.', image:'cards/hp-020.jpg' },
+  { id:'hp-021', name:'Lumos', rarity:'common', type:'Zauber', subtype:'Lichtzauber', house:'-', desc:'Licht am Ende des Zauberstabs.', image:'cards/hp-021.jpg' },
+  { id:'hp-022', name:'Accio', rarity:'common', type:'Zauber', subtype:'Herbeirufzauber', house:'-', desc:'Der Herbeirufzauber - ein Muss fuer jeden Zauberer.', image:'cards/hp-022.jpg' },
+  { id:'hp-023', name:'Expelliarmus', rarity:'common', type:'Zauber', subtype:'Entwaffnungszauber', house:'-', desc:'Harrys Lieblingszauber.', image:'cards/hp-023.jpg' },
+  { id:'hp-024', name:'Nimbus 2000', rarity:'common', type:'Gegenstand', subtype:'Rennbesen', house:'-', desc:'Harrys erster eigener Rennbesen.', image:'cards/hp-024.jpg' },
+  { id:'hp-025', name:'Der Sprechende Hut', rarity:'common', type:'Gegenstand', subtype:'Sortierhut', house:'-', desc:'Der Sprechende Hut entscheidet ueber die Haeuser.', image:'cards/hp-025.jpg' },
+  { id:'hp-026', name:'Hogwarts Schloss', rarity:'common', type:'Ort', subtype:'Schule fuer Zauberei', house:'-', desc:'Das praechtigste Schloss der Zaubererwelt.', image:'cards/hp-026.jpg' },
+  { id:'hp-027', name:'Die Grosse Halle', rarity:'common', type:'Ort', subtype:'Herz von Hogwarts', house:'-', desc:'Unter dem verzauberten Himmel.', image:'cards/hp-027.jpg' },
+  { id:'hp-028', name:'Der Verbotene Wald', rarity:'common', type:'Ort', subtype:'Dunkler Wald', house:'-', desc:'Tiefe, finstere Baeume und geheimnisvolle Wesen.', image:'cards/hp-028.jpg' },
+  { id:'hp-029', name:'Winkelgasse', rarity:'common', type:'Ort', subtype:'Zauberer-Einkaufsstrasse', house:'-', desc:'Die bunteste Strasse der Zaubererwelt.', image:'cards/hp-029.jpg' },
+  { id:'hp-030', name:'Quidditch', rarity:'common', type:'Sport', subtype:'Zauberersport', house:'-', desc:'Quidditch - der rasante Sport der Zauberer.', image:'cards/hp-030.jpg' },
+
+  // --- Zauber (8) ---
+  { id:'hp-031', name:'Protego', rarity:'common', type:'Zauber', subtype:'Schildzauber', house:'-', desc:'Ein magischer Schild, der Feinde abwehrt. "Protego!" erschafft eine unsichtbare Barriere.', image:'cards/hp-031.jpg' },
+  { id:'hp-032', name:'Stupor', rarity:'common', type:'Zauber', subtype:'Betäubungszauber', house:'-', desc:'Der Betäubungszauber schlechthin – ein roter Lichtblitz und der Gegner geht zu Boden.', image:'cards/hp-032.jpg' },
+  { id:'hp-033', name:'Petrificus Totalus', rarity:'common', type:'Zauber', subtype:'Ganzkörperklammern', house:'-', desc:'Lässt den Gegner erstarren wie eine Steinfigur. Arme an den Seiten, umfallen inbegriffen.', image:'cards/hp-033.jpg' },
+  { id:'hp-034', name:'Obliviate', rarity:'common', type:'Zauber', subtype:'Gedächtniszauber', house:'-', desc:'Ein Zauber, der Erinnerungen verändert oder löscht. Sehr nützlich – und sehr gefährlich.', image:'cards/hp-034.jpg' },
+  { id:'hp-035', name:'Crucio', rarity:'rare', type:'Zauber', subtype:'Folterfluch', house:'-', desc:'Einer der drei Unverzeihlichen Flüche. Verursacht unerträgliche Schmerzen beim Opfer.', image:'cards/hp-035.jpg' },
+  { id:'hp-036', name:'Imperio', rarity:'rare', type:'Zauber', subtype:'Imperiusfluch', house:'-', desc:'Einer der drei Unverzeihlichen Flüche. Unterwirft den Willen des Opfers vollständig.', image:'cards/hp-036.jpg' },
+  { id:'hp-037', name:'Sectumsempra', rarity:'rare', type:'Zauber', subtype:'Schnittfluch', house:'-', desc:'Ein dunkler Fluch, der wie ein unsichtbares Schwert tiefe Wunden reißt. Erfunden von Severus Snape.', image:'cards/hp-037.jpg' },
+  { id:'hp-038', name:'Avada Kedavra', rarity:'legendary', type:'Zauber', subtype:'Todesfluch', house:'-', desc:'Der schrecklichste der drei Unverzeihlichen Flüche – ein grüner Lichtblitz, der tötet. Kein Gegenzauber bekannt.', image:'cards/hp-038.jpg' },
+
+  // --- Gegenstände (6) ---
+  { id:'hp-039', name:'Der Elderstab', rarity:'legendary', type:'Gegenstand', subtype:'Der Zauberstab des Schicksals', house:'-', desc:'Der mächtigste Zauberstab aller Zeiten – einer der drei Heiligtümer des Todes. Gehört dem, der ihn besiegt.', image:'cards/hp-039.jpg' },
+  { id:'hp-040', name:'Das Tagebuch des Tom Riddle', rarity:'rare', type:'Gegenstand', subtype:'Horkrux', house:'-', desc:'Ein altes Tagebuch mit einem dunklen Geheimnis. Es schreibt zurück und saugt die Lebenskraft des Lesers aus.', image:'cards/hp-040.jpg' },
+  { id:'hp-041', name:'Der Feuerkelch', rarity:'rare', type:'Gegenstand', subtype:'Magisches Turnier', house:'-', desc:'Ein alter, holzgeschnitzter Kelch mit blauer Flamme. Er wählt die Teilnehmer des Trimagischen Turniers.', image:'cards/hp-041.jpg' },
+  { id:'hp-042', name:'Der Stein der Weisen', rarity:'legendary', type:'Gegenstand', subtype:'Unsterblichkeit', house:'-', desc:'Ein leuchtend roter Stein, der jedes Metall in Gold verwandelt und den Elixier des Lebens herstellt.', image:'cards/hp-042.jpg' },
+  { id:'hp-043', name:'Die Karte des Rumtreibers', rarity:'common', type:'Gegenstand', subtype:'Magische Karte', house:'-', desc:'Eine besondere Karte von Hogwarts, die alle Personen im Schloss zeigt. Schwöre feierlich, dass du nichts Böses im Schilde führst!', image:'cards/hp-043.jpg' },
+  { id:'hp-044', name:'Das Goldene Ei', rarity:'common', type:'Gegenstand', subtype:'Trimagisches Rätsel', house:'-', desc:'Ein goldenes Drachenei aus der ersten Aufgabe des Trimagischen Turniers. Es enthält ein wichtiges Geheimnis.', image:'cards/hp-044.jpg' },
+
+  // --- Orte (8) ---
+  { id:'hp-045', name:'Gleis 9 3/4', rarity:'common', type:'Ort', subtype:'Zugang zur Zaubererwelt', house:'-', desc:'Zwischen Gleis 9 und 10 am Bahnhof King Cross – der magische Durchgang zum Hogwarts-Express.', image:'cards/hp-045.jpg' },
+  { id:'hp-046', name:'Hogsmeade', rarity:'common', type:'Ort', subtype:'Zaubererdorf', house:'-', desc:'Das einzige rein zauberische Dorf in Großbritannien. Bekannt für die Drei Besen, Honigtopf und Schreikrämer.', image:'cards/hp-046.jpg' },
+  { id:'hp-047', name:'Die Kammer des Schreckens', rarity:'rare', type:'Ort', subtype:'Versteck von Salazar Slytherin', house:'Slytherin', desc:'Eine geheime Kammer unter Hogwarts, erbaut von Salazar Slytherin. Sie beherbergt ein uraltes Ungeheuer.', image:'cards/hp-047.jpg' },
+  { id:'hp-048', name:'Der Fuchsbau', rarity:'common', type:'Ort', subtype:'Zuhause der Weasleys', house:'-', desc:'Das gemütliche, schiefe Haus der Familie Weasley. Es raucht und ruckelt, aber es steckt voller Liebe.', image:'cards/hp-048.jpg' },
+  { id:'hp-049', name:'Das Zaubereiministerium', rarity:'rare', type:'Ort', subtype:'Regierung der Zauberer', house:'-', desc:'Der Sitz der britischen Zaubererregierung. Tief unter London verborgen, mit einem prächtigen Atrium.', image:'cards/hp-049.jpg' },
+  { id:'hp-050', name:'Das Malfoy-Anwesen', rarity:'common', type:'Ort', subtype:'Anwesen der Familie Malfoy', house:'Slytherin', desc:'Das prachtvolle, kalte Herrenhaus der Familie Malfoy – so elegant wie ungemütlich.', image:'cards/hp-050.jpg' },
+  { id:'hp-051', name:'Der Astronomieturm', rarity:'common', type:'Ort', subtype:'Höchster Turm von Hogwarts', house:'-', desc:'Der höchste Turm von Hogwarts mit Blick über den Verbotenen Wald. Hier stehen die wichtigsten astronomischen Geräte.', image:'cards/hp-051.jpg' },
+  { id:'hp-052', name:'Die Heulende Hütte', rarity:'common', type:'Ort', subtype:'Verfluchtes Haus', house:'-', desc:'Das angeblich am meisten heimgesuchte Haus Großbritanniens. In Wahrheit der perfekte Ort für Werwölfe.', image:'cards/hp-052.jpg' },
+
+  // --- Magische Wesen (8) ---
+  { id:'hp-053', name:'Fawkes', rarity:'legendary', type:'Tier', subtype:'Phönix', house:'-', desc:'Dumbledores treuer Phönix. Fawkes Tränen heilen, seine Federn sind mächtige Zauberstabkerne.', image:'cards/hp-053.jpg' },
+  { id:'hp-054', name:'Seidenschnabel', rarity:'common', type:'Tier', subtype:'Hippogreif', house:'-', desc:'Ein stolzer Hippogreif mit Adlerkopf und Pferdeleib. Man muss ihm Respekt entgegenbringen – erst verbeugen, dann anfassen.', image:'cards/hp-054.jpg' },
+  { id:'hp-055', name:'Fluffy', rarity:'common', type:'Tier', subtype:'Dreiköpfiger Hund', house:'-', desc:'Ein riesiger Hund mit drei Köpfen. Sehr gefährlich, aber schläft ein, wenn man ihm ein Lied vorspielt.', image:'cards/hp-055.jpg' },
+  { id:'hp-056', name:'Aragog', rarity:'common', type:'Tier', subtype:'Acromantula', house:'-', desc:'Eine riesige spinne im Verbotenen Wald. Aragog ist klug, aber gefährlich – und liebt die Dunkelheit.', image:'cards/hp-056.jpg' },
+  { id:'hp-057', name:'Norbert', rarity:'common', type:'Tier', subtype:'Norwegischer Stachelbuckel', house:'-', desc:'Hagrids kleiner Hausdrache – aus einem Ei geschlüpft. Sahnig niedlich, aber Feuer spucken kann er trotzdem.', image:'cards/hp-057.jpg' },
+  { id:'hp-058', name:'Der Basilisk', rarity:'rare', type:'Tier', subtype:'König der Schlangen', house:'Slytherin', desc:'Eine uralte Riesenschlange in der Kammer des Schreckens. Sein Blick tötet – also schau nie in seine Augen!', image:'cards/hp-058.jpg' },
+  { id:'hp-059', name:'Die Thestrale', rarity:'common', type:'Tier', subtype:'Geflügelte Pferde', house:'-', desc:'Nur wer den Tod gesehen hat, kann diese anmutigen, geflügelten Skelettpferde sehen. Sie ziehen die Kutschen nach Hogwarts.', image:'cards/hp-059.jpg' },
+  { id:'hp-060', name:'Kreacher', rarity:'common', type:'Charakter', subtype:'Hauself', house:'-', desc:'Der mürrische Hauself der Familie Black. Mit der Zeit lernt er, dass Freundlichkeit erwidert wird.', image:'cards/hp-060.jpg' },
+
+  // --- Charaktere (5) ---
+  { id:'hp-061', name:'Remus Lupin', rarity:'common', type:'Charakter', subtype:'Lehrer fuer Verteidigung', house:'Gryffindor', desc:'Der freundlichste Lehrer fuer Verteidigung gegen die dunklen Kuenste - auch wenn er jeden Monat ein kleines Wolfsproblem hat.', image:'cards/hp-061.jpg' },
+  { id:'hp-062', name:'Nymphadora Tonks', rarity:'common', type:'Charakter', subtype:'Aurorin', house:'Hufflepuff', desc:'Eine Aurorin mit knallpinken Haaren und Haenden voller Zauberei - ihre Nase kann sie genauso gut verformen wie die eines jeden Todessers.', image:'cards/hp-062.jpg' },
+  { id:'hp-063', name:'Bellatrix Lestrange', rarity:'rare', type:'Charakter', subtype:'Todesserin', house:'Slytherin', desc:'Die treueste Dienerin des Dunklen Lords. Wild, verrueckt und unberechenbar - ihr Lachen allein jagt Angst ein.', image:'cards/hp-063.jpg' },
+  { id:'hp-064', name:'Cedric Diggory', rarity:'common', type:'Charakter', subtype:'Trimagischer Champion', house:'Hufflepuff', desc:'Der beste und anstaendigste Champion, den Hogwarts je hatte. Tapfer, fair und immer hilfsbereit.', image:'cards/hp-064.jpg' },
+  { id:'hp-065', name:'Alastor Moody', rarity:'rare', type:'Charakter', subtype:'Auror', house:'Gryffindor', desc:'Steter Wachsamkeit - mit seinem magischen Auge sieht er alles, und sein Misstrauen hat ihn ueberleben lassen.', image:'cards/hp-065.jpg' },
+
+  // --- Zauber (3) ---
+  { id:'hp-066', name:'Riddikulus', rarity:'common', type:'Zauber', subtype:'Boggart-Bann', house:'-', desc:'Lachen ist die beste Medizin - gegen Boggarts hilft nur, die Angst vor etwas Komischem zu verwandeln.', image:'cards/hp-066.jpg' },
+  { id:'hp-067', name:'Finite Incantatem', rarity:'common', type:'Zauber', subtype:'Zauberschluss', house:'-', desc:'Der General-Annulierszauber. Ein Wort, das alles beendet - von schwebenden Federn bis zu verhexter Deko.', image:'cards/hp-067.jpg' },
+  { id:'hp-068', name:'Legilimens', rarity:'rare', type:'Zauber', subtype:'Gedankenmagie', house:'-', desc:'Eindringen in die Gedanken anderer - sehr unhoeflich, aber manchmal unvermeidlich.', image:'cards/hp-068.jpg' },
+
+  // --- Gegenstaende (5) ---
+  { id:'hp-069', name:'Der Tarnumhang', rarity:'rare', type:'Gegenstand', subtype:'Heiligtum des Todes', house:'-', desc:'Eines der drei Heiligtuemer des Todes. Macht den Traeger unsichtbar - seit Jahrhunderten in der Familie Potter.', image:'cards/hp-069.jpg' },
+  { id:'hp-070', name:'Godric Gryffindors Schwert', rarity:'legendary', type:'Gegenstand', subtype:'Legendary Waffe', house:'Gryffindor', desc:'Mit Rubinen besetztes Goblinsilber-Schwert. Es erscheint jedem wahren Gryffindor in der Stunde der Not.', image:'cards/hp-070.jpg' },
+  { id:'hp-071', name:'Das Horkrux-Locket', rarity:'rare', type:'Gegenstand', subtype:'Horkrux', house:'Slytherin', desc:'Ein goldenes Medaillon mit dem S von Slytherin. Ein Stueck von Voldemorts Seele - und schwer zu zerstoeren.', image:'cards/hp-071.jpg' },
+  { id:'hp-072', name:'Das Denkarium', rarity:'rare', type:'Gegenstand', subtype:'Gedankenspeicher', house:'-', desc:'Ein steinernes Becken voller silbriger Gedankenfaeden. Man kann Erinnerungen nicht nur speichern, sondern auch betreten.', image:'cards/hp-072.jpg' },
+  { id:'hp-073', name:'Flohpulver', rarity:'common', type:'Gegenstand', subtype:'Reisemagie', house:'-', desc:'Eine Handvoll irisierendes Puder ins Feuer - schon reist man durchs Kaminetz. Niesfestigkeit nicht inbegriffen.', image:'cards/hp-073.jpg' },
+
+  // --- Orte (4) ---
+  { id:'hp-074', name:'Der Raum der Wuensche', rarity:'rare', type:'Ort', subtype:'Versteck', house:'-', desc:'Ein Raum, der nur dem erscheint, der ihn wirklich braucht. Mal ein uebergrosser Schrank, mal ein Versammlungsort.', image:'cards/hp-074.jpg' },
+  { id:'hp-075', name:'Godric Hollow', rarity:'common', type:'Ort', subtype:'Zaubererdorf', house:'-', desc:'Ein verschneites Dorf mit einer langen Zauberergeschichte. Hier lebten die Potters - und hier wurden sie angegriffen.', image:'cards/hp-075.jpg' },
+  { id:'hp-076', name:'Beauxbatons', rarity:'common', type:'Ort', subtype:'Schule fuer Zauberei', house:'-', desc:'Die franzoesische Zauberschule. Ein elegantes Palais in den Pyrenaeen - die Schueler reisen mit fliegenden Pferdekutschen an.', image:'cards/hp-076.jpg' },
+  { id:'hp-077', name:'Die Bibliothek von Hogwarts', rarity:'common', type:'Ort', subtype:'Wissen', house:'-', desc:'Regal an Regal voller magischer Buecher - und der Restricted Section, die am besten verschlossen bleibt.', image:'cards/hp-077.jpg' },
+
+  // --- Kreaturen (3) ---
+  { id:'hp-078', name:'Der Dementor', rarity:'rare', type:'Tier', subtype:'Seelenlose Waechter', house:'-', desc:'Kapuzenwesen, die Glueck und Freude absorbieren. Ihr Kuss raubt die Seele. Nur ein Patronus kann sie vertreiben.', image:'cards/hp-078.jpg' },
+  { id:'hp-079', name:'Der Werwolf', rarity:'rare', type:'Tier', subtype:'Verfluchtes Wesen', house:'-', desc:'Bei Vollmond verwandelt - gefaehrlich, aber nicht boese. Lupin hat gezeigt, dass man auch mit dem Fluch leben kann.', image:'cards/hp-079.jpg' },
+  { id:'hp-080', name:'Der Wichtel', rarity:'common', type:'Tier', subtype:'Chaotisches Wesen', house:'-', desc:'Kleine, knallblaue Kobolde aus Cornwall. Sie sind schnell, frech und hinterlassen ein Chaos, das selbst Lockhart nicht beseitigen kann.', image:'cards/hp-080.jpg' },
+
+  // --- Relikt: Hogwarts-Gruender (4) ---
+  { id:'hp-081', name:'Godric Gryffindor', rarity:'relikt', type:'Charakter', subtype:'Hogwarts-Gruender', house:'Gryffindor', desc:'Einer der vier grossartigsten Zauberer aller Zeiten. Gruender von Hogwarts und Namensgeber des Hauses der Tapferen.', image:'cards/hp-081.jpg' },
+  { id:'hp-082', name:'Salazar Slytherin', rarity:'relikt', type:'Charakter', subtype:'Hogwarts-Gruender', house:'Slytherin', desc:'Einer der vier grossartigsten Zauberer aller Zeiten. Gruender von Hogwarts und Erbauer der Kammer des Schreckens.', image:'cards/hp-082.jpg' },
+  { id:'hp-083', name:'Helga Hufflepuff', rarity:'relikt', type:'Charakter', subtype:'Hogwarts-Gruender', house:'Hufflepuff', desc:'Einer der vier grossartigsten Zauberer aller Zeiten. Gruenderin von Hogwarts und bekannt fuer ihre Treue und ihren Gerechtigkeitssinn.', image:'cards/hp-083.jpg' },
+  { id:'hp-084', name:'Rowena Ravenclaw', rarity:'relikt', type:'Charakter', subtype:'Hogwarts-Gruender', house:'Ravenclaw', desc:'Einer der vier grossartigsten Zauberer aller Zeiten. Gruenderin von Hogwarts und die kluegste Hexe ihrer Zeit.', image:'cards/hp-084.jpg' },
+  { id:'hp-085', name:'Lucius Malfoy', rarity:'rare', type:'Charakter', subtype:'Todesser', house:'Slytherin', desc:'„Die Vergangenheit ist ein Buch, das man nicht zuschlagen kann." Lucius Malfoy, Oberhaupt der Familie Malfoy und einflussreicher Todesser, ist bekannt für seinen aristokratischen Stolz, seinen Reichtum und seine undurchsichtigen Machenschaften im Dienste des Dunklen Lords.', image:'cards/hp-085.jpg' },
+  { id:'hp-086', name:'Dolores Umbridge', rarity:'rare', type:'Charakter', subtype:'Senior-Undersecretary', house:'Slytherin', desc:'„Regeln sind das Fundament einer funktionierenden Gesellschaft." Dolores Umbridge, Senior-Undersecretary des Zaubereiministeriums, setzt ihre süßliche Fassade als Waffe ein. Hinter dem pinken Strickjäckchen verbirgt sich eine der gefährlichsten Bürokratinnen der Zaubererwelt.', image:'cards/hp-086-nb2l.jpg' },
+  { id:'hp-087', name:'Argus Filch', rarity:'common', type:'Charakter', subtype:'Hausmeister', house:'-', desc:'„Ich krieg euch schon noch, ihr kleinen Biester." Argus Filch, der mürrische Hausmeister von Hogwarts, durchstreift die Gänge auf der Suche nach Regelbrechern. Seine treue Katze Mrs Norris ist immer an seiner Seite.', image:'cards/hp-087-nb2l.jpg' },
+  { id:'hp-088', name:'Sybill Trelawney', rarity:'rare', type:'Charakter', subtype:'Wahrsagerin', house:'Ravenclaw', desc:'„Ich habe die Kristallkugel befragt..." Sybill Trelawney, Wahrsagerin und Ururenkelin der berühmten Seherin Cassandra Trelawney. Ihre echten Prophezeiungen sind selten - aber wenn sie kommen, verändern sie die Welt.', image:'cards/hp-088-nb2l.jpg' },
+  { id:'hp-089', name:'Peter Pettigrew', rarity:'common', type:'Charakter', subtype:'Todesser', house:'Gryffindor', desc:'Peter Pettigrew, der treue Freund der Marauder, der zum verräterischsten Todesser aller Zeiten wurde. Aus Angst und Feigheit brachte er die Potters in den Tod und diente dem Dunklen Lord über zwölf Jahre als Ratte.', image:'cards/hp-089-nb2l.jpg' },
+  { id:'hp-090', name:'Madam Pomfrey', rarity:'common', type:'Charakter', subtype:'Krankenschwester', house:'-', desc:'„Keine Zauberstäbe im Krankenflügel!" Madam Pomfrey, die fürsorgliche Krankenschwester von Hogwarts, heilt seit Jahrzehnten alle Verletzungen mit unermüdlicher Geduld. Von versteinerten Schülern bis zu gebrochenen Nasen.', image:'cards/hp-090-nb2l.jpg' },
+  { id:'hp-091', name:'Feuerblitz', rarity:'rare', type:'Gegenstand', subtype:'Rennbesen', house:'-', desc:'Der Feuerblitz ist der schnellste und edelste Rennbesen der Welt. Handgefertigt aus poliertem Mahagoni mit perfekt gebundenen Birkentrieben - ein Geschenk von unschätzbarem Wert für jeden Quidditch-Spieler.', image:'cards/hp-091-nb2l.jpg' },
+  { id:'hp-092', name:'Der Zeitumkehrer', rarity:'rare', type:'Gegenstand', subtype:'Magisches Artefakt', house:'-', desc:'Der Zeitumkehrer ist ein goldenes Amulett mit rotierenden Ringen, das seinen Träger durch die Zeit reisen lässt. Hermine Granger nutzte ihn im dritten Schuljahr, um Zaubertränke zu besuchen und einen unvergesslichen Tag zu überleben.', image:'cards/hp-092-nb2l.jpg' },
+  { id:'hp-093', name:'Alohomora', rarity:'common', type:'Zauber', subtype:'Schließzauber', house:'-', desc:'„Alohomora!" Der erste und bekannteste Diebeszauber des magischen Universums. Öffnet die meisten Schlösser mit einem goldenen Lichtstrahl - Hermines Spezialität seit ihrem ersten Schuljahr in Hogwarts.', image:'cards/hp-093-nb2l.jpg' },
+  { id:'hp-094', name:'Azkaban', rarity:'legendary', type:'Ort', subtype:'Zauberergefängnis', house:'-', desc:'„Verlassen Sie alle Hoffnung, die Sie hier betreten." Azkaban ist das gefürchtete Zauberergefängnis auf einer einsamen Insel in der Nordsee. Bewacht von Dementoren, umgeben von Sturm und Eis - hier schwindet jede Hoffnung.', image:'cards/hp-094.jpg' },
+  { id:'hp-095', name:'St. Mungo', rarity:'rare', type:'Ort', subtype:'Krankenhaus', house:'-', desc:'„Willkommen im St. Mungo Hospital für Magische Krankheiten und Verletzungen." Das einzige Zaubererkrankenhaus Großbritanniens, versteckt hinter einer Schaufensterpuppe in der Winkelgasse. Heiler in limettengrünen Roben kümmern sich um jede magische Verletzung.', image:'cards/hp-095.jpg' },
+  { id:'hp-096', name:'Nagini', rarity:'rare', type:'Tier', subtype:'Voldemorts Schlange', house:'Slytherin', desc:'„Die treueste Dienerin des Dunklen Lords." Nagini ist Voldemorts riesige Schlange und einer seiner Horkruxe. Durch die magische Verbindung zu ihrem Meister wird sie fast unzerstörbar - und ihre Bisse sind tödlich.', image:'cards/hp-096.jpg' },
+  { id:'hp-097', name:'Grimmauldplatz 12', rarity:'common', type:'Ort', subtype:'Ordenshauptquartier', house:'-', desc:'„Das Haus der alten Schwarzen." Zwischen zwei Häusern versteckt liegt das düstere Familienanwesen der Black-Familie. Seit Band 5 dient es als geheimes Hauptquartier des Ordens des Phönix - mit einem stets motzenden Hauselfen vor der Tür.', image:'cards/hp-097.jpg' },
+  { id:'hp-098', name:'Fenrir Greyback', rarity:'rare', type:'Charakter', subtype:'Werwolf-Anführer', house:'-', desc:'„Ich beiße - und ich sorge dafür, dass andere mir folgen." Fenrir Greyback ist der brutalste Werwolf Großbritanniens. Er jagt gezielt Kinder, um den Werwolf-Biss zu verbreiten - und verwandelt im 6. Band Bill Weasley für immer.', image:'cards/hp-098.jpg' },
+  { id:'hp-099', name:'Der Inferius', rarity:'rare', type:'Tier', subtype:'Untote Wächter', house:'-', desc:'„Tote, die von dunkler Magie erweckt wurden." Infernale sind die grauenvollen Wächter der Horkrux-Höhle. Sie greifen nur an, wenn ihr Meister es befiehlt - und sind fast unzerstörbar, denn sie spüren keinen Schmerz.', image:'cards/hp-099.jpg' },
+  { id:'hp-100', name:'Der Horkrux-Cup', rarity:'rare', type:'Gegenstand', subtype:'Horkrux', house:'Hufflepuff', desc:'„Helga Hufflepuffs goldener Becher." Ein kleiner, wunderschöner Kelch mit zwei zierlichen Griffen und einem Dachs-Wappen. Voldemort stahl ihn und verbarg einen Teil seiner Seele darin - versteckt im Tresor der Familie Lestrange bei Gringotts.', image:'cards/hp-100.jpg' },
+  { id:'hp-101', name:'Xenophilius Lovegood', rarity:'common', type:'Charakter', subtype:'Herausgeber des Klitterers', house:'Ravenclaw', desc:'„Der Klitterer hat immer recht!" Xenophilius ist Lunas exzentrischer Vater und Herausgeber der skurrilen Zeitschrift. Er trägt seltsame Hüte aus Butterbierdeckeln und kennt die Heiligtümer des Todes - obwohl er nicht weiß, wann er schweigen sollte.', image:'cards/hp-101.jpg' },
+];
+
+// ===================== ALBUM REWARD CARDS =====================
+// Exklusive Karten, die nur durch Vervollständigen eines Album-Bandes freigeschaltet werden.
+// Keine Rarität - sie haben einen eigenen Belohnungs-Mechanismus.
+const REWARD_CARDS = {
+  1: { id:'hp-102', name:'Der Hogwarts-Brief', type:'Gegenstand', subtype:'Eintrittskarte nach Hogwarts', house:'-', desc:'„Lieber Zauberer, wir freuen uns, Ihnen mitzuteilen, dass Sie an der Hogwarts-Schule für Hexerei und Zauberei aufgenommen wurden." Der Beginn von allem - ein vergilbter Umschlag mit grünem Tintensiegel, der jede Muggel-Familie auf den Kopf stellt.', image:'cards/hp-102.jpg' },
+  2: { id:'hp-103', name:'Gilderoy Lockhart', type:'Charakter', subtype:'Der größte Zauberer aller Zeiten (selbst ernannt)', house:'Ravenclaw', desc:'„Wie ich bereits in meinen Bestsellern erwähnt habe..." Gilderoy Lockhart, der charmante Hochstapler, vergisst gern, dass er selbst geschrieben hat, was er vorträgt. Sein Gedächtnis verliert er schließlich - seinen Stolz nie.', image:'cards/hp-103.jpg' },
+  3: { id:'hp-104', name:'Der Fahrende Ritter', type:'Ort', subtype:'Magisches Verkehrsmittel', house:'-', desc:'„Brauchen Sie den Fahrenden Ritter?" Ein violetter Dreideckerbus, der sich durch die Magie zwischen den Straßen hindurchquetscht. Er bringt gestrandete Zauberer ans Ziel - mit übertriebenem Komfort und einem schrecklichen Ruckeln.', image:'cards/hp-104.jpg' },
+  4: { id:'hp-105', name:'Rita Kimmkorn', type:'Charakter', subtype:'Skandalreporterin', house:'-', desc:'„Niemand hat gesagt, dass die Wahrheit hübsch ist." Rita Kimmkorn ist die gefürchtetste Reporterin des Tagespropheten. Mit ihrer grünen Eilfeder schreibt sie schneller als sie denkt - und mit weniger Rücksicht.', image:'cards/hp-105.jpg' },
+  5: { id:'hp-106', name:'Die Mysteriumsabteilung', type:'Ort', subtype:'Geheimste Abteilung des Ministeriums', house:'-', desc:'„Tief unter dem Zaubereiministerium, hinter schwarzen Türen." Hier lagert die Prophezeiung - und die Gefahr. Der Kampf zwischen Orden und Todessern im Atrium der Mysteriumsabteilung verändert alles.', image:'cards/hp-106.jpg' },
+  6: { id:'hp-107', name:'Horace Slughorn', type:'Charakter', subtype:'Meister der Zaubertränke', house:'Slytherin', desc:'„Berühmte Hexen und Zauberer - meine Leidenschaft!" Horace Slughorn sammelt Begabte wie andere Briefmarken. Seine Erinnerung an den jungen Tom Riddle ist sein dunkelstes Geheimnis - und der Schlüssel zum Sieg.', image:'cards/hp-107.jpg' },
+  7: { id:'hp-108', name:'Die Schlacht von Hogwarts', type:'Ereignis', subtype:'Das große Finale', house:'-', desc:'„Alle für einen, einer für alle." Der letzte Kampf: Schüler, Lehrer, Hauselfen und Phönixorden gegen Voldemorts Armee. Die Mauern von Hogwarts wanken, aber der Mut seiner Verteidiger nicht.', image:'cards/hp-108.jpg' },
+};
+
+// ===================== ALBUM BANDS =====================
+// Struktur des Sammelalbums: 7 Bände + Strandparty + Gründer
+// Jeder Band: Titel, Hintergrundbild, zugehörige Karten-IDs, Belohnungskarte
+const ALBUM_BANDS = [
+  { id: 1, title: 'Der Stein der Weisen', short: 'Band 1', icon: '📕', bg: 'album/bg-band1.jpg',
+    cards: ['hp-002','hp-006','hp-005','hp-007','hp-001','hp-010','hp-025','hp-029','hp-042','hp-055','hp-045','hp-057','hp-024','hp-020'],
+    reward: 1 },
+  { id: 2, title: 'Die Kammer des Schreckens', short: 'Band 2', icon: '📗', bg: 'album/bg-band2.jpg',
+    cards: ['hp-017','hp-013','hp-085','hp-040','hp-047','hp-058','hp-053','hp-070','hp-048','hp-067','hp-087','hp-034','hp-033'],
+    reward: 2 },
+  { id: 3, title: 'Der Gefangene von Askaban', short: 'Band 3', icon: '📘', bg: 'album/bg-band3.jpg',
+    cards: ['hp-009','hp-061','hp-089','hp-088','hp-078','hp-079','hp-080','hp-066','hp-052','hp-094','hp-046','hp-092','hp-091','hp-054','hp-043'],
+    reward: 3 },
+  { id: 4, title: 'Der Feuerkelch', short: 'Band 4', icon: '📙', bg: 'album/bg-band4.jpg',
+    cards: ['hp-004','hp-064','hp-065','hp-041','hp-044','hp-022','hp-035','hp-036','hp-038','hp-076','hp-030','hp-028','hp-021'],
+    reward: 4 },
+  { id: 5, title: 'Der Orden des Phönix', short: 'Band 5', icon: '📕', bg: 'album/bg-band5.jpg',
+    cards: ['hp-086','hp-012','hp-011','hp-014','hp-059','hp-074','hp-095','hp-068','hp-093','hp-062','hp-063','hp-049','hp-096','hp-097'],
+    reward: 5 },
+  { id: 6, title: 'Der Halbblutprinz', short: 'Band 6', icon: '📗', bg: 'album/bg-band6.jpg',
+    cards: ['hp-003','hp-008','hp-039','hp-037','hp-051','hp-056','hp-072','hp-071','hp-069','hp-031','hp-090','hp-098','hp-099'],
+    reward: 6 },
+  { id: 7, title: 'Die Heiligtümer des Todes', short: 'Band 7', icon: '📘', bg: 'album/bg-band7.jpg',
+    cards: ['hp-015','hp-016','hp-018','hp-019','hp-023','hp-026','hp-027','hp-032','hp-050','hp-060','hp-073','hp-075','hp-077','hp-100','hp-101'],
+    reward: 7 },
+  { id: 8, title: 'Strandparty', short: 'Strandparty', icon: '🏖️', bg: 'album/bg-beach.jpg',
+    cards: ['hp-fun-001','hp-fun-002','hp-fun-003','hp-fun-004','hp-fun-005','hp-fun-006','hp-fun-007','hp-fun-008','hp-fun-009','hp-fun-010','hp-fun-011','hp-fun-012','hp-fun-013','hp-fun-014','hp-fun-015','hp-fun-016','hp-fun-017','hp-fun-018','hp-fun-019','hp-fun-020','hp-fun-021','hp-fun-022','hp-fun-023','hp-fun-024','hp-fun-025','hp-fun-026','hp-fun-027','hp-fun-028','hp-fun-029','hp-fun-030'],
+    reward: null },
+  { id: 9, title: 'Die Hogwarts-Gründer', short: 'Gründer', icon: '🦡', bg: 'album/bg-founders.jpg',
+    cards: ['hp-081','hp-082','hp-083','hp-084'],
+    reward: null },
+];
+
+// ===================== FUNNY VARIANT CARDS (WIP) =====================
+const FUNNY_CARDS = {
+  'hp-002': { id:'hp-fun-001', name:'Strandparty-Harry', rarity:'legendary', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Harry im Hawaii-Hemd mit Sonnenbrille und Butterbier am Strand - der Dunkle Lord kann warten, die Wellen rufen!', image:'cards/hp-fun-001.jpg' },
+  'hp-003': { id:'hp-fun-002', name:'Strandparty-Dumbledore', rarity:'legendary', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Dumbledore in hawaiianischer Robe mit Cocktail und Sonnenbrille - selbst der groesste Zauberer ghoent sich malUrlaub.', image:'cards/hp-fun-002.jpg' },
+  'hp-004': { id:'hp-fun-003', name:'Strandparty-Voldemort', rarity:'legendary', type:'Charakter', subtype:'Strandparty', house:'Slytherin', desc:'Voldemort im Hawaii-Hemd mit Blumenkette und Cocktail - der Dunkle Lord ghoent sich mal eine Auszeit. Avada Kedavra? Feierabend!', image:'cards/hp-fun-003.jpg' },
+  'hp-001': { id:'hp-fun-004', name:'Strandparty-Snape', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Slytherin', desc:'Snape im zu kleinen Hawaii-Hemd mit Socken in Sandalen - sein miefigster Blick seit elf Jahren.', image:'cards/hp-fun-004.jpg' },
+  'hp-005': { id:'hp-fun-005', name:'Strandparty-Hermine', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Hermine am Strand mit Sonnenhut und Buch - selbst im Urlaub muss gelernt werden.', image:'cards/hp-fun-005.jpg' },
+  'hp-006': { id:'hp-fun-006', name:'Strandparty-Ron', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Ron am Strand-BBQ mit einem Berg Grillgut - der Hunger macht auch vor dem Meer nicht Halt.', image:'cards/hp-fun-006.jpg' },
+  'hp-007': { id:'hp-fun-007', name:'Strandparty-Hagrid', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Hagrid auf einem winzigen Handtuch mit einer riesigen Eistte - ein Anblick, fuer den es keine Kamera weit genug geben.', image:'cards/hp-fun-007.jpg' },
+  'hp-008': { id:'hp-fun-008', name:'Strandparty-McGonagall', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'McGonagall als Katze im Hawaii-Hemdchen mit Eis tee und strengem Blick auf die Moewen.', image:'cards/hp-fun-008.jpg' },
+  'hp-009': { id:'hp-fun-009', name:'Strandparty-Sirius', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Sirius als Hund beim Buddeln im Sand - ganz der frhliche Strand-Hund, Sand fliegt berallhin.', image:'cards/hp-fun-009.jpg' },
+  'hp-010': { id:'hp-fun-010', name:'Strandparty-Draco', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Slytherin', desc:'Draco mit Sonnenbrand und eingeschnapptem Gesicht - selbst die beste Sonnencreme hilft nicht gegen reines Slytherin-Pech.', image:'cards/hp-fun-010.jpg' },
+  'hp-012': { id:'hp-fun-011', name:'Strandparty-Luna', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Ravenclaw', desc:'Luna am Strand mit Muscheln und Sternchen-Bikini - sie sammelt Meeresschnecken fuer ihre naechste Erfindung.', image:'cards/hp-fun-011.jpg' },
+  'hp-013': { id:'hp-fun-012', name:'Strandparty-Ginny', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Ginny beim Beach-Volleyball - keine Karte bleibt ungeschlagen.', image:'cards/hp-fun-012.jpg' },
+  'hp-014': { id:'hp-fun-013', name:'Strandparty-Neville', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Neville baut die praechtigste Sandburg am ganzen Strand - mit Flaggchen und Algen-Garten.', image:'cards/hp-fun-013.jpg' },
+  'hp-015': { id:'hp-fun-014', name:'Strandparty-Fred', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Fred auf einer aufblasbaren Flamingo-Insel - Chaos pur, wo immer er auftaucht.', image:'cards/hp-fun-014.jpg' },
+  'hp-016': { id:'hp-fun-015', name:'Strandparty-George', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'George auf einem aufblasbaren Einhorn, Wasserpistole im Anschlag - der Wilde Westen trifft aufs Meer.', image:'cards/hp-fun-015.jpg' },
+  'hp-017': { id:'hp-fun-016', name:'Strandparty-Dobby', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'-', desc:'Dobby baut gluecklich eine Sandburg mit Muscheln und Socken-Flagge. Ein freier Elf, ein freier Strand!', image:'cards/hp-fun-016.jpg' },
+  'hp-061': { id:'hp-fun-017', name:'Strandparty-Lupin', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Remus Lupin am Strand mit einem dicken Schmoecker - entspannt, aber wachsam. Bei Vollmond lieber Abstand halten.', image:'cards/hp-fun-017.jpg' },
+  'hp-062': { id:'hp-fun-018', name:'Strandparty-Tonks', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Hufflepuff', desc:'Tonks mit knallpinken Bikini und einer riesigen Luftmatratze - ihre Frisur wechselt schneller als die Wellen.', image:'cards/hp-fun-018.jpg' },
+  'hp-063': { id:'hp-fun-019', name:'Strandparty-Bellatrix', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Slytherin', desc:'Bellatrix baut eine Sandburg - aber eindeutig mit dunkler Magie. Ihre Strandmuschel ist schwarz.', image:'cards/hp-fun-019.jpg' },
+  'hp-064': { id:'hp-fun-020', name:'Strandparty-Cedric', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Hufflepuff', desc:'Cedric beim Beach-Quidditch - fair, freundlich und trotzdem ungeschlagen. Der Sonnenuntergang steht ihm gut.', image:'cards/hp-fun-020.jpg' },
+  'hp-065': { id:'hp-fun-021', name:'Strandparty-Moody', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Mad-Eye Moody im Liegestuhl mit einem Fernglas - sein magisches Auge scannt parallel den Horizont. Stete Strandwachsamkeit!', image:'cards/hp-fun-021.jpg' },
+  'hp-085': { id:'hp-fun-022', name:'Strandparty-Lucius', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Slytherin', desc:'Lucius Malfoy am Strand mit Sonnenbrand, Hawaii-Hemd und Kokosnuss-Drink - der aristokratischste Todesser der Zaubererwelt sieht aus wie ein Tourist mit Sonnenstich.', image:'cards/hp-fun-022.jpg' },
+  'hp-086': { id:'hp-fun-023', name:'Strandparty-Umbridge', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Slytherin', desc:'Dolores Umbridge im pinken Blumen-Bikini mit Rüschen-Sarong - ihre Samtschleife sitzt perfekt, aber das Kokosnuss-Öl tropft auf die Kätzchen-Teller. Der Strand wird regiert.', image:'cards/hp-fun-023.jpg' },
+  'hp-087': { id:'hp-fun-024', name:'Strandparty-Filch', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'-', desc:'Argus Filch im altmodischen Streifen-Badeanzug im Planschbecken - Mrs Norris auf einer Mini-Schwimminsel neben ihm. Das Eis schmilzt, aber sein Gesichtsausdruck nicht.', image:'cards/hp-fun-024.jpg' },
+  'hp-088': { id:'hp-fun-025', name:'Strandparty-Trelawney', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Ravenclaw', desc:'Sybill Trelawney am Strand in wallenden bunten Tüchern über dem Badeanzug, Kristall-Sonnenbrille, legt Tarotkarten im Sand - die Wellen spülen gerade Das Ehepaar weg.', image:'cards/hp-fun-025.jpg' },
+  'hp-089': { id:'hp-fun-026', name:'Strandparty-Pettigrew', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Peter Pettigrew bis zum Hals im Sand vergraben, nur der Kopf und die silberne Hand lugen hervor. Eine winzige Sonnenmütze und Möwen über ihm - armseliger ging es nie.', image:'cards/hp-fun-026.jpg' },
+  'hp-090': { id:'hp-fun-027', name:'Strandparty-Pomfrey', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'-', desc:'Madam Pomfrey am Strand im weißen Cardigan über dem Badeanzug - sie behandelt eine Alraune mit Sonnencreme und verteilt Tee an Sonnenbrand-Opfer. Der Krankenflügel ist diesmal draußen.', image:'cards/hp-fun-027.jpg' },
+  'hp-060': { id:'hp-fun-028', name:'Strandparty-Kreacher', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'-', desc:'Kreacher in einem zu kleinen Hawaii-Hemd über dem Lendenschurz, riesiger Strohhut, sitzt grantig in einer Sandburg mit Eimer und Schäufelchen - aber das Butterbier schmeckt ihm.', image:'cards/hp-fun-028.jpg' },
+  'hp-098': { id:'hp-fun-029', name:'Strandparty-Fenrir', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'-', desc:'Fenrir Greyback als Tourist: zu kleines Hawaii-Hemd, Socken in Sandalen und ein schmelzendes Eis in der Hand. Sein mörderischer Blick gilt diesmal nur dem Sonnenbrand - und den Möwen.', image:'cards/hp-fun-029.jpg' },
+  'hp-101': { id:'hp-fun-030', name:'Strandparty-Xenophilius', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Ravenclaw', desc:'Xenophilius im psychedelischen Bademantel mit Muschel-Hut und Korken-Kette, den Klitterer unter dem Arm und einen Wasserball unterm anderen. Er erklärt gerade einer Qualle den Schrumpfhörnigen Schnarchkackler.', image:'cards/hp-fun-030.jpg' }
+};
+
+// ===================== TASKS =====================
+const TASKS = [
+  { id:'instrument', icon:'🎵', label:'Instrument geübt', needParent:false, adultOnly:false },
+  { id:'sport', icon:'🏃', label:'Sport gemacht', needParent:false, adultOnly:true },
+  { id:'haushalt', icon:'🧹', label:'Haushaltsheldentat vollbracht', needParent:false, adultOnly:true },
+  { id:'ruecken', icon:'💪', label:'Rückenübungen gemacht', needParent:false, adultOnly:true },
+  { id:'tisch', icon:'🍽️', label:'Tisch gedeckt oder abgeräumt', needParent:false, adultOnly:false },
+  { id:'sonstiges', icon:'✨', label:'Sonstiges (Mama oder Papa fragen)', needParent:true, adultOnly:false }
+];
+
+const RARITY = { common:'Gewöhnlich', rare:'Selten', legendary:'Legendär', relikt:'Relikt' };
+const RARITY_COLORS = { common:'#888', rare:'#2e7d32', legendary:'#c5a55a', relikt:'#9b59b6' };
+const PACK_RARITY = [
+  { rarity:'common', prob:77 },
+  { rarity:'rare', prob:17 },
+  { rarity:'legendary', prob:5 },
+  { rarity:'relikt', prob:1 }
+];
+const BONUS_PACK_RARITY = [
+  { rarity:'common', prob:58 },
+  { rarity:'rare', prob:34 },
+  { rarity:'legendary', prob:6 },
+  { rarity:'relikt', prob:2 }
+];
+const CARDS_PER_PACK = 3;
+const DEFAULT_PIN = '1234';
+const STORAGE_KEY = 'hp_magische_belohnungen';
+
+// ===================== STATE =====================
+let currentProfile = null;
+let pinBuffer = '';
+let pendingTask = null;
+let pendingSonstigesText = '';
+let familyPackAwarded = false;
+let currentPackCards = [];
+let currentFilter = 'all';
+
+// ===================== DATA MANAGEMENT =====================
+function loadData() {
+  try {
+    const raw = localStorage.getItem('magicCardsData');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+
+function initData() {
+  data = loadData();
+  if (!data) data = { pin: DEFAULT_PIN, profiles: {} };
+  if (!data.tradeOffers) data.tradeOffers = [];
+  // Try loading server backup in background (for newer version)
+  setTimeout(loadServerBackup, 500);
+}
+
+function loadServerBackup() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/api/load', true);
+  xhr.onload = function() {
+    if (xhr.status === 200 && xhr.responseText && xhr.responseText !== '{}') {
+      try {
+        var serverData = JSON.parse(xhr.responseText);
+        if (serverData && serverData.profiles && Object.keys(serverData.profiles).length > 0) {
+          // Only use server data if local has fewer profiles (e.g. after cache clear)
+          var localCount = Object.keys(data.profiles || {}).length;
+          var serverCount = Object.keys(serverData.profiles).length;
+          if (serverCount > localCount) {
+            data = serverData;
+            localStorage.setItem('magicCardsData', JSON.stringify(data));
+            if (typeof renderWelcome === 'function') renderWelcome();
+            console.log('✅ Daten vom Server wiederhergestellt (' + serverCount + ' Profile)');
+          }
+        }
+      } catch(e) { console.log('Server backup load error:', e); }
+    }
+  };
+  xhr.send();
+}
+
+function save() {
+  localStorage.setItem('magicCardsData', JSON.stringify(data));
+  // Also save to server for backup
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/save', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify(data));
+  } catch(e) { /* server save optional */ }
+}
+
+let data = null;
+initData();
+
+function getProfiles() {
+  return Object.keys(data.profiles || {});
+}
+
+function getProfile(name) {
+  if (!data.profiles[name]) {
+    data.profiles[name] = { tasks:[], packs:0, cards:{}, created:Date.now() };
+    save();
+  }
+  return data.profiles[name];
+}
+
+// ISO-Wochen-Key (z.B. "2026-W30") für die Familien-Wochenchallenge
+function getWeekKey(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return d.getUTCFullYear() + '-W' + String(weekNo).padStart(2, '0');
+}
+
+// Familien-Challenge: Wochen-Reset prüfen + aktuellen Stand liefern
+function getWeekChallenge() {
+  const wk = getWeekKey(new Date());
+  if (!data.weekChallenge || data.weekChallenge.week !== wk) {
+    data.weekChallenge = { week: wk, target: 20, count: 0, rewarded: false };
+    save();
+  }
+  return data.weekChallenge;
+}
+
+function renderWeekChallenge() {
+  const wc = getWeekChallenge();
+  const box = document.getElementById('weekChallenge');
+  if (!box) return;
+  const pct = Math.min(100, Math.round((wc.count / wc.target) * 100));
+  document.getElementById('wcFill').style.width = pct + '%';
+  document.getElementById('wcStatus').textContent = `${wc.count}/${wc.target}`;
+  const hint = document.getElementById('wcHint');
+  if (wc.rewarded) {
+    box.classList.add('done');
+    hint.textContent = '🎉 Geschafft! Alle haben ihr Familien-Pack erhalten. Nächste Woche geht es weiter!';
+  } else {
+    box.classList.remove('done');
+    hint.textContent = `Noch ${wc.target - wc.count} Aufgaben bis zum Familien-Pack für alle! 🎁`;
+  }
+}
+
+// ===================== NAVIGATION =====================
+function navigateTo(screen) {
+  // Hide all screens
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = ''; });
+  
+  // Special handling for parent
+  if (screen === 'parent-login') {
+    if (currentProfile === null) {
+      document.getElementById('screen-welcome').classList.add('active');
+      return;
+    }
+    document.getElementById('screen-parent-login').classList.add('active');
+    resetPinPad();
+  } else if (screen === 'parent-area') {
+    document.getElementById('screen-parent-area').classList.add('active');
+    renderParentArea();
+  } else if (screen === 'dashboard') {
+    document.getElementById('screen-dashboard').classList.add('active');
+    renderDashboard();
+  } else if (screen === 'packs') {
+    document.getElementById('screen-packs').classList.add('active');
+    document.getElementById('screen-packs').style.display = '';
+    renderPackScreen();
+  } else if (screen === 'album') {
+    document.getElementById('screen-album').classList.add('active');
+    renderAlbum();
+  } else if (screen === 'trades') {
+    document.getElementById('screen-trades').classList.add('active');
+    renderTrades();
+  } else if (screen === 'welcome') {
+    document.getElementById('screen-welcome').classList.add('active');
+  }
+
+  // Update bottom nav
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.screen === screen);
+  });
+  // Keep bottom nav hidden on welcome
+  document.getElementById('bottomNav').style.display = 
+    (screen === 'welcome') ? 'none' : 'flex';
+}
+
+// ===================== WELCOME / PROFILES =====================
+function renderWelcome() {
+  const grid = document.getElementById('profileGrid');
+  grid.innerHTML = '';
+  
+  const profiles = getProfiles();
+  profiles.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'profile-btn';
+    btn.textContent = name + ' (' + (data.profiles[name].type === 'adult' ? 'Erw' : 'Kind') + ')';
+    btn.onclick = () => selectProfile(name);
+    grid.appendChild(btn);
+  });
+
+  // Add profile button (unlimited)
+    if (profiles.length < 10) {
+      const addBtn = document.createElement('button');
+      addBtn.className = 'profile-btn add-profile';
+      addBtn.textContent = '➕ Neues Kind';
+      addBtn.onclick = () => promptNewProfile('child');
+      grid.appendChild(addBtn);
+
+      const adultBtn = document.createElement('button');
+      adultBtn.className = 'profile-btn add-profile';
+      adultBtn.textContent = '👤 Erwachsene/r';
+      adultBtn.onclick = () => promptNewProfile('adult');
+      grid.appendChild(adultBtn);
+    }
+
+    if (profiles.length === 0) {
+      // No profiles yet, show a nicer prompt
+      grid.innerHTML = '';
+      const addBtn = document.createElement('button');
+      addBtn.className = 'profile-btn';
+      addBtn.textContent = '➕ Neues Kind';
+      addBtn.onclick = () => promptNewProfile('child');
+      grid.appendChild(addBtn);
+
+      const adultBtn = document.createElement('button');
+      adultBtn.className = 'profile-btn';
+      adultBtn.textContent = '👤 Erwachsene/r';
+      adultBtn.onclick = () => promptNewProfile('adult');
+      grid.appendChild(adultBtn);
+  }
+}
+
+function promptNewProfile(type) {
+  const name = prompt('Wie heißt du?', '');
+  if (name && name.trim()) {
+    const clean = name.trim();
+    if (data.profiles[clean]) {
+      alert('Dieser Name existiert bereits!');
+      return;
+    }
+    data.profiles[clean] = { tasks:[], packs:0, cards:{}, created:Date.now(), type:type };
+    save();
+    selectProfile(clean);
+  }
+}
+
+function selectProfile(name) {
+  currentProfile = name;
+  navigateTo('dashboard');
+}
+
+// ===================== DASHBOARD =====================
+function renderDashboard() {
+  if (!currentProfile) return;
+  const prof = getProfile(currentProfile);
+  document.getElementById('dashName').textContent = currentProfile;
+
+  const taskCount = prof.tasks ? prof.tasks.length : 0;
+  const cardCount = Object.values(prof.cards || {}).reduce((a,b) => a + b, 0);
+  const uniqueCount = Object.keys(prof.cards || {}).length;
+  const packCount = prof.packs || 0;
+  const bonusCount = prof.bonusPacks || 0;
+  const totalPacks = packCount + bonusCount;
+
+  document.getElementById('dashPackPlural').textContent = totalPacks === 1 ? '' : 's';
+  document.getElementById('dashPackCount').textContent = totalPacks;
+  document.getElementById('statTasks').textContent = taskCount;
+  document.getElementById('statCards').textContent = cardCount;
+  document.getElementById('statUnique').textContent = `${uniqueCount}/${CARD_DB.length + Object.keys(FUNNY_CARDS).length}`;
+
+  // Streaks
+  const today = new Date().toISOString().slice(0,10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  const instStreak = prof.instrumentStreak || 0;
+  const lastDate = prof.lastInstrumentDate;
+  const isActive = lastDate === today || lastDate === yesterday;
+  const displayStreak = isActive ? instStreak : 0;
+  document.getElementById('streakBox').style.display = 'flex';
+  document.getElementById('instrumentStreakNum').textContent = displayStreak;
+  document.getElementById('weekStreakBox').style.display = displayStreak > 0 ? 'flex' : 'none';
+  document.getElementById('weekStreakNum').textContent = displayStreak;
+  // Show remaining days until next bonus pack
+  const remaining = 7 - (displayStreak % 7);
+  const hint = remaining === 7 ? 'Morgen gibt es ein Bonus-Pack!' : `${remaining} Tage bis zum nächsten Bonus-Pack`;
+  document.getElementById('weekStreakHint').textContent = hint;
+
+  // Familien-Wochenchallenge
+  renderWeekChallenge();
+
+  // Task buttons
+  const grid = document.getElementById('taskGrid');
+  grid.innerHTML = '';
+  const isAdult = prof.type === 'adult';
+  const visibleTasks = TASKS.filter(t => isAdult ? t.adultOnly : !t.adultOnly);
+  visibleTasks.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'task-btn';
+    btn.innerHTML = `
+      <span class="task-icon">${t.icon}</span>
+      <span class="task-label">${t.label}</span>
+      <span class="task-arrow">›</span>
+    `;
+    btn.onclick = () => openTaskModal(t);
+    grid.appendChild(btn);
+  });
+}
+
+// ===================== TASK MODAL =====================
+function openTaskModal(task) {
+  pendingTask = task;
+  document.getElementById('taskModalTitle').textContent = 'Aufgabe bestätigen';
+  document.getElementById('taskModalText').textContent = `Hast du «${task.label}» erledigt?`;
+  
+  const extra = document.getElementById('taskModalExtra');
+  if (task.needParent) {
+    extra.style.display = 'block';
+    document.getElementById('taskModalInput').value = '';
+  } else {
+    extra.style.display = 'none';
+  }
+  
+  document.getElementById('taskModal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('taskModal').classList.remove('active');
+  pendingTask = null;
+}
+
+function confirmTask() {
+  if (!pendingTask) return;
+
+  if (pendingTask.needParent) {
+    const text = document.getElementById('taskModalInput').value.trim();
+    if (!text) {
+      alert('Bitte schreibe, was du gemacht hast.');
+      return;
+    }
+    closeModal();
+    completeTask(text);
+  } else {
+    const label = pendingTask.label;
+    closeModal();
+    completeTask(label);
+  }
+}
+
+function closeParentConfirmModal() {
+  document.getElementById('parentConfirmModal').classList.remove('active');
+  pendingSonstigesText = '';
+}
+
+function submitParentConfirm() {
+  const pin = document.getElementById('parentConfirmPin').value;
+  if (pin === data.pin) {
+    document.getElementById('parentConfirmModal').classList.remove('active');
+    completeTask(pendingSonstigesText || pendingTask.label);
+    pendingSonstigesText = '';
+  } else {
+    document.getElementById('parentConfirmError').textContent = '❌ Falsche PIN!';
+  }
+}
+
+function completeTask(label) {
+  const prof = getProfile(currentProfile);
+  if (!prof.tasks) prof.tasks = [];
+  const today = new Date().toISOString().slice(0,10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+
+  prof.tasks.push({
+    label: label,
+    date: today,
+    time: Date.now()
+  });
+  prof.packs = (prof.packs || 0) + 1;
+
+  // Familien-Wochenchallenge: jede Aufgabe zählt (auch Erwachsene)
+  const wk = getWeekKey(new Date());
+  if (!data.weekChallenge || data.weekChallenge.week !== wk) {
+    data.weekChallenge = { week: wk, target: 20, count: 0, rewarded: false };
+  }
+  data.weekChallenge.count++;
+  if (data.weekChallenge.count >= data.weekChallenge.target && !data.weekChallenge.rewarded) {
+    data.weekChallenge.rewarded = true;
+    // Familien-Pack für ALLE Profile
+    Object.keys(data.profiles).forEach(n => {
+      if (!data.profiles[n].bonusPacks) data.profiles[n].bonusPacks = 0;
+      data.profiles[n].bonusPacks++;
+    });
+    familyPackAwarded = true;
+  }
+
+  // Track instrument/ruecken streak + perfect week
+  let bonusAwarded = false;
+  if (label === 'Instrument geübt' || label === 'Rückenübungen gemacht') {
+    if (prof.lastInstrumentDate !== today) {
+      if (prof.lastInstrumentDate === yesterday) {
+        prof.instrumentStreak = (prof.instrumentStreak || 0) + 1;
+      } else {
+        prof.instrumentStreak = 1;
+      }
+      prof.lastInstrumentDate = today;
+
+      // Perfect week bonus: every 7 consecutive days of practice
+      if (prof.instrumentStreak % 7 === 0 && prof.instrumentStreak > 0) {
+        prof.bonusPacks = (prof.bonusPacks || 0) + 1;
+        bonusAwarded = true;
+      }
+    }
+  }
+  save();
+
+  // 10% chance for a random bonus card on any completed task
+  let bonusCard = null;
+  if (Math.random() < 0.1) {
+    const rarity = rollRarity(false);
+    const pool = CARD_DB.filter(c => c.rarity === rarity);
+    if (pool.length > 0) {
+      bonusCard = pool[Math.floor(Math.random() * pool.length)];
+      if (!prof.cards) prof.cards = {};
+      prof.cards[bonusCard.id] = (prof.cards[bonusCard.id] || 0) + 1;
+      save();
+    }
+  }
+
+  // Show success flash
+  let flashText = '⭐ Aufgabe erledigt! Du erhältst ein Pack!';
+  if (familyPackAwarded) {
+    flashText = '🎉 Familien-Challenge geschafft! Alle haben ein Familien-Pack mit extra seltenen Karten erhalten!';
+  } else if (bonusCard && bonusAwarded) {
+    flashText = '🎉 ' + prof.instrumentStreak + ' Tage am Stück! Bonus-Pack + 🎁 Extra-Karte: ' + bonusCard.name;
+  } else if (bonusCard) {
+    flashText = '⭐ Aufgabe erledigt! Du erhältst ein Pack + 🎁 Extra-Karte: ' + bonusCard.name + '!';
+  } else if (bonusAwarded) {
+    flashText = '🎉 ' + prof.instrumentStreak + ' Tage am Stück! Bonus-Pack mit extra seltenen Karten erhalten!';
+  }
+  familyPackAwarded = false;
+  const flash = document.getElementById('successFlash');
+  document.getElementById('successFlashText').textContent = flashText;
+  flash.style.display = 'block';
+  setTimeout(() => {
+    flash.style.display = 'none';
+    renderDashboard();
+    if (bonusCard) {
+      setTimeout(() => showCardReveal([{...bonusCard, isNew: !prof.cards[bonusCard.id]}], () => { renderDashboard(); }), 300);
+    }
+  }, 2000);
+}
+
+// ===================== PACK OPENING =====================
+function renderPackScreen() {
+  if (!currentProfile) return;
+  const prof = getProfile(currentProfile);
+  const packs = prof.packs || 0;
+  const bonusPacks = prof.bonusPacks || 0;
+  
+  document.getElementById('packCountBig').textContent = `Du hast ${packs} Pack${packs === 1 ? '' : 's'}`;
+  
+  const bonusIndicator = document.getElementById('bonusPackIndicator');
+  if (bonusPacks > 0) {
+    bonusIndicator.style.display = 'block';
+    bonusIndicator.textContent = '⭐ ' + bonusPacks + ' Bonus-Pack mit extra seltenen Karten!';
+  } else {
+    bonusIndicator.style.display = 'none';
+  }
+  
+  const hasPacks = packs > 0 || bonusPacks > 0;
+
+  if (!hasPacks) {
+    document.getElementById('packIdle').style.display = 'none';
+    document.getElementById('packOpening').classList.remove('active');
+    document.getElementById('cardReveal').classList.remove('active');
+    document.getElementById('packEmpty').style.display = 'block';
+  } else {
+    document.getElementById('packIdle').style.display = 'block';
+    document.getElementById('packOpening').classList.remove('active');
+    document.getElementById('cardReveal').classList.remove('active');
+    document.getElementById('packEmpty').style.display = 'none';
+  }
+}
+
+function openPack() {
+  const prof = getProfile(currentProfile);
+  if (!prof.packs || prof.packs < 1) {
+    if (!prof.bonusPacks || prof.bonusPacks < 1) return;
+  }
+  
+  let isBonus = false;
+  if (prof.bonusPacks && prof.bonusPacks > 0) {
+    prof.bonusPacks--;
+    isBonus = true;
+  }
+  prof.packs--;
+
+  currentPackCards = [];
+  if (!prof.cards) prof.cards = {};
+  
+  for (let i = 0; i < CARDS_PER_PACK; i++) {
+    const rarity = rollRarity(isBonus);
+    const pool = CARD_DB.filter(c => c.rarity === rarity);
+    if (pool.length === 0) continue;
+    const card = pool[Math.floor(Math.random() * pool.length)];
+    const isNew = !prof.cards[card.id];
+    currentPackCards.push({ ...card, isNew });
+    prof.cards[card.id] = (prof.cards[card.id] || 0) + 1;
+  }
+  save();
+
+  document.getElementById('packIdle').style.display = 'none';
+  document.getElementById('packOpening').classList.add('active');
+  document.getElementById('cardReveal').classList.remove('active');
+
+  setTimeout(() => {
+    document.getElementById('packOpening').classList.remove('active');
+    renderRevealedCards();
+    document.getElementById('cardReveal').classList.add('active');
+  }, 1200);
+}
+
+
+function rollRarity(bonus) {
+  const table = bonus ? BONUS_PACK_RARITY : PACK_RARITY;
+  const r = Math.random() * 100;
+  let cumulative = 0;
+  for (const tier of table) {
+    cumulative += tier.prob;
+    if (r < cumulative) return tier.rarity;
+  }
+  return 'common';
+}
+
+function renderRevealedCards() {
+  const container = document.getElementById('revealCards');
+  container.innerHTML = '';
+  
+  currentPackCards.forEach(card => {
+    const div = document.createElement('div');
+    div.className = 'mini-card rarity-' + card.rarity + getEffectClass(card.rarity);
+    div.onclick = () => showCardDetail(card.id);
+    
+    const rarityName = RARITY[card.rarity] || 'Gewöhnlich';
+    const hasImage = card.image && card.image !== '';
+    
+    const effectHTML = getEffectHTML(card.rarity);
+    div.innerHTML = effectHTML +
+      '<div class="mini-card-img">' +
+        (hasImage ? '<img src="' + card.image + '" alt="' + card.name + '" loading="lazy">' : getCardEmoji(card)) +
+      '</div>' +
+      '<div class="mini-card-info">' +
+        '<div class="mini-name">' + card.name + (card.isNew ? '<span class="new-badge">NEU</span>' : '') + '</div>' +
+        '<div class="mini-rarity" style="color:' + RARITY_COLORS[card.rarity] + '">' + rarityName + '</div>' +
+      '</div>';
+    container.appendChild(div);
+  });
+}
+
+function afterPackOpen() {
+  renderPackScreen();
+  renderDashboard();
+  renderAlbum();
+}
+
+// ===================== COLLECTION =====================
+
+// Generate particle HTML for magical effects
+function getEffectHTML(rarity) {
+  if (rarity === 'legendary') {
+    return '<div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div>';
+  }
+  if (rarity === 'relikt') {
+    return '<div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div>';
+  }
+  if (rarity === 'rare') {
+    return '<div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div>';
+  }
+  return '';
+}
+
+function getEffectClass(rarity) {
+  if (rarity === 'legendary') return ' effect-legendary';
+  if (rarity === 'relikt') return ' effect-relikt';
+  if (rarity === 'rare') return ' effect-rare';
+  return '';
+}
+
+function renderCollection(filter) {
+  if (!currentProfile) return;
+  const prof = getProfile(currentProfile);
+  const owned = prof.cards || {};
+  const totalUnique = Object.keys(owned).length;
+  const totalCards = CARD_DB.length + Object.keys(FUNNY_CARDS).length;
+  
+  document.getElementById('collectionCount').textContent = `${totalUnique}/${totalCards}`;
+  document.getElementById('collectionProgress').style.width = `${(totalUnique / totalCards) * 100}%`;
+
+  let cards;
+  if (currentFilter === 'funny') {
+    // Only show funny/strandparty cards
+    cards = Object.values(FUNNY_CARDS).map(fc => ({
+      ...fc,
+      count: owned[fc.id] || 0
+    }));
+  } else {
+    // Show base cards
+    cards = CARD_DB.map(c => ({
+      ...c,
+      count: owned[c.id] || 0
+    }));
+    // Also add owned funny cards so they appear in 'Alle'
+    Object.values(FUNNY_CARDS).forEach(fc => {
+      if (owned[fc.id]) {
+        cards.push({ ...fc, count: owned[fc.id] });
+      }
+    });
+  }
+
+  if (filter) currentFilter = filter;
+  if (currentFilter !== 'all' && currentFilter !== 'funny') {
+    cards = cards.filter(c => c.rarity === currentFilter);
+  }
+
+  // Sort by rarity (legendary first)
+  const rarityOrder = { relikt:0, legendary:1, rare:2, common:3 };
+  cards.sort((a, b) => {
+    const aOwned = a.count > 0 ? 0 : 1;
+    const bOwned = b.count > 0 ? 0 : 1;
+    if (aOwned !== bOwned) return aOwned - bOwned;
+    return rarityOrder[a.rarity] - rarityOrder[b.rarity];
+  });
+
+  const grid = document.getElementById('collectionGrid');
+  grid.innerHTML = '';
+
+  const hasAny = cards.some(c => c.count > 0);
+  document.getElementById('collectionEmpty').style.display = hasAny ? 'none' : 'block';
+
+  cards.forEach(card => {
+    const div = document.createElement('div');
+    div.onclick = card.count > 0 ? () => showCardDetail(card.id) : null;
+    div.className = (card.count > 0 ? 'collection-card' : 'collection-card unowned') + getEffectClass(card.rarity);
+
+    const hasImage = card.image && card.image !== '';
+    const rarityName = RARITY[card.rarity] || 'Gewöhnlich';
+    
+    // Magical effects
+    const effectHTML = getEffectHTML(card.rarity);
+    div.innerHTML = effectHTML + `
+      <div class="collection-card-img">
+        ${card.count > 0
+          ? (hasImage ? `<img src="${card.image}" alt="${card.name}" loading="lazy">` : getCardEmoji(card))
+          : '❓'}
+      </div>
+      <div class="collection-card-name">${card.name}</div>
+      ${card.count > 0 ? `<div class="count-badge">${card.count}</div>` : ''}
+      ${(prof.animatedPortraits && prof.animatedPortraits[card.id]) ? '<div class="anim-badge">🎬</div>' : ''}
+    `;
+    grid.appendChild(div);
+  });
+
+  // Update filter buttons
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === currentFilter);
+  });
+}
+
+function setFilter(filter) {
+  currentFilter = filter;
+  renderCollection();
+}
+
+// ===================== ALBUM =====================
+let albumCurrentBand = 0;
+let albumCurrentPage = 0;
+let albumPageCount = 1;
+// Anzahl-Badge: Präferenz NUR im Browser (kein Server-Sync)
+let albumShowCounts = false;
+try { albumShowCounts = localStorage.getItem('hpAlbumShowCounts') === '1'; } catch(e) {}
+
+function toggleAlbumCounts() {
+  albumShowCounts = !albumShowCounts;
+  try { localStorage.setItem('hpAlbumShowCounts', albumShowCounts ? '1' : '0'); } catch(e) {}
+  const btn = document.getElementById('albumCountToggle');
+  if (btn) btn.classList.toggle('active', albumShowCounts);
+  renderAlbumBand();
+}
+
+function renderAlbum() {
+  if (!currentProfile) return;
+  const prof = getProfile(currentProfile);
+  const owned = prof.cards || {};
+
+  // Gesamtfortschritt: wie viele Album-Karten (ohne Belohnungen) besessen
+  let ownedTotal = 0, cardsTotal = 0;
+  ALBUM_BANDS.forEach(b => {
+    b.cards.forEach(id => { cardsTotal++; if (owned[id] > 0) ownedTotal++; });
+  });
+  document.getElementById('albumCount').textContent = `${ownedTotal}/${cardsTotal}`;
+
+  // Toggle-Zustand setzen
+  const toggleBtn = document.getElementById('albumCountToggle');
+  if (toggleBtn) {
+    toggleBtn.classList.toggle('active', albumShowCounts);
+    toggleBtn.onclick = toggleAlbumCounts;
+  }
+
+  // Tabs bauen
+  const tabs = document.getElementById('albumTabs');
+  tabs.innerHTML = '';
+  ALBUM_BANDS.forEach((b, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'album-tab' + (i === albumCurrentBand ? ' active' : '');
+    btn.innerHTML = `${b.icon} ${b.short}`;
+    btn.onclick = () => selectAlbumBand(i);
+    tabs.appendChild(btn);
+  });
+
+  // Aktiven Band rendern
+  renderAlbumBand();
+}
+
+function selectAlbumBand(i) {
+  albumCurrentBand = i;
+  albumCurrentPage = 0;
+  // Tabs aktualisieren
+  document.querySelectorAll('.album-tab').forEach((t, idx) => {
+    t.classList.toggle('active', idx === i);
+  });
+  renderAlbumBand();
+}
+
+function renderAlbumBand() {
+  const band = ALBUM_BANDS[albumCurrentBand];
+  if (!band) return;
+  const prof = getProfile(currentProfile);
+  const owned = prof.cards || {};
+  const animated = prof.animatedPortraits || {};
+
+  // Hintergrund setzen
+  document.getElementById('albumArea').style.backgroundImage = `url('${band.bg}')`;
+
+  // Seiten aufteilen: max 15 Slots pro Seite (14 Karten + 1 Belohnung)
+  const slots = band.cards.map(id => ({ id, owned: owned[id] > 0 }));
+  const pages = [];
+  for (let i = 0; i < slots.length; i += 14) {
+    pages.push(slots.slice(i, i + 14));
+  }
+  // Letzte Seite bekommt das Belohnungsfeld
+  albumPageCount = pages.length;
+
+  const container = document.getElementById('albumPages');
+  container.innerHTML = '';
+
+  pages.forEach((pageSlots, pi) => {
+    const page = document.createElement('div');
+    page.className = 'album-page' + (pi === albumCurrentPage ? ' active' : (pi < albumCurrentPage ? ' left' : ' right'));
+
+    // Band-Kopf (zählt den GESAMTEN Band, nicht nur die Seite)
+    const head = document.createElement('div');
+    head.className = 'album-band-head';
+    const ownedInBand = band.cards.filter(id => owned[id] > 0).length;
+    head.innerHTML = `
+      <div class="album-band-title">${band.title}</div>
+      <div class="album-band-sub">${band.short} · ${ownedInBand} von ${band.cards.length} Karten</div>
+    `;
+    page.appendChild(head);
+
+    // Grid
+    const grid = document.createElement('div');
+    grid.className = 'album-grid';
+    pageSlots.forEach(s => {
+      const card = getCardById(s.id);
+      if (!card) return;
+      const slot = document.createElement('div');
+      if (s.owned) {
+        slot.className = 'album-slot';
+        slot.innerHTML = `<img src="${card.image}" alt="${card.name}" loading="lazy">`;
+        // Anzahl-Badge oben links, wenn mehrfach besessen und Toggle aktiv
+        if (albumShowCounts && owned[s.id] > 1) {
+          const badge = document.createElement('span');
+          badge.className = 'album-count';
+          badge.textContent = owned[s.id];
+          slot.appendChild(badge);
+        }
+      } else {
+        const rar = card.rarity || 'common';
+        slot.className = 'album-slot empty-' + rar;
+      }
+      // Nur besessene Karten sind klickbar
+      if (s.owned) slot.onclick = () => showCardDetail(s.id);
+      grid.appendChild(slot);
+    });
+
+    // Belohnungsfeld auf der letzten Seite (nur wenn Band eine Belohnung hat)
+    if (pi === pages.length - 1 && band.reward) {
+      const reward = REWARD_CARDS[band.reward];
+      const rewardSlot = document.createElement('div');
+      const rewardOwned = owned[reward.id] > 0;
+      if (rewardOwned) {
+        rewardSlot.className = 'album-slot-reward';
+        rewardSlot.innerHTML = `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
+        rewardSlot.onclick = () => showCardDetail(reward.id);
+      } else {
+        rewardSlot.className = 'album-slot-reward locked';
+        rewardSlot.onclick = () => claimBandReward(band);
+      }
+      grid.appendChild(rewardSlot);
+    }
+
+    page.appendChild(grid);
+    container.appendChild(page);
+  });
+
+  // Blätter-Navigation
+  const nav = document.getElementById('albumNav');
+  document.getElementById('albumIndicator').textContent = `${albumCurrentPage + 1} / ${albumPageCount}`;
+  if (albumPageCount > 1) {
+    nav.style.display = 'flex';
+    document.getElementById('albumPrev').classList.toggle('disabled', albumCurrentPage === 0);
+    document.getElementById('albumNext').classList.toggle('disabled', albumCurrentPage === albumPageCount - 1);
+  } else {
+    nav.style.display = 'none';
+  }
+}
+
+function albumFlip(dir) {
+  const target = albumCurrentPage + dir;
+  if (target < 0 || target >= albumPageCount) return;
+  albumCurrentPage = target;
+  document.querySelectorAll('.album-page').forEach((p, i) => {
+    p.classList.remove('active', 'left', 'right');
+    if (i === albumCurrentPage) p.classList.add('active');
+    else if (i < albumCurrentPage) p.classList.add('left');
+    else p.classList.add('right');
+  });
+  document.getElementById('albumIndicator').textContent = `${albumCurrentPage + 1} / ${albumPageCount}`;
+  document.getElementById('albumPrev').classList.toggle('disabled', albumCurrentPage === 0);
+  document.getElementById('albumNext').classList.toggle('disabled', albumCurrentPage === albumPageCount - 1);
+}
+
+// Belohnung erst beim KLICK auf das leere Feld prüfen und gewähren
+function claimBandReward(band) {
+  if (!currentProfile) return;
+  const prof = getProfile(currentProfile);
+  const owned = prof.cards || {};
+  if (!band.reward) return;
+  const reward = REWARD_CARDS[band.reward];
+  if (!reward) return;
+  if (owned[reward.id] > 0) return; // schon vergeben
+
+  const missing = band.cards.filter(id => !owned[id] || owned[id] < 1);
+  if (missing.length > 0) {
+    // Noch nicht komplett – magischer Hinweis
+    const missingCount = missing.length;
+    const missingName = missingCount === 1
+      ? 'Es fehlt noch 1 Karte in diesem Band.'
+      : `Es fehlen noch ${missingCount} Karten in diesem Band.`;
+    alert('🔒 Noch nicht freigeschaltet!\n' + missingName + '\nSammle alle Karten, dann erwacht die Belohnung!');
+    return;
+  }
+
+  // Band komplett -> Belohnung gewähren
+  owned[reward.id] = 1;
+  save();
+  renderAlbumBand();
+  setTimeout(() => {
+    if (confirm('✨ ' + reward.name + ' ist freigeschaltet!\nMöchtest du sie dir ansehen?')) {
+      showCardDetail(reward.id);
+    }
+  }, 100);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const prevBtn = document.getElementById('albumPrev');
+  const nextBtn = document.getElementById('albumNext');
+  if (prevBtn) prevBtn.onclick = () => albumFlip(-1);
+  if (nextBtn) nextBtn.onclick = () => albumFlip(1);
+});
+
+// ===================== CARD DETAIL =====================
+// --- Animierte Porträt-Videos für Relikt-Karten ---
+const ANIMATED_PORTRAITS = {
+  'hp-081': 'cards/hp-081-anim-5s.mp4',
+  'hp-082': 'cards/hp-082-anim-5s.mp4',
+  'hp-083': 'cards/hp-083-anim-5s.mp4',
+  'hp-084': 'cards/hp-084-anim-5s.mp4',
+};
+// Videos der Band-Belohnungskarten (immer animiert)
+const REWARD_VIDEOS = {
+  'hp-102': 'cards/hp-102-anim-5s.mp4',
+  'hp-103': 'cards/hp-103-anim-5s.mp4',
+  'hp-104': 'cards/hp-104-anim-3s.mp4',
+  'hp-105': 'cards/hp-105-anim-5s.mp4',
+  'hp-106': 'cards/hp-106-anim-3s.mp4',
+  'hp-107': 'cards/hp-107-anim-5s.mp4',
+  'hp-108': 'cards/hp-108-anim-3s.mp4',
+};
+
+function showCardDetail(cardId) {
+  let card = getCardById(cardId);
+  if (!card) return;
+
+  // Belohnungskarten erkennen (keine Rarität -> eigene Kennzeichnung)
+  const isRewardCard = Object.values(REWARD_CARDS).some(c => c.id === cardId);
+
+  const prof = getProfile(currentProfile);
+  const owned = prof.cards || {};
+  const count = owned[cardId] || 0;
+  const isAnimated = prof.animatedPortraits && prof.animatedPortraits[cardId];
+  const rarityName = isRewardCard ? 'Band-Belohnung' : (RARITY[card.rarity] || 'Gewöhnlich');
+  const rarityColor = isRewardCard ? '#e0c878' : RARITY_COLORS[card.rarity];
+
+  const overlay = document.getElementById('cardDetailOverlay');
+  const hasImage = card.image && card.image !== '';
+  overlay.dataset.cardId = cardId;
+
+  // Belohnungskarten: immer Video; Relikte: Video nur nach Magischem Upgrade
+  let videoSrc = null;
+  if (REWARD_VIDEOS[cardId]) videoSrc = REWARD_VIDEOS[cardId];
+  else if (isAnimated && ANIMATED_PORTRAITS[cardId]) videoSrc = ANIMATED_PORTRAITS[cardId];
+
+  document.getElementById('detailImg').innerHTML = videoSrc
+    ? `<video src="${videoSrc}" autoplay loop muted playsinline></video>`
+    : hasImage 
+    ? `<img src="${card.image}" alt="${card.name}">` 
+    : '🃏';
+  document.getElementById('detailName').textContent = card.name;
+  document.getElementById('detailRarity').textContent = rarityName;
+  document.getElementById('detailRarity').style.color = rarityColor;
+  document.getElementById('detailType').textContent = `${card.type} · ${card.subtype}`;
+  document.getElementById('detailHouse').textContent = card.house === '—' ? '' : `🏠 ${card.house}`;
+  document.getElementById('detailHouse').style.display = card.house === '—' ? 'none' : 'inline-block';
+  document.getElementById('detailDesc').textContent = card.desc;
+  document.getElementById('detailCopies').textContent = count > 0 
+    ? `Du besitzt diese Karte ${count}x` 
+    : 'Du besitzt diese Karte noch nicht.';
+
+  // Trade/upgrade button
+  const tradeDiv = document.getElementById('detailTrade');
+  const tradeBtn = document.getElementById('detailTradeBtn');
+  const tradeInfo = document.getElementById('detailTradeInfo');
+  if (count > 0 && card.type === 'Charakter' && count >= 3) {
+    const funny = FUNNY_CARDS[card.id];
+    if (funny) {
+      tradeBtn.textContent = '⬆ Zu ' + funny.name + ' upgraden!';
+      tradeInfo.textContent = 'Tausche 3x ' + card.name + ' gegen diese lustige Variante';
+      tradeDiv.style.display = 'block';
+    } else {
+      tradeDiv.style.display = 'none';
+    }
+  } else if (count >= 2 && ANIMATED_PORTRAITS[card.id] && !isAnimated) {
+    tradeBtn.textContent = '✨ Magisches Upgrade ✨';
+    tradeInfo.textContent = 'Verschmelze 2x ' + card.name + ' zu einem lebendigen Zaubererporträt – die Karte erwacht zum Leben!';
+    tradeBtn.className = 'btn-magic-upgrade';
+    tradeDiv.style.display = 'block';
+  } else if (count > 0 && card.type !== 'Charakter' && count >= 2) {
+    tradeBtn.textContent = '🔄 2:1 Eintauschen';
+    tradeInfo.textContent = 'Tausche 2x ' + card.name + ' gegen eine zufällige neue Karte';
+    tradeDiv.style.display = 'block';
+  } else {
+    tradeDiv.style.display = 'none';
+  }
+  
+  // Trade offer button (for any owned card – NICHT für Belohnungskarten)
+  const tradeOfferDiv = document.getElementById('detailTradeOffer');
+  if (count > 0 && currentProfile && !isRewardCard) {
+    tradeOfferDiv.style.display = 'block';
+  } else {
+    tradeOfferDiv.style.display = 'none';
+  }
+
+  // Set effect class + particles on detail box
+  const detailBox = document.querySelector('.card-detail-box');
+  if (detailBox) {
+    detailBox.className = 'card-detail-box' + (isRewardCard ? ' rarity-legendary' : getEffectClass(card.rarity));
+    detailBox.querySelectorAll('.spark, .star').forEach(el => el.remove());
+    const eHTML = isRewardCard ? getEffectHTML('legendary') : getEffectHTML(card.rarity);
+    if (eHTML) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = eHTML;
+      while (tmp.firstChild) detailBox.insertBefore(tmp.firstChild, detailBox.firstChild);
+    }
+  }
+  overlay.classList.add('active');
+  document.getElementById('detailImg').innerHTML
+}
+
+function getFunnyCardId(cardId) {
+  const funny = FUNNY_CARDS[cardId];
+  return funny ? funny.id : null;
+}
+
+function executeTrade() {
+  if (!currentProfile) return;
+  const overlay = document.getElementById('cardDetailOverlay');
+  const cardId = overlay.dataset.cardId;
+  if (!cardId) return;
+  
+  const card = CARD_DB.find(c => c.id === cardId);
+  if (!card) return;
+  
+  const prof = getProfile(currentProfile);
+  const owned = prof.cards || {};
+  const count = owned[cardId] || 0;
+  
+  if (card.type === 'Charakter' && count >= 3) {
+    // Upgrade to funny variant
+    const funny = FUNNY_CARDS[card.id];
+    if (!funny) return;
+    if (!confirm('3x ' + card.name + ' gegen 1x ' + funny.name + ' tauschen?')) return;
+    owned[cardId] = (owned[cardId] || 0) - 3;
+    if (owned[cardId] <= 0) delete owned[cardId];
+    owned[funny.id] = (owned[funny.id] || 0) + 1;
+    save();
+    closeCardDetail();
+    setTimeout(() => showCardReveal([{...funny, isNew: true}], () => {
+      renderCollection();
+      renderAlbum();
+      renderDashboard();
+    }), 100);
+  } else if (count >= 2 && ANIMATED_PORTRAITS[cardId] && !(prof.animatedPortraits && prof.animatedPortraits[cardId])) {
+    // Upgrade to animated portrait
+    const card = CARD_DB.find(c => c.id === cardId);
+    if (!card) return;
+    if (!confirm('Bist du bereit? 2x ' + card.name + ' verschmelzen zu einem lebendigen Zaubererporträt! ✨')) return;
+    owned[cardId] = (owned[cardId] || 0) - 1;
+    prof.animatedPortraits = prof.animatedPortraits || {};
+    prof.animatedPortraits[cardId] = true;
+    save();
+    closeCardDetail();
+    setTimeout(() => renderCollection(), 100);
+  } else if (card.type !== 'Charakter' && count >= 2) {
+    // Trade 2:1 for random card with pack rarity distribution
+    if (!confirm('2x ' + card.name + ' gegen 1 zufällige Karte tauschen?')) return;
+    owned[cardId] = (owned[cardId] || 0) - 2;
+    if (owned[cardId] <= 0) delete owned[cardId];
+    // Pick random card from base set (no funny cards) with pack rarity odds
+    let rarityPool = CARD_DB.filter(c => c.id !== cardId);
+    if (rarityPool.length === 0) { alert('Keine Karten zum Tauschen verfügbar!'); return; }
+    // Roll rarity based on traded card's rarity
+    let rarityTable;
+    if (card.rarity === 'legendary') {
+      rarityTable = [
+        { rarity:'legendary', prob:99 },
+        { rarity:'relikt', prob:1 }
+      ];
+    } else if (card.rarity === 'rare') {
+      rarityTable = [
+        { rarity:'rare', prob:94 },
+        { rarity:'legendary', prob:5 },
+        { rarity:'relikt', prob:1 }
+      ];
+    } else {
+      rarityTable = PACK_RARITY; // common: standard pack odds
+    }
+    const r = Math.random() * 100;
+    let cumulative = 0;
+    let rolledRarity = 'common';
+    for (const tier of rarityTable) {
+      cumulative += tier.prob;
+      if (r < cumulative) { rolledRarity = tier.rarity; break; }
+    }
+    const filtered = rarityPool.filter(c => c.rarity === rolledRarity);
+    const randomCard = filtered.length > 0
+      ? filtered[Math.floor(Math.random() * filtered.length)]
+      : rarityPool[Math.floor(Math.random() * rarityPool.length)];
+    const alreadyOwned = owned[randomCard.id] > 0;
+    owned[randomCard.id] = (owned[randomCard.id] || 0) + 1;
+    save();
+    closeCardDetail();
+    setTimeout(() => showCardReveal([{...randomCard, isNew: !alreadyOwned}], () => {
+      renderCollection();
+      renderAlbum();
+      renderDashboard();
+    }), 100);
+  }
+}
+
+function showSuccess(msg) {
+  const flash = document.getElementById('successFlash');
+  document.getElementById('successFlashText').textContent = msg;
+  flash.style.display = 'block';
+  setTimeout(() => { flash.style.display = 'none'; }, 2500);
+}
+
+
+// Emoji fallback for cards without images
+function getCardEmoji(card) {
+  const types = {
+    'Charakter': '🧙',
+    'Zauber': '⚡',
+    'Gegenstand': '🔮',
+    'Ort': '🏰',
+    'Tier': '🦄',
+    'Sport': '🏆',
+    'Ereignis': '⚔️'
+  };
+  return types[card.type] || '🃏';
+}
+
+function showCardReveal(cards, callback) {
+  try {
+    currentPackCards = cards;
+    renderRevealedCards();
+    // cardReveal ist Kind von screen-packs – muss sichtbar sein
+    document.getElementById('screen-packs').classList.add('active');
+    document.getElementById('packIdle').style.display = 'none';
+    const btn = document.querySelector('#cardReveal .btn-primary');
+    if (!btn) { console.error('btn not found'); return; }
+    btn.textContent = '👍 OK';
+    const savedCallback = callback;
+    btn.onclick = function() {
+      document.getElementById('cardReveal').classList.remove('active');
+      document.getElementById('screen-packs').classList.remove('active');
+      btn.textContent = '🃏 In die Sammlung';
+      btn.onclick = afterPackOpen;
+      if (typeof savedCallback === 'function') {
+        setTimeout(savedCallback, 50);
+      }
+    };
+    document.getElementById('cardReveal').classList.add('active');
+  } catch(e) {
+    console.error('showCardReveal error:', e);
+  }
+}
+
+function closeCardDetail() {
+  document.getElementById('cardDetailOverlay').classList.remove('active');
+}
+
+// ===================== PARENT PIN =====================
+function resetPinPad() {
+  pinBuffer = '';
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+}
+
+function pinPress(digit) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += digit;
+  updatePinDots();
+  
+  if (pinBuffer.length === 4) {
+    if (pinBuffer === data.pin) {
+      document.getElementById('pinError').textContent = '';
+      navigateTo('parent-area');
+    } else {
+      document.getElementById('pinError').textContent = '❌ Falsche PIN!';
+      setTimeout(resetPinPad, 800);
+    }
+  }
+}
+
+function pinClear() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.querySelector(`.pin-dot[data-i="${i}"]`);
+    if (dot) dot.classList.toggle('filled', i < pinBuffer.length);
+  }
+}
+
+// ===================== PARENT AREA =====================
+function renderParentArea() {
+  const profiles = getProfiles();
+  const selectDiv = document.getElementById('parentProfileSelect');
+  selectDiv.innerHTML = '';
+
+  // Populate assign dropdowns
+  ['assignPackProfile','assignCardProfile','removeCardProfile','streakProfileSelect'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '';
+    profiles.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      sel.appendChild(opt);
+    });
+  });
+
+  // Populate card dropdown (base + funny cards)
+  const cardSel = document.getElementById('assignCardSelect');
+  if (cardSel) {
+    cardSel.innerHTML = '';
+    // Base cards
+    CARD_DB.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name + ' (' + RARITY[c.rarity] + ')';
+      cardSel.appendChild(opt);
+    });
+    // Funny/Strandparty cards
+    Object.values(FUNNY_CARDS).forEach(fc => {
+      const opt = document.createElement('option');
+      opt.value = fc.id;
+      opt.textContent = '🏖️ ' + fc.name + ' (Strandparty)';
+      cardSel.appendChild(opt);
+    });
+  }
+  
+  profiles.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'active';
+    btn.textContent = name;
+    btn.onclick = () => renderParentProfile(name);
+    selectDiv.appendChild(btn);
+  });
+
+  if (profiles.length > 0) {
+    renderParentProfile(profiles[0]);
+  }
+}
+
+function renderParentProfile(name) {
+  const prof = getProfile(name);
+  const tasks = prof.tasks || [];
+  const cards = prof.cards || {};
+  const totalCards = Object.values(cards).reduce((a,b) => a + b, 0);
+  const uniqueCards = Object.keys(cards).length;
+
+  const statsDiv = document.getElementById('parentProfileStats');
+  statsDiv.innerHTML = `
+    <p style="font-size:14px;margin-bottom:8px;"><strong>${name}</strong></p>
+    <p style="font-size:13px;color:var(--dark-light);">
+      📅 Erstellt: ${new Date(prof.created).toLocaleDateString('de-DE')}<br>
+      ✅ Aufgaben erledigt: ${tasks.length}<br>
+      🎁 Packs erhalten: ${tasks.length}<br>
+      🃏 Karten gesammelt: ${totalCards} (${uniqueCards} verschiedene)
+    </p>
+  `;
+
+  // Activity log
+  const logDiv = document.getElementById('parentActivityLog');
+  if (tasks.length === 0) {
+    logDiv.innerHTML = '<p style="color:var(--dark-light);font-size:14px;">Noch keine Aktivitäten.</p>';
+    return;
+  }
+
+  logDiv.innerHTML = '';
+  // Show last 20 entries, newest first
+  const sorted = [...tasks].reverse().slice(0, 20);
+  sorted.forEach(t => {
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `
+      <span class="log-action">${t.label}</span>
+      <span class="log-date">${t.date}</span>
+    `;
+    logDiv.appendChild(entry);
+  });
+}
+
+function changePin() {
+  const input = document.getElementById('newPinInput');
+  const pin = input.value.trim();
+  if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+    document.getElementById('pinChangeMsg').textContent = '❌ Bitte 4-stellige Zahl eingeben.';
+    return;
+  }
+  data.pin = pin;
+  save();
+  document.getElementById('pinChangeMsg').textContent = '✅ PIN erfolgreich geändert!';
+  input.value = '';
+}
+
+function resetAllData() {
+  if (!confirm('Wirklich ALLE Daten löschen? Profile, Karten, Aufgaben – alles weg!\nDiese Aktion kann nicht rückgängig gemacht werden.')) return;
+  if (!confirm('Bist du ganz sicher? Alle Kinder verlieren ihre gesamten Karten und Fortschritte!')) return;
+  
+  data = { pin: DEFAULT_PIN, profiles: {} };
+  save();
+  currentProfile = null;
+  navigateTo('welcome');
+  renderWelcome();
+}
+
+function exportData() {
+  const msg = document.getElementById('backupMsg');
+  try {
+    const stamp = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `magische-belohnungen-backup-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    if (msg) { msg.textContent = '✅ Sicherung erstellt! Speichere die Datei gut auf (z.B. per Mail an dich selbst).'; msg.style.color = '#2e7d32'; }
+  } catch(e) {
+    if (msg) { msg.textContent = '❌ Fehler beim Sichern: ' + e.message; msg.style.color = '#c0392b'; }
+  }
+}
+
+function importData(event) {
+  const msg = document.getElementById('backupMsg');
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (!parsed || typeof parsed !== 'object' || !parsed.profiles) {
+        throw new Error('Keine gültige Sicherungsdatei');
+      }
+      if (!confirm('Achtung: Das Einspielen ERSETZT alle aktuellen Daten durch den Stand der Sicherungsdatei. Fortfahren?')) {
+        event.target.value = '';
+        return;
+      }
+      // Daten übernehmen
+      data = parsed;
+      if (!data.pin) data.pin = DEFAULT_PIN;
+      if (!data.tradeOffers) data.tradeOffers = [];
+      save();
+      currentProfile = null;
+      navigateTo('welcome');
+      renderWelcome();
+      if (msg) { msg.textContent = '✅ Daten erfolgreich eingespielt!'; msg.style.color = '#2e7d32'; }
+    } catch(e) {
+      if (msg) { msg.textContent = '❌ Fehler beim Einspielen: ' + e.message; msg.style.color = '#c0392b'; }
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function parentLogout() {
+  navigateTo('dashboard');
+}
+
+
+// ===================== TRADING SYSTEM =====================
+function renderTrades() {
+  if (!currentProfile) return;
+  const offers = data.tradeOffers || [];
+  const myName = currentProfile;
+  const myCards = (getProfile(myName).cards || {});
+  
+  // Incoming offers (from others)
+  const incoming = offers.filter(o => o.from !== myName);
+  const incomingDiv = document.getElementById('incomingTrades');
+  if (incoming.length === 0) {
+    incomingDiv.innerHTML = '<p style="color:var(--dark-light);font-size:14px;">Keine aktiven Angebote von anderen.</p>';
+  } else {
+    incomingDiv.innerHTML = '';
+    incoming.forEach(o => renderTradeOffer(o, incomingDiv, 'incoming'));
+  }
+  
+  // My offers
+  const myOffers = offers.filter(o => o.from === myName);
+  const myDiv = document.getElementById('myTrades');
+  if (myOffers.length === 0) {
+    myDiv.innerHTML = '<p style="color:var(--dark-light);font-size:14px;">Du hast keine aktiven Angebote. Tippe in der Sammlung auf eine Karte und wähle "Zum Tausch anbieten".</p>';
+  } else {
+    myDiv.innerHTML = '';
+    myOffers.forEach(o => renderTradeOffer(o, myDiv, 'mine'));
+  }
+}
+
+function getCardById(id) {
+  let c = CARD_DB.find(cr => cr.id === id);
+  if (!c) {
+    const found = Object.values(FUNNY_CARDS).find(cr => cr.id === id);
+    if (found) c = found;
+  }
+  if (!c) {
+    const reward = Object.values(REWARD_CARDS).find(cr => cr.id === id);
+    if (reward) c = reward;
+  }
+  return c;
+}
+
+function renderTradeOffer(offer, container, mode) {
+  const offerCard = getCardById(offer.offerCard);
+  if (!offerCard) return;
+  
+  const myCards = (getProfile(currentProfile).cards || {});
+  const myName = currentProfile;
+  const div = document.createElement('div');
+  div.className = 'trade-card';
+  
+  const isMyOffer = mode === 'mine';
+  const connector = offer.wantMode === 'all' ? ' + ' : ' oder ';
+  
+  // Build want cards HTML
+  let wantHtml = '';
+  let ownsAll = true;
+  let ownsAny = false;
+  const owned = getProfile(myName).cards || {};
+  
+  offer.wantCards.forEach((wId, i) => {
+    const wCard = getCardById(wId);
+    if (!wCard) return;
+    const have = owned[wId] > 0;
+    if (!have) ownsAll = false;
+    if (have) ownsAny = true;
+    const cls = have ? 'owned' : '';
+    if (i > 0) {
+      wantHtml += `<span class="trade-want-connector">${connector}</span>`;
+    }
+    wantHtml += `<span class="trade-want-tag ${cls}">${have ? '✅' : '❌'} ${wCard.name}</span>`;
+  });
+  
+  const canAccept = !isMyOffer && (offer.wantMode === 'any' ? ownsAny : ownsAll);
+  
+  div.innerHTML = `
+    <div class="trade-offer-img">${offerCard.image ? '<img src="' + offerCard.image + '" alt="">' : '🃏'}</div>
+    <div class="trade-offer-info">
+      <div class="trade-offer-name">${offerCard.name}</div>
+      <div class="trade-offer-from">von ${offer.from}</div>
+      <div class="trade-want-list">${wantHtml}</div>
+    </div>
+    ${isMyOffer
+      ? `<button class="btn-danger btn-small" onclick="deleteTradeOffer('${offer.id}')">🗑️</button>`
+      : (canAccept
+        ? `<button class="btn-primary btn-small" onclick="openTradeConfirm('${offer.id}')">✅ Annehmen</button>`
+        : '')
+    }
+  `;
+  container.appendChild(div);
+}
+
+function openTradeConfirm(offerId) {
+  const offer = (data.tradeOffers || []).find(o => o.id === offerId);
+  if (!offer) return;
+  window._pendingTradeId = offerId;
+  const offerCard = getCardById(offer.offerCard);
+  const wantNames = offer.wantCards.map(id => {
+    const c = getCardById(id);
+    return c ? c.name : '?';
+  }).join(offer.wantMode === 'all' ? '" und "' : '" oder "');
+  document.getElementById('tradeConfirmText').textContent =
+    `Du tauschst deine Karten gegen "${offerCard ? offerCard.name : '?'}" von ${offer.from}. Gibst du: "${wantNames}"?`;
+  document.getElementById('tradeConfirmModal').classList.add('active');
+}
+
+function closeTradeConfirm() {
+  document.getElementById('tradeConfirmModal').classList.remove('active');
+  window._pendingTradeId = null;
+}
+
+function confirmTradeAccept() {
+  const offerId = window._pendingTradeId;
+  const offers = data.tradeOffers || [];
+  const idx = offers.findIndex(o => o.id === offerId);
+  if (idx < 0) { document.getElementById('tradeConfirmError').textContent = '❌ Angebot nicht mehr verfügbar.'; return; }
+  const offer = offers[idx];
+  const myName = currentProfile;
+  if (offer.from === myName) return;
+  
+  const myProf = getProfile(myName);
+  const theirProf = getProfile(offer.from);
+  if (!myProf.cards) myProf.cards = {};
+  if (!theirProf.cards) theirProf.cards = {};
+  
+  // Check my cards
+  for (const wId of offer.wantCards) {
+    if (!myProf.cards[wId] || myProf.cards[wId] < 1) {
+      document.getElementById('tradeConfirmError').textContent = '❌ Du besitzt die benötigte Karte nicht mehr.';
+      closeTradeConfirm();
+      renderTrades();
+      return;
+    }
+  }
+  
+  // Transfer wanted cards from me -> them
+  for (const wId of offer.wantCards) {
+    myProf.cards[wId]--;
+    if (myProf.cards[wId] <= 0) delete myProf.cards[wId];
+    theirProf.cards[wId] = (theirProf.cards[wId] || 0) + 1;
+  }
+  
+  // Transfer offered card from them -> me
+  theirProf.cards[offer.offerCard]--;
+  if (theirProf.cards[offer.offerCard] <= 0) delete theirProf.cards[offer.offerCard];
+  myProf.cards[offer.offerCard] = (myProf.cards[offer.offerCard] || 0) + 1;
+  
+  // Remove offer
+  offers.splice(idx, 1);
+  save();
+  closeTradeConfirm();
+  showSuccess('🔄 Tausch erfolgreich!');
+  renderTrades();
+}
+
+function deleteTradeOffer(offerId) {
+  const offers = data.tradeOffers || [];
+  const idx = offers.findIndex(o => o.id === offerId);
+  if (idx < 0) return;
+  const offer = offers[idx];
+  if (offer.from !== currentProfile) return;
+  if (!confirm('Angebot wirklich löschen?')) return;
+  offers.splice(idx, 1);
+  save();
+  renderTrades();
+}
+
+function openCreateTradeModal(cardId) {
+  closeCardDetail();
+  const card = getCardById(cardId);
+  if (!card) return;
+  window._pendingTradeCardId = cardId;
+  document.getElementById('tradeOfferCardName').textContent = card.name;
+  
+  // Build want cards checklist (unowned first)
+  const container = document.getElementById('tradeWantCards');
+  container.innerHTML = '';
+  const owned = getProfile(currentProfile).cards || {};
+  const allCards = [...CARD_DB, ...Object.values(FUNNY_CARDS)];
+  // Sort: unowned first, then owned
+  const sorted = [...allCards].sort((a, b) => {
+    const aOwned = owned[a.id] ? 1 : 0;
+    const bOwned = owned[b.id] ? 1 : 0;
+    if (aOwned !== bOwned) return aOwned - bOwned;
+    return a.name.localeCompare(b.name);
+  });
+  sorted.forEach(c => {
+    if (c.id === cardId) return; // can't want the same card
+    const isOwned = owned[c.id] > 0;
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 8px;cursor:pointer;font-size:13px;';
+    label.innerHTML = `<input type="checkbox" value="${c.id}"> <span style="opacity:${isOwned ? 0.5 : 1}">${c.name} (${RARITY[c.rarity] || c.rarity})${isOwned ? ' ✅' : ''}</span>`;
+    container.appendChild(label);
+  });
+  
+  document.getElementById('tradeModalError').textContent = '';
+  document.getElementById('tradeModal').classList.add('active');
+}
+
+function closeTradeModal() {
+  document.getElementById('tradeModal').classList.remove('active');
+  window._pendingTradeCardId = null;
+}
+
+function submitTradeOffer() {
+  const cardId = window._pendingTradeCardId;
+  if (!cardId) return;
+  const checks = document.querySelectorAll('#tradeWantCards input[type="checkbox"]:checked');
+  if (checks.length === 0) {
+    document.getElementById('tradeModalError').textContent = '❌ Wähle mindestens eine Wunsch-Karte aus.';
+    return;
+  }
+  const wantCards = Array.from(checks).map(c => c.value);
+  const wantMode = document.querySelector('input[name="tradeMode"]:checked').value;
+  
+  if (!data.tradeOffers) data.tradeOffers = [];
+  data.tradeOffers.push({
+    id: 'trade_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    from: currentProfile,
+    offerCard: cardId,
+    wantCards: wantCards,
+    wantMode: wantMode,
+    createdAt: Date.now()
+  });
+  save();
+  closeTradeModal();
+  showSuccess('✅ Angebot erstellt!');
+  navigateTo('trades');
+}
+
+
+
+// ===================== INIT =====================
+function init() {
+  renderWelcome();
+  
+  // Auto-select if only one profile
+  const profiles = getProfiles();
+  if (profiles.length === 1) {
+    selectProfile(profiles[0]);
+  } else {
+    document.getElementById('screen-welcome').classList.add('active');
+    document.getElementById('bottomNav').style.display = 'none';
+  }
+
+  // Close card detail on overlay click
+  document.getElementById('cardDetailOverlay').onclick = function(e) {
+    if (e.target === this) closeCardDetail();
+  };
+
+  // Listen for Enter in parent confirm PIN
+  document.getElementById('parentConfirmPin').onkeydown = function(e) {
+    if (e.key === 'Enter') submitParentConfirm();
+  };
+}
+
+// Start the app
+function logout() {
+  currentProfile = null;
+  navigateTo('welcome');
+  renderWelcome();
+}
+
+function assignPacks(bonus) {
+  const sel = document.getElementById('assignPackProfile');
+  const name = sel.value;
+  const count = parseInt(document.getElementById('assignPackCount').value) || 1;
+  if (!name || !data.profiles[name]) return;
+  const prof = getProfile(name);
+  if (bonus) {
+    prof.bonusPacks = (prof.bonusPacks || 0) + count;
+    document.getElementById('assignPackMsg').textContent = `✅ ${count} Bonus-Pack(s) an ${name} gegeben!`;
+  } else {
+    prof.packs = (prof.packs || 0) + count;
+    document.getElementById('assignPackMsg').textContent = `✅ ${count} Pack(s) an ${name} gegeben!`;
+  }
+  save();
+}
+
+function assignCard() {
+  const selProf = document.getElementById('assignCardProfile');
+  const selCard = document.getElementById('assignCardSelect');
+  const name = selProf.value;
+  const cardId = selCard.value;
+  if (!name || !cardId || !data.profiles[name]) return;
+  let card = CARD_DB.find(c => c.id === cardId);
+  if (!card) {
+    const found = Object.values(FUNNY_CARDS).find(c => c.id === cardId);
+    if (found) card = found;
+  }
+  if (!card) return;
+  const prof = getProfile(name);
+  if (!prof.cards) prof.cards = {};
+  prof.cards[cardId] = (prof.cards[cardId] || 0) + 1;
+  save();
+  document.getElementById('assignCardMsg').textContent = `✅ ${card.name} an ${name} gegeben!`;
+}
+
+function updateRemoveCardList() {
+  const selProf = document.getElementById('removeCardProfile');
+  const selCard = document.getElementById('removeCardSelect');
+  const name = selProf.value;
+  if (!name || !data.profiles[name]) { selCard.innerHTML = ''; return; }
+  const prof = getProfile(name);
+  const owned = prof.cards || {};
+  selCard.innerHTML = '';
+  // Build list of owned cards (base + funny)
+  const allCards = [...CARD_DB, ...Object.values(FUNNY_CARDS)];
+  allCards.forEach(c => {
+    const count = owned[c.id] || 0;
+    if (count > 0) {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      const prefix = c.id.startsWith('hp-fun-') ? '🏖️ ' : '';
+      opt.textContent = `${prefix}${c.name} (${count}x)`;
+      selCard.appendChild(opt);
+    }
+  });
+}
+
+function removeCard() {
+  const selProf = document.getElementById('removeCardProfile');
+  const selCard = document.getElementById('removeCardSelect');
+  const name = selProf.value;
+  const cardId = selCard.value;
+  if (!name || !cardId || !data.profiles[name]) return;
+  const prof = getProfile(name);
+  if (!prof.cards || !prof.cards[cardId]) return;
+  prof.cards[cardId]--;
+  if (prof.cards[cardId] <= 0) delete prof.cards[cardId];
+  save();
+  const cardName = selCard.options[selCard.selectedIndex]?.text.split(' (')[0] || cardId;
+  document.getElementById('removeCardMsg').textContent = `🗑️ 1x ${cardName} von ${name} entfernt`;
+  updateRemoveCardList();
+}
+
+function setStreak() {
+  const sel = document.getElementById('streakProfileSelect');
+  const name = sel.value;
+  const days = parseInt(document.getElementById('streakDaysInput').value) || 0;
+  if (!name || !data.profiles[name]) return;
+  data.profiles[name].instrumentStreak = days;
+  data.profiles[name].lastInstrumentDate = new Date().toISOString().slice(0,10);
+  save();
+  document.getElementById('streakMsg').textContent = `✅ Streak von ${name} auf ${days} Tage gesetzt!`;
+}
+
+init();
+
+// Service Worker für Offline-Cache der Videos
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    console.log('SW registered:', reg.scope);
+  }).catch(err => {
+    console.log('SW registration failed:', err);
+  });
+}
+</script>
+</body>
+</html>
