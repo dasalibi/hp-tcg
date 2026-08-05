@@ -302,6 +302,22 @@ html, body {
   0%, 100% { box-shadow: 0 0 16px rgba(127,209,79,0.2), inset 0 0 20px rgba(127,209,79,0.06); }
   50% { box-shadow: 0 0 28px rgba(127,209,79,0.45), inset 0 0 28px rgba(127,209,79,0.12); }
 }
+/* Klickbar wenn einlösbar – goldener Glow + Pfeil-Hinweis */
+.week-challenge.claimable {
+  cursor: pointer;
+  border-color: var(--gold-light);
+  box-shadow: 0 0 24px rgba(224,200,120,0.35), inset 0 0 24px rgba(224,200,120,0.08);
+  animation: claimPulse 1.2s ease-in-out infinite;
+}
+.week-challenge.claimable .wc-title,
+.week-challenge.claimable .wc-status { color: #ffd97a; text-shadow: 0 0 12px rgba(255,217,122,0.7); }
+.week-challenge.claimable .wc-hint::after {
+  content: ' 👆';
+}
+@keyframes claimPulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(224,200,120,0.25), inset 0 0 20px rgba(224,200,120,0.05); }
+  50% { box-shadow: 0 0 32px rgba(224,200,120,0.55), inset 0 0 28px rgba(224,200,120,0.14); }
+}
 .task-btn {
   display: flex;
   align-items: center;
@@ -780,6 +796,55 @@ html, body {
   border-radius: 12px;
   padding: 4px 12px;
   font-weight: 600;
+}
+
+/* ========== Band-Pack-Auswahl ========== */
+.band-pick-box {
+  max-width: 400px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.band-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.band-pick-option {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 95px;
+  cursor: pointer;
+  border: 2px solid #4a3520;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.band-pick-option:active { transform: scale(0.96); }
+.band-pick-option .bp-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+.band-pick-option .bp-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,5,2,0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px;
+}
+.band-pick-option .bp-num {
+  font-size: 20px;
+}
+.band-pick-option .bp-name {
+  font-family: var(--font-serif);
+  color: #f0d890;
+  font-size: 12px;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.95);
+  line-height: 1.25;
 }
 
 /* ========== Collection ========== */
@@ -1614,6 +1679,16 @@ html, body {
   </div>
 </div>
 
+<!-- ==================== MODAL: Band-Pack-Auswahl ==================== -->
+<div class="modal-overlay" id="bandPickModal">
+  <div class="modal-box band-pick-box">
+    <h3>🎁 Wähle dein Band-Pack!</h3>
+    <p style="font-size:13px;color:var(--dark-light);margin-bottom:10px;">Jedes Pack enthält 3 Karten aus dem gewählten Band – und manchmal ein Relikt!</p>
+    <div class="band-pick-grid" id="bandPickGrid"></div>
+    <button class="btn-secondary" onclick="closeBandPick()" style="width:100%;margin-top:12px;">Abbrechen</button>
+  </div>
+</div>
+
 <!-- ==================== MODAL: Task Confirm ==================== -->
 <div class="modal-overlay" id="taskModal">
   <div class="modal-box">
@@ -2097,13 +2172,97 @@ function renderWeekChallenge() {
   document.getElementById('wcFill').style.width = pct + '%';
   document.getElementById('wcStatus').textContent = `${wc.count}/${wc.target}`;
   const hint = document.getElementById('wcHint');
-  if (wc.rewarded) {
+  // Einlöse-Status des aktuellen Profils
+  let claimed = false;
+  if (currentProfile) {
+    const prof = getProfile(currentProfile);
+    claimed = !!(prof.weekRewardClaimed === wc.week);
+  }
+  box.classList.remove('done', 'claimable');
+  box.onclick = null;
+  if (wc.rewarded && !claimed) {
+    // Challenge geschafft, dieses Profil hat noch nicht eingelöst -> klickbar
+    box.classList.add('done', 'claimable');
+    hint.textContent = '🎉 Geschafft! Tippen zum Abholen: Wähle eines von 7 Band-Packs! 🎁';
+    box.onclick = claimWeekReward;
+  } else if (wc.rewarded && claimed) {
     box.classList.add('done');
-    hint.textContent = '🎉 Geschafft! Alle haben ihr Familien-Pack erhalten. Nächste Woche geht es weiter!';
+    hint.textContent = '✅ Dein Band-Pack ist eingelöst! Nächste Woche geht es weiter!';
   } else {
-    box.classList.remove('done');
     hint.textContent = `Noch ${wc.target - wc.count} Aufgaben bis zum Familien-Pack für alle! 🎁`;
   }
+}
+
+// ===================== BAND-PACK (Wochenchallenge-Belohnung) =====================
+function claimWeekReward() {
+  const wc = getWeekChallenge();
+  if (!currentProfile) return;
+  const prof = getProfile(currentProfile);
+  if (!wc.rewarded) return;                      // Challenge noch nicht geschafft
+  if (prof.weekRewardClaimed === wc.week) return; // schon eingelöst
+
+  // Auswahl-Modal mit den 7 BAND-Optionen füllen (nur Bänder 1-7, keine Strandparty/Gründer)
+  const grid = document.getElementById('bandPickGrid');
+  grid.innerHTML = '';
+  ALBUM_BANDS.slice(0, 7).forEach((band, i) => {
+    const opt = document.createElement('div');
+    opt.className = 'band-pick-option';
+    opt.innerHTML = `
+      <div class="bp-bg" style="background-image:url('${band.bg}')"></div>
+      <div class="bp-overlay">
+        <div class="bp-num">${band.icon}</div>
+        <div class="bp-name">${band.title}</div>
+      </div>
+    `;
+    opt.onclick = () => openBandPack(i);
+    grid.appendChild(opt);
+  });
+  document.getElementById('bandPickModal').classList.add('active');
+}
+
+function closeBandPick() {
+  document.getElementById('bandPickModal').classList.remove('active');
+}
+
+// Öffnet ein Band-Pack: 3 Karten, Pool = Band-Karten + Relikte möglich
+function openBandPack(bandIdx) {
+  const band = ALBUM_BANDS[bandIdx];
+  if (!band) return;
+  const wc = getWeekChallenge();
+  const prof = getProfile(currentProfile);
+  if (!prof || !wc.rewarded || prof.weekRewardClaimed === wc.week) return;
+  if (!prof.cards) prof.cards = {};
+
+  // Pool: alle Karten des Bands + die 4 Relikt/Gründer-Karten
+  const bandCards = band.cards.map(id => getCardById(id)).filter(Boolean);
+  const relikts = ['hp-081','hp-082','hp-083','hp-084'].map(id => getCardById(id)).filter(Boolean);
+  const pool = bandCards.concat(relikts);
+  if (pool.length === 0) return;
+
+  // 3 Karten ziehen (normale Raritätsverteilung)
+  const drawn = [];
+  for (let i = 0; i < CARDS_PER_PACK; i++) {
+    const rarity = rollRarity(false);
+    // Bei Relikt: nur Relikte; sonst passende Band-Karten; Fallback: ganzer Pool
+    let candidates = pool.filter(c => c.rarity === rarity);
+    if (candidates.length === 0) candidates = pool;
+    const card = candidates[Math.floor(Math.random() * candidates.length)];
+    const isNew = !prof.cards[card.id];
+    drawn.push({ ...card, isNew });
+    prof.cards[card.id] = (prof.cards[card.id] || 0) + 1;
+  }
+
+  // Einlöse-Status setzen (Woche merken) + speichern
+  prof.weekRewardClaimed = wc.week;
+  save();
+
+  closeBandPick();
+  // Pack-Öffnungs-Animation + Karten-Enthüllung
+  showCardReveal(drawn, () => {
+    renderDashboard();
+    renderAlbum();
+    renderPackScreen();
+  });
 }
 
 // ===================== NAVIGATION =====================
@@ -2346,11 +2505,7 @@ function completeTask(label) {
   data.weekChallenge.count++;
   if (data.weekChallenge.count >= data.weekChallenge.target && !data.weekChallenge.rewarded) {
     data.weekChallenge.rewarded = true;
-    // Familien-Pack für ALLE Profile
-    Object.keys(data.profiles).forEach(n => {
-      if (!data.profiles[n].bonusPacks) data.profiles[n].bonusPacks = 0;
-      data.profiles[n].bonusPacks++;
-    });
+    // Kein automatisches Pack – jedes Familienmitglied löst selbst per Klick ein
     familyPackAwarded = true;
   }
 
@@ -2390,7 +2545,7 @@ function completeTask(label) {
   // Show success flash
   let flashText = '⭐ Aufgabe erledigt! Du erhältst ein Pack!';
   if (familyPackAwarded) {
-    flashText = '🎉 Familien-Challenge geschafft! Alle haben ein Familien-Pack mit extra seltenen Karten erhalten!';
+    flashText = '🎉 Familien-Challenge geschafft! Jedes Familienmitglied kann sich jetzt ein Band-Pack abholen!';
   } else if (bonusCard && bonusAwarded) {
     flashText = '🎉 ' + prof.instrumentStreak + ' Tage am Stück! Bonus-Pack + 🎁 Extra-Karte: ' + bonusCard.name;
   } else if (bonusCard) {
