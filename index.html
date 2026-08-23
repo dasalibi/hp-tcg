@@ -859,6 +859,25 @@ html, body {
   font-size: 22px;
   color: var(--burgundy);
 }
+.collection-progress {
+  width: 100%;
+  height: 8px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.collection-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
 .collection-filter {
   display: flex;
   gap: 6px;
@@ -1429,6 +1448,36 @@ html, body {
 .effect-relikt .spark:nth-child(9) { top: 78%; left: 28%; animation-delay: 2.4s; background: #8e44ad; box-shadow: 0 0 6px #8e44ad; }
 .effect-relikt .spark:nth-child(10){ top: 84%; left: 68%; animation-delay: 2.7s; background: #fff; }
 
+/* ===== iPad-Format (≥768px Breite) ===== */
+@media (min-width: 768px) {
+  .app {
+    max-width: 820px;
+    box-shadow: 0 0 40px rgba(44,24,16,0.2);
+  }
+  .bottom-nav {
+    max-width: 820px;
+    padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 10px);
+  }
+  .nav-item { font-size: 13px; padding: 6px 14px; }
+  .nav-item .nav-icon { font-size: 30px; }
+  .screen { padding: 28px 24px 100px; }
+  /* Sammlung: 4 Spalten auf iPad */
+  .collection-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  /* Pack-Enthüllung: mehr Karten nebeneinander */
+  .reveal-cards { flex-direction: row; gap: 16px; justify-content: center; }
+  .reveal-cards .mini-card { width: 160px; }
+  /* Album-Tabs größer */
+  .album-tab { font-size: 14px; padding: 9px 16px; }
+  .album-band-title { font-size: 22px; }
+  .album-band-sub { font-size: 13px; }
+  /* Album: 6x3-Raster auf iPad (Karten bleiben hochformatig, nicht abgeschnitten) */
+  .album-grid {
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1534,6 +1583,27 @@ html, body {
   <div class="empty-state" id="packEmpty" style="display:none;">
     <div class="empty-icon">📭</div>
     <p>Du hast keine Packs mehr.<br>Erledige Aufgaben, um neue zu verdienen!</p>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: COLLECTION ==================== -->
+<div class="screen" id="screen-collection">
+  <div class="collection-header">
+    <h2>🃏 Meine Sammlung</h2>
+    <span id="collectionCount">0/0</span>
+  </div>
+  <div class="collection-progress"><div class="collection-progress-fill" id="collectionProgress" style="width:0%"></div></div>
+  <div class="collection-filter">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Alle</button>
+    <button class="filter-btn" data-filter="relikt" onclick="setFilter('relikt')">Relikt</button>
+    <button class="filter-btn" data-filter="legendary" onclick="setFilter('legendary')">Legendär</button>
+    <button class="filter-btn" data-filter="rare" onclick="setFilter('rare')">Selten</button>
+    <button class="filter-btn" data-filter="common" onclick="setFilter('common')">Gewöhnlich</button>
+    <button class="filter-btn" data-filter="funny" onclick="setFilter('funny')">Strandparty</button>
+  </div>
+  <div class="collection-grid" id="collectionGrid"></div>
+  <div class="collection-empty" id="collectionEmpty" style="display:none;">
+    <p>Noch keine Karten in dieser Kategorie.</p>
   </div>
 </div>
 
@@ -1813,6 +1883,10 @@ html, body {
   <button class="nav-item" data-screen="packs" onclick="navigateTo('packs')">
     <span class="nav-icon">🎁</span>
     <span>Packs</span>
+  </button>
+  <button class="nav-item" data-screen="collection" onclick="navigateTo('collection')">
+    <span class="nav-icon">🃏</span>
+    <span>Sammlung</span>
   </button>
   <button class="nav-item" data-screen="album" onclick="navigateTo('album')">
     <span class="nav-icon">📖</span>
@@ -2158,7 +2232,15 @@ function getWeekKey(date) {
 function getWeekChallenge() {
   const wk = getWeekKey(new Date());
   if (!data.weekChallenge || data.weekChallenge.week !== wk) {
-    data.weekChallenge = { week: wk, target: 20, count: 0, rewarded: false };
+    // Dynamisches Ziel: letzte Woche geschafft -> +5 (max 50), verfehlt -> -5 (min 20)
+    const prev = data.weekChallenge;
+    let target = 20;
+    if (prev && prev.week) {
+      target = prev.rewarded
+        ? Math.min(50, (prev.target || 20) + 5)
+        : Math.max(20, (prev.target || 20) - 5);
+    }
+    data.weekChallenge = { week: wk, target: target, count: 0, rewarded: false };
     save();
   }
   return data.weekChallenge;
@@ -2288,6 +2370,9 @@ function navigateTo(screen) {
     document.getElementById('screen-packs').classList.add('active');
     document.getElementById('screen-packs').style.display = '';
     renderPackScreen();
+  } else if (screen === 'collection') {
+    document.getElementById('screen-collection').classList.add('active');
+    renderCollection();
   } else if (screen === 'album') {
     document.getElementById('screen-album').classList.add('active');
     renderAlbum();
@@ -2498,19 +2583,17 @@ function completeTask(label) {
   prof.packs = (prof.packs || 0) + 1;
 
   // Familien-Wochenchallenge: jede Aufgabe zählt (auch Erwachsene)
-  const wk = getWeekKey(new Date());
-  if (!data.weekChallenge || data.weekChallenge.week !== wk) {
-    data.weekChallenge = { week: wk, target: 20, count: 0, rewarded: false };
-  }
-  data.weekChallenge.count++;
-  if (data.weekChallenge.count >= data.weekChallenge.target && !data.weekChallenge.rewarded) {
-    data.weekChallenge.rewarded = true;
+  const wc = getWeekChallenge();
+  wc.count++;
+  if (wc.count >= wc.target && !wc.rewarded) {
+    wc.rewarded = true;
     // Kein automatisches Pack – jedes Familienmitglied löst selbst per Klick ein
     familyPackAwarded = true;
   }
 
-  // Track instrument/ruecken streak + perfect week
+  // Track instrument/ruecken streak + perfect week + 3er-Streak-Bonus
   let bonusAwarded = false;
+  let streakCard = null;
   if (label === 'Instrument geübt' || label === 'Rückenübungen gemacht') {
     if (prof.lastInstrumentDate !== today) {
       if (prof.lastInstrumentDate === yesterday) {
@@ -2524,6 +2607,17 @@ function completeTask(label) {
       if (prof.instrumentStreak % 7 === 0 && prof.instrumentStreak > 0) {
         prof.bonusPacks = (prof.bonusPacks || 0) + 1;
         bonusAwarded = true;
+      }
+
+      // 3er-Streak-Bonus: einzelne zufällige Karte (normale Pack-Wahrscheinlichkeiten)
+      if (prof.instrumentStreak % 3 === 0 && prof.instrumentStreak > 0) {
+        const rarity = rollRarity(false);
+        const pool = CARD_DB.filter(c => c.rarity === rarity);
+        if (pool.length > 0) {
+          streakCard = pool[Math.floor(Math.random() * pool.length)];
+          if (!prof.cards) prof.cards = {};
+          prof.cards[streakCard.id] = (prof.cards[streakCard.id] || 0) + 1;
+        }
       }
     }
   }
@@ -2542,16 +2636,26 @@ function completeTask(label) {
     }
   }
 
+  // Motivierende Hinweise für den 3er-Streak (zufällig)
+  const streakPraise = [
+    '🎉 ' + prof.instrumentStreak + ' Tage am Stück – unglaublich stark! Hier ist deine Belohnung:',
+    '🌟 ' + prof.instrumentStreak + ' Tage Zauberkraft! Diese Karte gehört dir:',
+    '⚡ ' + prof.instrumentStreak + ' Tage in Folge – so fleißig! Nimm diese Karte:',
+    '✨ Drei Tage magische Ausdauer! Deine Belohnungskarte:'
+  ];
+
   // Show success flash
   let flashText = '⭐ Aufgabe erledigt! Du erhältst ein Pack!';
   if (familyPackAwarded) {
     flashText = '🎉 Familien-Challenge geschafft! Jedes Familienmitglied kann sich jetzt ein Band-Pack abholen!';
   } else if (bonusCard && bonusAwarded) {
     flashText = '🎉 ' + prof.instrumentStreak + ' Tage am Stück! Bonus-Pack + 🎁 Extra-Karte: ' + bonusCard.name;
-  } else if (bonusCard) {
-    flashText = '⭐ Aufgabe erledigt! Du erhältst ein Pack + 🎁 Extra-Karte: ' + bonusCard.name + '!';
   } else if (bonusAwarded) {
     flashText = '🎉 ' + prof.instrumentStreak + ' Tage am Stück! Bonus-Pack mit extra seltenen Karten erhalten!';
+  } else if (streakCard) {
+    flashText = streakPraise[Math.floor(Math.random() * streakPraise.length)] + ' ' + streakCard.name + '!';
+  } else if (bonusCard) {
+    flashText = '⭐ Aufgabe erledigt! Du erhältst ein Pack + 🎁 Extra-Karte: ' + bonusCard.name + '!';
   }
   familyPackAwarded = false;
   const flash = document.getElementById('successFlash');
@@ -2560,8 +2664,12 @@ function completeTask(label) {
   setTimeout(() => {
     flash.style.display = 'none';
     renderDashboard();
-    if (bonusCard) {
-      setTimeout(() => showCardReveal([{...bonusCard, isNew: !prof.cards[bonusCard.id]}], () => { renderDashboard(); }), 300);
+    // Alle erhaltenen Karten enthüllen (3er-Streak-Karte + 10%-Karte)
+    const revealCards = [];
+    if (streakCard) revealCards.push({ ...streakCard, isNew: prof.cards[streakCard.id] === 1 });
+    if (bonusCard) revealCards.push({ ...bonusCard, isNew: prof.cards[bonusCard.id] === 1 });
+    if (revealCards.length > 0) {
+      setTimeout(() => showCardReveal(revealCards, () => { renderDashboard(); }), 300);
     }
   }, 2000);
 }
@@ -2857,11 +2965,13 @@ function renderAlbumBand() {
   // Hintergrund setzen
   document.getElementById('albumArea').style.backgroundImage = `url('${band.bg}')`;
 
-  // Seiten aufteilen: max 15 Slots pro Seite (14 Karten + 1 Belohnung)
+  // Seiten aufteilen: Handy 4x4 (14 Karten + Belohnung), iPad 6x3 (17 Karten + Belohnung)
+  const isIpad = window.innerWidth >= 768;
+  const perPage = isIpad ? 17 : 14;
   const slots = band.cards.map(id => ({ id, owned: owned[id] > 0 }));
   const pages = [];
-  for (let i = 0; i < slots.length; i += 14) {
-    pages.push(slots.slice(i, i + 14));
+  for (let i = 0; i < slots.length; i += perPage) {
+    pages.push(slots.slice(i, i + perPage));
   }
   // Letzte Seite bekommt das Belohnungsfeld
   albumPageCount = pages.length;
