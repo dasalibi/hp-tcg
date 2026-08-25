@@ -847,6 +847,37 @@ html, body {
   line-height: 1.25;
 }
 
+/* ===== Gründer-Seite: Karten über den Bannern ===== */
+.album-grid-founders {
+  position: relative;
+}
+.album-grid-founders .founders-slot {
+  position: absolute;
+  top: 12%;
+  width: 14%;
+  height: 50%;
+  margin-left: -7%;
+  transform: none;
+  animation: none;
+}
+.album-grid-founders .founders-slot:nth-child(even) {
+  margin-top: 0;
+}
+.album-grid-founders .founders-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.album-grid-founders .founders-slot.empty-common,
+.album-grid-founders .founders-slot.empty-rare,
+.album-grid-founders .founders-slot.empty-legendary,
+.album-grid-founders .founders-slot.empty-relikt {
+  border: 2px dashed #c9b37a;
+  background: rgba(0,0,0,0.35);
+  border-radius: 10px;
+}
+
 /* ========== Collection ========== */
 .collection-header {
   display: flex;
@@ -2031,7 +2062,24 @@ const CARD_DB = [
   { id:'hp-098', name:'Fenrir Greyback', rarity:'rare', type:'Charakter', subtype:'Werwolf-Anführer', house:'-', desc:'„Ich beiße - und ich sorge dafür, dass andere mir folgen." Fenrir Greyback ist der brutalste Werwolf Großbritanniens. Er jagt gezielt Kinder, um den Werwolf-Biss zu verbreiten - und verwandelt im 6. Band Bill Weasley für immer.', image:'cards/hp-098.jpg' },
   { id:'hp-099', name:'Der Inferius', rarity:'rare', type:'Tier', subtype:'Untote Wächter', house:'-', desc:'„Tote, die von dunkler Magie erweckt wurden." Infernale sind die grauenvollen Wächter der Horkrux-Höhle. Sie greifen nur an, wenn ihr Meister es befiehlt - und sind fast unzerstörbar, denn sie spüren keinen Schmerz.', image:'cards/hp-099.jpg' },
   { id:'hp-100', name:'Der Horkrux-Cup', rarity:'rare', type:'Gegenstand', subtype:'Horkrux', house:'Hufflepuff', desc:'„Helga Hufflepuffs goldener Becher." Ein kleiner, wunderschöner Kelch mit zwei zierlichen Griffen und einem Dachs-Wappen. Voldemort stahl ihn und verbarg einen Teil seiner Seele darin - versteckt im Tresor der Familie Lestrange bei Gringotts.', image:'cards/hp-100.jpg' },
-  { id:'hp-101', name:'Xenophilius Lovegood', rarity:'common', type:'Charakter', subtype:'Herausgeber des Klitterers', house:'Ravenclaw', desc:'„Der Klitterer hat immer recht!" Xenophilius ist Lunas exzentrischer Vater und Herausgeber der skurrilen Zeitschrift. Er trägt seltsame Hüte aus Butterbierdeckeln und kennt die Heiligtümer des Todes - obwohl er nicht weiß, wann er schweigen sollte.', image:'cards/hp-101.jpg' },
+  { id:'hp-101', name:'Xenophilius Lovegood', rarity:'common', type:'Charakter', subtype:'Herausgeber des Klitterers', house:'Ravenclaw', desc:'„Der Klitterer hat immer recht!“ Xenophilius ist Lunas exzentrischer Vater und Herausgeber der skurrilen Zeitschrift. Er trägt seltsame Hüte aus Butterbierdeckeln und kennt die Heiligtümer des Todes - obwohl er nicht weiß, wann er schweigen sollte.', image:'cards/hp-101.jpg' },
+  // ===== Band 10: Die Magische Welt (außerhalb von Hogwarts) =====
+  { id:'hp-109', name:'Aberforth Dumbledore', rarity:'rare', type:'Charakter', subtype:'Wirt des Tausendfüßler', house:'Gryffindor', desc:'„Ich bin nicht Albus.“ Aberforth, der wortkarge Bruder von Albus Dumbledore, führt die schäbige Kneipe Tausendfüßler in Hogsmeade. Hinter seiner mürrischen Fassade steckt ein treuer Beschützer - sein Patronus ist eine Ziege, und sein Bier ist legendär.', image:'cards/hp-109.jpg' },
+  { id:'hp-110', name:'Kingsley Shacklebolt', rarity:'rare', type:'Charakter', subtype:'Auror', house:'Gryffindor', desc:'„Der ist auf unserer Seite.“ Kingsley Shacklebolt, der hochgewachsene Auror mit sonorer Stimme, jagt Todesser im Ministerium und wird später selbst Zaubereiminister. Seine Ruhe und seine Kampfmagie machen ihn zu einem der stärksten Verbündeten des Ordens.', image:'cards/hp-110.jpg' },
+  { id:'hp-111', name:'Garrick Ollivander', rarity:'rare', type:'Charakter', subtype:'Zauberstabmacher', house:'-', desc:'„Der Zauberstab wählt den Zauberer.“ Garrick Ollivander, mit blassen Silberaugen und einem Blick, der durch Wände sieht, fertigt seit Generationen Zauberstäbe in der Winkelgasse. Er kennt jede Stabverbindung - und die gefährlichste von allen: den Elderstab.', image:'cards/hp-111.jpg' },
+  { id:'hp-112', name:'Viktor Krum', rarity:'common', type:'Charakter', subtype:'Sucher aus Durmstrang', house:'-', desc:'„Der beste Sucher der Welt.“ Viktor Krum, der finstere Star-Sucher aus Durmstrang, fängt den Schnatz, wenn er will - und wirft ihn weg, wenn es wichtiger ist. Auf dem Trimagischen Turnier wird er zum stillen Helden, der seinen Gegner rettet.', image:'cards/hp-112.jpg' },
+  { id:'hp-113', name:'Gringotts, die Zaubererbank', rarity:'rare', type:'Ort', subtype:'Bank der Zaubererwelt', house:'-', desc:'„Kein Ort auf der Welt ist sicherer.“ Gringotts, die weiße Marmorbank mit den Bronzetüren, wird von Kobolden geführt. In ihren unergründlichen Tresoren schlafen Gold, Schätze - und ein Horkrux. Wer klaut, lernt die Drachen kennen.', image:'cards/hp-113.jpg' },
+  { id:'hp-114', name:'Das Camp der Quidditch-WM', rarity:'common', type:'Ort', subtype:'Zeltlager', house:'-', desc:'„Tausend Zelte in allen Farben.“ Vor dem Finale der Quidditch-Weltmeisterschaft verwandelt sich eine Wiese in eine magische Stadt aus Zelten - mit fliegenden Flaggen, singenden Zelten und verbotenen Zauberartikeln unter dem Ladentisch.', image:'cards/hp-114.jpg' },
+  { id:'hp-115', name:'Die Horkrux-Höhle', rarity:'rare', type:'Ort', subtype:'Verstecktes Versteck', house:'-', desc:'„Ein dunkler See ohne Boden.“ Hinter einem Vorhang aus Wasser verbirgt sich die Höhle, in der Voldemort seinen Horkrux versteckte. Der grüne Trank raubt dem Trinker die Erinnerungen - und die Inferi warten im Wasser.', image:'cards/hp-115.jpg' },
+  { id:'hp-116', name:'Das Einhorn', rarity:'rare', type:'Tier', subtype:'Reines Wesen', house:'-', desc:'„Sein Blut erhält dich, auch halbtot.“ Das Einhorn, das silbern im Verbotenen Wald leuchtet, ist das reinste aller Wesen. Sein Blut kann Leben erhalten - aber um einen schrecklichen Preis. Kein Wunder, dass sein Anblick heilig ist.', image:'cards/hp-116.jpg' },
+  { id:'hp-117', name:'Der Knallrümpfige Kröter', rarity:'common', type:'Tier', subtype:'Gezüchtete Kreatur', house:'-', desc:'„Ein verzweifelter Cocktail aus Mantikor und Feuerskorpion.“ Der Knallrümpfige Kröter, gezüchtet von Hagrid, sieht aus wie ein gepanzerter Hummer ohne Kopf - und schießt aus seinem hinteren Ende Flammen. Nur wer ihn mag, bekommt ihn zu fassen.', image:'cards/hp-117.jpg' },
+  { id:'hp-118', name:'Der Niffler', rarity:'rare', type:'Tier', subtype:'Schatzjäger', house:'-', desc:'„Alles Glitzernde ist meins!“ Der Niffler, ein flauschiges schwarzes Wesen mit Schnabel und Beutel, hat einen untrüglichen Spürsinn für glänzende Dinge. In einer Bank ist er eine Katastrophe - außer man sucht genau das, was er findet.', image:'cards/hp-118.jpg' },
+  { id:'hp-119', name:'Der Ungarische Hornschwanz', rarity:'legendary', type:'Tier', subtype:'Drache', house:'-', desc:'„Der gefährlichste Drache der Welt.“ Der Ungarische Hornschwanz speit Flammen bis zu fünfzig Fuß, hat bronzene Hörner und einen Schwanz mit Stacheln. Beim Trimagischen Turnier fordert er die Champions heraus - und niemand klaut ihm gern das goldene Ei.', image:'cards/hp-119.jpg' },
+  { id:'hp-120', name:'Der Schokofrosch', rarity:'common', type:'Gegenstand', subtype:'Sammlerstück', house:'-', desc:'„Sammelkarten inklusive!“ Der Schokofrosch hüpft aus seiner Schachtel, bevor man ihn essen kann. In jeder Packung steckt eine berühmte Zauberer-Sammelkarte - von Dumbledore bis Dumbledore. Die gefragteste ist die mit dem Goldenen Schnatz.', image:'cards/hp-120.jpg' },
+  { id:'hp-121', name:'Der Tagesprophet', rarity:'common', type:'Gegenstand', subtype:'Zaubererzeitung', house:'-', desc:'„Die Bilder bewegen sich - die Nachrichten auch.“ Der Tagesprophet ist die führende Zeitung der Zaubererwelt, geliefert per Eule. Zwischen Kicher-Artikeln und dunklen Schlagzeilen weiß man nie, wem man glauben kann - aber lesen muss man ihn trotzdem.', image:'cards/hp-121.jpg' },
+  { id:'hp-122', name:'Morsmordre', rarity:'common', type:'Zauber', subtype:'Dunkles Mal', house:'-', desc:'„Der Dunkle Mal - das Zeichen des Dunklen Lords.“ Ein smaragdgrüner Totenkopf mit Schlange, der über allem schwebt. Wer ihn am Himmel beschwört, hat Voldemort gerufen - und wer ihn sieht, weiß: Es geht los.', image:'cards/hp-122.jpg' },
+  { id:'hp-123', name:'Aguamenti', rarity:'common', type:'Zauber', subtype:'Wasser herbeizaubern', house:'-', desc:'„Aguamenti!“ Ein klarer Wasserstrahl schießt aus der Zauberstabspitze - genug für einen Schluck, ein Bad oder den gefährlichsten Teil einer Horkrux-Höhle. Ein einfacher Zauber, der über Leben entscheiden kann.', image:'cards/hp-123.jpg' },
+  { id:'hp-124', name:'Bombarda', rarity:'rare', type:'Zauber', subtype:'Sprengzauber', house:'-', desc:'„Bombarda!“ Ein ohrenbetäubender Knall, ein Blitz aus Orange und Rot - und Mauern bersten. Der Sprengzauber ist die unfeine Lösung für Türen, Wände und Gefängnisse. Präzision ist nicht seine Stärke - Wirkung schon.', image:'cards/hp-124.jpg' },
 ];
 
 // ===================== ALBUM REWARD CARDS =====================
@@ -2044,7 +2092,8 @@ const REWARD_CARDS = {
   4: { id:'hp-105', name:'Rita Kimmkorn', type:'Charakter', subtype:'Skandalreporterin', house:'-', desc:'„Niemand hat gesagt, dass die Wahrheit hübsch ist." Rita Kimmkorn ist die gefürchtetste Reporterin des Tagespropheten. Mit ihrer grünen Eilfeder schreibt sie schneller als sie denkt - und mit weniger Rücksicht.', image:'cards/hp-105.jpg' },
   5: { id:'hp-106', name:'Die Mysteriumsabteilung', type:'Ort', subtype:'Geheimste Abteilung des Ministeriums', house:'-', desc:'„Tief unter dem Zaubereiministerium, hinter schwarzen Türen." Hier lagert die Prophezeiung - und die Gefahr. Der Kampf zwischen Orden und Todessern im Atrium der Mysteriumsabteilung verändert alles.', image:'cards/hp-106.jpg' },
   6: { id:'hp-107', name:'Horace Slughorn', type:'Charakter', subtype:'Meister der Zaubertränke', house:'Slytherin', desc:'„Berühmte Hexen und Zauberer - meine Leidenschaft!" Horace Slughorn sammelt Begabte wie andere Briefmarken. Seine Erinnerung an den jungen Tom Riddle ist sein dunkelstes Geheimnis - und der Schlüssel zum Sieg.', image:'cards/hp-107.jpg' },
-  7: { id:'hp-108', name:'Die Schlacht von Hogwarts', type:'Ereignis', subtype:'Das große Finale', house:'-', desc:'„Alle für einen, einer für alle." Der letzte Kampf: Schüler, Lehrer, Hauselfen und Phönixorden gegen Voldemorts Armee. Die Mauern von Hogwarts wanken, aber der Mut seiner Verteidiger nicht.', image:'cards/hp-108.jpg' },
+  7: { id:'hp-108', name:'Die Schlacht von Hogwarts', type:'Ereignis', subtype:'Das große Finale', house:'-', desc:'„Alle für einen, einer für alle.“ Der letzte Kampf: Schüler, Lehrer, Hauselfen und Phönixorden gegen Voldemorts Armee. Die Mauern von Hogwarts wanken, aber der Mut seiner Verteidiger nicht.', image:'cards/hp-108.jpg' },
+  8: { id:'hp-125', name:'Der Goldene Schnatz', type:'Gegenstand', subtype:'Das Herz des Quidditch', house:'-', desc:'„Der Schnatz hat Fleisch und Blut.“ Ein winziger goldener Ball mit silbernen Flügeln, der nur denjenigen berührt, der ihn zuerst fängt. Wer den Schnatz fängt, beendet das Spiel - und gewinnt 150 Punkte. Das schönste Objekt der Zauberwelt, und jetzt gehört er dir.', image:'cards/hp-125.jpg' },
 };
 
 // ===================== ALBUM BANDS =====================
@@ -2073,11 +2122,14 @@ const ALBUM_BANDS = [
     cards: ['hp-015','hp-016','hp-018','hp-019','hp-023','hp-026','hp-027','hp-032','hp-050','hp-060','hp-073','hp-075','hp-077','hp-100','hp-101'],
     reward: 7 },
   { id: 8, title: 'Strandparty', short: 'Strandparty', icon: '🏖️', bg: 'album/bg-beach.jpg',
-    cards: ['hp-fun-001','hp-fun-002','hp-fun-003','hp-fun-004','hp-fun-005','hp-fun-006','hp-fun-007','hp-fun-008','hp-fun-009','hp-fun-010','hp-fun-011','hp-fun-012','hp-fun-013','hp-fun-014','hp-fun-015','hp-fun-016','hp-fun-017','hp-fun-018','hp-fun-019','hp-fun-020','hp-fun-021','hp-fun-022','hp-fun-023','hp-fun-024','hp-fun-025','hp-fun-026','hp-fun-027','hp-fun-028','hp-fun-029','hp-fun-030'],
+    cards: ['hp-fun-001','hp-fun-002','hp-fun-003','hp-fun-004','hp-fun-005','hp-fun-006','hp-fun-007','hp-fun-008','hp-fun-009','hp-fun-010','hp-fun-011','hp-fun-012','hp-fun-013','hp-fun-014','hp-fun-015','hp-fun-016','hp-fun-017','hp-fun-018','hp-fun-019','hp-fun-020','hp-fun-021','hp-fun-022','hp-fun-023','hp-fun-024','hp-fun-025','hp-fun-026','hp-fun-027','hp-fun-028','hp-fun-029','hp-fun-030','hp-fun-031','hp-fun-032','hp-fun-033','hp-fun-034'],
     reward: null },
   { id: 9, title: 'Die Hogwarts-Gründer', short: 'Gründer', icon: '🦡', bg: 'album/bg-founders.jpg',
     cards: ['hp-081','hp-082','hp-083','hp-084'],
     reward: null },
+  { id: 10, title: 'Die Magische Welt', short: 'Magische Welt', icon: '🌍', bg: 'album/bg-magicalworld.jpg',
+    cards: ['hp-109','hp-110','hp-111','hp-112','hp-113','hp-114','hp-115','hp-116','hp-117','hp-118','hp-119','hp-120','hp-121','hp-122','hp-123','hp-124'],
+    reward: 8 },
 ];
 
 // ===================== FUNNY VARIANT CARDS (WIP) =====================
@@ -2111,7 +2163,11 @@ const FUNNY_CARDS = {
   'hp-090': { id:'hp-fun-027', name:'Strandparty-Pomfrey', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'-', desc:'Madam Pomfrey am Strand im weißen Cardigan über dem Badeanzug - sie behandelt eine Alraune mit Sonnencreme und verteilt Tee an Sonnenbrand-Opfer. Der Krankenflügel ist diesmal draußen.', image:'cards/hp-fun-027.jpg' },
   'hp-060': { id:'hp-fun-028', name:'Strandparty-Kreacher', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'-', desc:'Kreacher in einem zu kleinen Hawaii-Hemd über dem Lendenschurz, riesiger Strohhut, sitzt grantig in einer Sandburg mit Eimer und Schäufelchen - aber das Butterbier schmeckt ihm.', image:'cards/hp-fun-028.jpg' },
   'hp-098': { id:'hp-fun-029', name:'Strandparty-Fenrir', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'-', desc:'Fenrir Greyback als Tourist: zu kleines Hawaii-Hemd, Socken in Sandalen und ein schmelzendes Eis in der Hand. Sein mörderischer Blick gilt diesmal nur dem Sonnenbrand - und den Möwen.', image:'cards/hp-fun-029.jpg' },
-  'hp-101': { id:'hp-fun-030', name:'Strandparty-Xenophilius', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Ravenclaw', desc:'Xenophilius im psychedelischen Bademantel mit Muschel-Hut und Korken-Kette, den Klitterer unter dem Arm und einen Wasserball unterm anderen. Er erklärt gerade einer Qualle den Schrumpfhörnigen Schnarchkackler.', image:'cards/hp-fun-030.jpg' }
+  'hp-101': { id:'hp-fun-030', name:'Strandparty-Xenophilius', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'Ravenclaw', desc:'Xenophilius im psychedelischen Bademantel mit Muschel-Hut und Korken-Kette, den Klitterer unter dem Arm und einen Wasserball unterm anderen. Er erklärt gerade einer Qualle den Schrumpfhörnigen Schnarchkackler.', image:'cards/hp-fun-030.jpg' },
+  'hp-109': { id:'hp-fun-031', name:'Strandparty-Aberforth', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Aberforth als grantiger Strandwirt: verblichenes Blumenhemd, Sandalen, eine Ziege mit Sonnenbrille an seiner Seite und ein Kühler voller Butterbier. Sein mürrischer Blick gilt der Sonne - aber verkauft wird trotzdem.', image:'cards/hp-fun-031.jpg' },
+  'hp-110': { id:'hp-fun-032', name:'Strandparty-Kingsley', rarity:'rare', type:'Charakter', subtype:'Strandparty', house:'Gryffindor', desc:'Kingsley als königlicher Strand-Bodyguard: goldenes Hemd, stylische Sonnenbrille, statt des Stabs ein Cocktail mit Mini-Sonnenschirm. Er bewacht den Strand wie das Ministerium - würdevoll und leicht absurd.', image:'cards/hp-fun-032.jpg' },
+  'hp-111': { id:'hp-fun-033', name:'Strandparty-Ollivander', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'-', desc:'Ollivander mit breitem Strohhut und weißem Leinenanzug am Strandstand: zwischen Sandförmchen und Spaten verkauft er ernsthaft „Zauberstäbe“ - und der Stab wählt den Sandburgenbauer.', image:'cards/hp-fun-033.jpg' },
+  'hp-112': { id:'hp-fun-034', name:'Strandparty-Viktor Krum', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'-', desc:'Viktor Krum trainiert am Strand: Badehose, Handtuch um den Hals, verbissen übt er mit einem goldenen Ball - den Schnatz hat er längst gefangen, aber die Wellen ignorieren seinen Star-Blick.', image:'cards/hp-fun-034.jpg' }
 };
 
 // ===================== TASKS =====================
@@ -2283,10 +2339,12 @@ function claimWeekReward() {
   if (!wc.rewarded) return;                      // Challenge noch nicht geschafft
   if (prof.weekRewardClaimed === wc.week) return; // schon eingelöst
 
-  // Auswahl-Modal mit den 7 BAND-Optionen füllen (nur Bänder 1-7, keine Strandparty/Gründer)
+  // Auswahl-Modal mit den 7 BAND-Optionen + Magische Welt füllen (keine Strandparty/Gründer)
   const grid = document.getElementById('bandPickGrid');
   grid.innerHTML = '';
-  ALBUM_BANDS.slice(0, 7).forEach((band, i) => {
+  // Bänder 1-7 (Index 0-6) + Die Magische Welt (Index 9)
+  const pickBands = [0,1,2,3,4,5,6,9].map(i => ALBUM_BANDS[i]).filter(Boolean);
+  pickBands.forEach((band, i) => {
     const opt = document.createElement('div');
     opt.className = 'band-pick-option';
     opt.innerHTML = `
@@ -2296,7 +2354,7 @@ function claimWeekReward() {
         <div class="bp-name">${band.title}</div>
       </div>
     `;
-    opt.onclick = () => openBandPack(i);
+    opt.onclick = () => openBandPack(band.id - 1);
     grid.appendChild(opt);
   });
   document.getElementById('bandPickModal').classList.add('active');
@@ -2993,10 +3051,33 @@ function renderAlbumBand() {
     `;
     page.appendChild(head);
 
-    // Grid
-    const grid = document.createElement('div');
-    grid.className = 'album-grid';
-    pageSlots.forEach(s => {
+    // Grid (Gründer-Seite: 4 Karten über den Bannern, absolut positioniert)
+    let grid;
+    const isFounders = albumCurrentBand === 8;
+    if (isFounders) {
+      grid = document.createElement('div');
+      grid.className = 'album-grid album-grid-founders';
+      pageSlots.forEach((s, si) => {
+        const card = getCardById(s.id);
+        if (!card) return;
+        const slot = document.createElement('div');
+        if (s.owned) {
+          slot.className = 'album-slot founders-slot';
+          slot.innerHTML = `<img src="${card.image}" alt="${card.name}" loading="lazy">`;
+          slot.onclick = () => showCardDetail(s.id);
+        } else {
+          slot.className = 'album-slot empty-common founders-slot';
+        }
+        // Positionen: 4 Spalten über den Bannern (12.5%, 37.5%, 62.5%, 87.5%)
+        const pos = [12.5, 37.5, 62.5, 87.5][si];
+        slot.style.left = pos + '%';
+        grid.appendChild(slot);
+      });
+      page.appendChild(grid);
+    } else {
+      grid = document.createElement('div');
+      grid.className = 'album-grid';
+      pageSlots.forEach(s => {
       const card = getCardById(s.id);
       if (!card) return;
       const slot = document.createElement('div');
@@ -3018,6 +3099,7 @@ function renderAlbumBand() {
       if (s.owned) slot.onclick = () => showCardDetail(s.id);
       grid.appendChild(slot);
     });
+    }
 
     // Belohnungsfeld auf der letzten Seite (nur wenn Band eine Belohnung hat)
     if (pi === pages.length - 1 && band.reward) {
@@ -3122,6 +3204,7 @@ const REWARD_VIDEOS = {
   'hp-106': 'cards/hp-106-anim-3s.mp4',
   'hp-107': 'cards/hp-107-anim-5s.mp4',
   'hp-108': 'cards/hp-108-anim-3s.mp4',
+  'hp-125': 'cards/hp-125-anim-5s.mp4',
 };
 
 function showCardDetail(cardId) {
