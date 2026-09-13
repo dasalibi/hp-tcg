@@ -1672,8 +1672,8 @@ body{
 
 /* ---- Kopfzeile ---- */
 .dash-header h2{font-family:var(--font-serif);color:var(--g-hi);font-size:20px;letter-spacing:.06em;}
-.logout-btn{background:rgba(243,234,217,.07);border:1px solid var(--g-line-soft);color:var(--g-dim);border-radius:11px;}
-.logout-btn:hover{background:rgba(243,234,217,.13);color:var(--g-tx);}
+.logout-btn{background:rgba(243,234,217,.14);border:1px solid var(--g-line);color:var(--g-tx);border-radius:11px;}
+.logout-btn:hover{background:rgba(243,234,217,.22);color:#fff;}
 .dash-welcome{font-family:var(--font-serif);font-size:29px;color:var(--g-tx);font-weight:600;letter-spacing:.01em;}
 .dash-welcome strong{color:var(--g-hi);}
 
@@ -1741,7 +1741,7 @@ body{
 
 /* ---- Navigation ---- */
 .nav-item .nav-icon svg{width:21px;height:21px;display:block;margin:0 auto;}
-.bottom-nav{background:linear-gradient(0deg,#0c0704,rgba(12,7,4,.95));border-top:1px solid var(--g-line);}
+.bottom-nav{background:linear-gradient(0deg,#0b0603,#100a06);border-top:1px solid var(--g-line);}
 .nav-item{color:var(--g-faint);position:relative;}
 .nav-item .nav-icon{filter:none;}
 .nav-item.active{color:var(--g-hi);}
@@ -1834,7 +1834,7 @@ body{
 .profile-btn.add-profile{border-style:dashed;color:rgba(201,169,97,.85);font-family:var(--font-sans);}
 
 /* ---- Dashboard-Details (Hybrid) ---- */
-.dash-sub{font-size:12px;color:var(--g-faint);margin-top:4px;}
+.dash-sub{font-size:12.5px;color:var(--g-dim);margin-top:4px;}
 .hero-in{display:flex;align-items:center;gap:20px;}
 .hero-title{font-family:var(--font-serif);font-size:23px;color:var(--g-tx);margin-bottom:7px;letter-spacing:.01em;}
 .hero-sub{font-size:13px;color:var(--g-dim);line-height:1.45;}
@@ -3184,7 +3184,7 @@ function renderDashboard() {
   const lastDate = prof.lastInstrumentDate;
   const isActive = lastDate === today || lastDate === yesterday;
   const displayStreak = isActive ? instStreak : 0;
-  document.getElementById('streakBox').style.display = 'flex';
+  document.getElementById('streakBox').style.display = 'none';   // Serie steht bereits im Untertitel
   document.getElementById('instrumentStreakNum').textContent = displayStreak;
   document.getElementById('weekStreakBox').style.display = displayStreak > 0 ? 'flex' : 'none';
   document.getElementById('weekStreakNum').textContent = displayStreak;
