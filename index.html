@@ -22,22 +22,37 @@
    CSS – Magische Belohnungen
    ============================================================ */
 :root {
-  --parchment: #f5f0e8;
-  --parchment-dark: #e8dfd0;
-  --burgundy: #7a1a1a;
-  --burgundy-light: #9a2a2a;
+  /* ===== DUNKLES GOLD-SYSTEM (app-weit) =====
+     Flächen dunkel, Text hell, Gold/Weinrot nur als Akzent. */
+  --parchment: #1a1209;
+  --parchment-dark: #241708;
+  --burgundy: #e8cd8a;          /* Akzent → Gold */
+  --burgundy-light: #f0dca0;
   --gold: #c5a55a;
   --gold-light: #e0c878;
   --gold-dark: #a08040;
-  --dark: #2c1810;
-  --dark-light: #4a3020;
-  --cream: #faf6ef;
-  --white: #ffffff;
-  --shadow: rgba(44,24,16,0.15);
+  --dark: #f3ead9;              /* Text auf dunklem Grund */
+  --dark-light: rgba(243,234,217,0.66);
+  --cream: #1d1309;
+  --white: #f7f1e6;             /* Text auf dunklem Grund */
+  --shadow: rgba(0,0,0,0.40);
   --radius: 14px;
   --radius-sm: 8px;
   --font-serif: 'Cinzel', 'Georgia', 'Times New Roman', serif;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Ausnahmen: diese Flächen bleiben Pergament (hell) mit dunklem Text */
+.modal-box, .week-challenge, .ach-popup-box, .band-pick-box,
+.reveal-cards, .mini-card, .detail-box, .parent-light {
+  --parchment: #f5f0e8;
+  --parchment-dark: #e8dfd0;
+  --cream: #faf6ef;
+  --white: #ffffff;
+  --dark: #2c1810;
+  --dark-light: #6d5741;
+  --burgundy: #7a1a1a;
+  --shadow: rgba(44,24,16,0.15);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1638,6 +1653,198 @@ html, body {
 .effect-relikt .spark:nth-child(9) { top: 78%; left: 28%; animation-delay: 2.4s; background: #8e44ad; box-shadow: 0 0 6px #8e44ad; }
 .effect-relikt .spark:nth-child(10){ top: 84%; left: 68%; animation-delay: 2.7s; background: #fff; }
 
+/* ===================================================================
+   DUNKLES GOLD-SYSTEM (Album-Welt) – app-weites Redesign
+   Grundflächen dunkel, Inhalte auf Pergament-Karten, Gold als Akzent.
+   =================================================================== */
+:root{
+  --g-bg:#150e07; --g-bg2:#1d1309; --g-deep:#0c0704;
+  --g-gold:#c9a961; --g-hi:#e8cd8a; --g-line:rgba(201,169,97,.24); --g-line-soft:rgba(201,169,97,.13);
+  --g-tx:#f3ead9; --g-dim:rgba(243,234,217,.62); --g-faint:rgba(243,234,217,.42);
+}
+
+/* ---- Grundflächen ---- */
+body{
+  background:radial-gradient(115% 75% at 50% 0%, #3a2614 0%, #1a1209 58%, #100a05 100%) fixed;
+}
+.app{background:linear-gradient(180deg, rgba(58,38,20,.42) 0%, rgba(21,14,7,.93) 42%, #100a05 100%);}
+.screen{color:var(--g-tx);}
+
+/* ---- Kopfzeile ---- */
+.dash-header h2{font-family:var(--font-serif);color:var(--g-hi);font-size:20px;letter-spacing:.06em;}
+.logout-btn{background:rgba(243,234,217,.07);border:1px solid var(--g-line-soft);color:var(--g-dim);border-radius:11px;}
+.logout-btn:hover{background:rgba(243,234,217,.13);color:var(--g-tx);}
+.dash-welcome{font-family:var(--font-serif);font-size:29px;color:var(--g-tx);font-weight:600;letter-spacing:.01em;}
+.dash-welcome strong{color:var(--g-hi);}
+
+/* ---- Pack-Erinnerung → Held-Karte ---- */
+.pack-reminder{
+  background:linear-gradient(135deg, rgba(201,169,97,.17), rgba(201,169,97,.05));
+  border:1px solid var(--g-line); border-radius:16px; color:var(--g-tx);
+  padding:20px 22px; position:relative; overflow:hidden;
+}
+.pack-reminder::after{content:"";position:absolute;right:-50px;top:-50px;width:190px;height:190px;border-radius:50%;
+  background:radial-gradient(circle, rgba(201,169,97,.16), transparent 70%);pointer-events:none;}
+.pack-reminder .emoji{filter:drop-shadow(0 0 10px rgba(232,205,138,.45));}
+.pack-reminder .count{font-family:var(--font-serif);font-size:30px;color:var(--g-hi);}
+
+/* ---- Streak-Kacheln ---- */
+.streak-box{background:rgba(243,234,217,.055);border:1px solid var(--g-line-soft);border-radius:14px;}
+.streak-box .streak-num{font-family:var(--font-serif);color:var(--g-hi);}
+.streak-box .streak-label{color:var(--g-dim);}
+.streak-box .streak-progress{color:rgba(201,169,97,.75);}
+
+/* ---- Kennzahlen ---- */
+.stats-row{gap:12px;}
+.stat-card{background:rgba(243,234,217,.055);border:1px solid var(--g-line-soft);border-radius:14px;}
+.stat-num{font-family:var(--font-serif);color:var(--g-tx);}
+.stat-label{color:var(--g-faint);}
+
+/* ---- Familien-Challenge → Pergament-Karte ---- */
+.week-challenge{
+  background:linear-gradient(160deg,#f3ead9,#e7d9bf);color:var(--dark);
+  border-radius:18px;border:0;box-shadow:0 14px 34px rgba(0,0,0,.42);padding:20px 22px;
+}
+.week-challenge .wc-title{font-family:var(--font-serif);color:var(--wine,#7a1a1a);letter-spacing:.04em;}
+.week-challenge .wc-status{background:rgba(122,26,26,.1);color:#7a1a1a;font-weight:700;}
+.week-challenge .wc-bar{background:rgba(122,26,26,.14);}
+.week-challenge .wc-fill{background:linear-gradient(90deg,#a8842c,#e8cd8a);box-shadow:0 0 10px rgba(201,169,97,.5);}
+.week-challenge .wc-hint{color:#6d5741;}
+.week-challenge .wc-icon{filter:none;}
+
+/* ---- Abschnittstitel ---- */
+.section-title{font-family:var(--font-serif);color:rgba(201,169,97,.8);letter-spacing:.16em;
+  text-transform:uppercase;font-size:13px;}
+
+/* ---- Aufgaben-Kacheln ---- */
+.task-btn{background:rgba(243,234,217,.06);border:1px solid var(--g-line-soft);border-radius:12px;color:var(--g-tx);
+  transition:.18s;}
+.task-btn:hover{background:rgba(243,234,217,.11);border-color:var(--g-line);transform:translateY(-2px);}
+.task-btn .task-icon{filter:drop-shadow(0 0 6px rgba(232,205,138,.3));}
+.task-btn .task-label{color:var(--g-tx);}
+.task-btn .task-arrow{color:var(--g-gold);}
+
+/* ---- weitere Flächen im dunklen System ---- */
+.card-detail-box{background:rgba(243,234,217,.05);border:1px solid var(--g-line-soft);}
+.pin-key{background:rgba(243,234,217,.08);border:1px solid var(--g-line-soft);color:var(--g-tx);}
+.pin-dot{background:rgba(243,234,217,.12);border:1px solid var(--g-line-soft);}
+.pin-dot.filled{background:var(--g-hi);border-color:var(--g-hi);}
+.assign-row select,.assign-row input{background:rgba(243,234,217,.08);border:1px solid var(--g-line-soft);color:var(--g-tx);}
+.dash-stars{opacity:.22;}
+/* Elemente mit Goldfläche brauchen dunklen Text */
+.count-badge,.detail-close,.profile-select button.active,.success-flash,
+.filter-btn.active{color:#2a1a10;}
+.success-flash{background:linear-gradient(180deg,#e8cd8a,#c9a961);}
+/* Pack: Weinrot mit hellem Text */
+.pack-closed{background:linear-gradient(135deg,#7a1a1a,#4a0a0a);color:#f7f1e6;border-color:var(--g-gold);}
+.pack-closed .pack-sub{color:rgba(247,241,230,.78);}
+
+/* ---- Navigation ---- */
+.nav-item .nav-icon svg{width:21px;height:21px;display:block;margin:0 auto;}
+.bottom-nav{background:linear-gradient(0deg,#0c0704,rgba(12,7,4,.95));border-top:1px solid var(--g-line);}
+.nav-item{color:var(--g-faint);position:relative;}
+.nav-item .nav-icon{filter:none;}
+.nav-item.active{color:var(--g-hi);}
+.nav-item.active .nav-icon{filter:drop-shadow(0 0 7px rgba(232,205,138,.55));}
+.nav-item.active::after{content:"";position:absolute;top:0;width:30px;height:2px;border-radius:0 0 2px 2px;background:var(--g-hi);}
+
+/* ---- Modals / Overlays ---- */
+.modal-overlay,.ach-popup,.card-detail-overlay{background:rgba(10,6,3,.84);}
+.modal-box{background:linear-gradient(160deg,#f3ead9,#e7d9bf);border:1px solid rgba(201,169,97,.5);color:var(--dark);}
+.modal-input{background:rgba(255,255,255,.55);border:1px solid rgba(122,26,26,.25);color:var(--dark);}
+.btn-primary{background:linear-gradient(180deg,#e8cd8a,#c9a961);color:#2a1a10;border:0;font-weight:700;}
+.btn-primary:hover{box-shadow:0 8px 20px rgba(201,169,97,.35);}
+.btn-secondary{background:rgba(243,234,217,.1);border:1px solid var(--g-line-soft);color:var(--g-tx);}
+.btn-danger{background:#7a1a1a;color:#fff;border:0;}
+
+/* ---- Sammlung ---- */
+.collection-header h2{font-family:var(--font-serif);color:var(--g-hi);}
+.collection-count{color:var(--g-dim);}
+.collection-progress{background:rgba(243,234,217,.12);}
+.collection-progress-fill{background:linear-gradient(90deg,#a8842c,#e8cd8a);box-shadow:0 0 10px rgba(201,169,97,.45);}
+.collection-filter .filter-btn{background:rgba(243,234,217,.06);border:1px solid var(--g-line-soft);color:var(--g-dim);}
+.collection-filter .filter-btn.active{background:linear-gradient(180deg,#e8cd8a,#c9a961);color:#2a1a10;border-color:transparent;font-weight:700;}
+.collection-card{border:1px solid var(--g-line-soft);background:rgba(243,234,217,.05);}
+.collection-card-name{color:var(--g-tx);}
+.collection-card-img{background:rgba(243,234,217,.07);}
+.collection-empty{color:var(--g-faint);}
+
+/* ---- Orden (an dunkles System angepasst) ---- */
+.ach-header h2{color:var(--g-hi);}
+.ach-count{color:var(--g-dim);}
+.ach-progress{background:rgba(243,234,217,.12);}
+.ach-progress-fill{background:linear-gradient(90deg,#a8842c,#e8cd8a);}
+.ach-cat{color:var(--g-hi);}
+.ach-cat::after{background:linear-gradient(90deg,var(--g-line),transparent);}
+.ach-item{background:rgba(243,234,217,.055);border:1px solid var(--g-line-soft);}
+.ach-item.unlocked{background:linear-gradient(135deg,rgba(201,169,97,.16),rgba(201,169,97,.06));
+  border-color:var(--g-line);box-shadow:0 3px 14px rgba(201,169,97,.14);}
+.ach-icon{background:rgba(243,234,217,.07);}
+.ach-item.unlocked .ach-icon{background:radial-gradient(circle,#f0dca0,#c9a961);box-shadow:0 0 14px rgba(232,205,138,.5);}
+.ach-name{color:var(--g-tx);}
+.ach-desc{color:var(--g-dim);}
+.ach-bar{background:rgba(243,234,217,.14);}
+.ach-meta{color:var(--g-hi);}
+.ach-done-tick{color:var(--g-hi);}
+
+/* ---- Tauschen ---- */
+.trades-header h2{font-family:var(--font-serif);color:var(--g-hi);}
+.trades-section h3{font-family:var(--font-serif);color:rgba(201,169,97,.8);}
+.trade-card,.trade-offer{background:rgba(243,234,217,.055);border:1px solid var(--g-line-soft);color:var(--g-tx);border-radius:14px;}
+.trade-info,.trade-want{color:var(--g-dim);}
+.trade-btn{background:linear-gradient(180deg,#e8cd8a,#c9a961);color:#2a1a10;border:0;font-weight:700;}
+
+/* ---- Packs-Screen ---- */
+.pack-count{color:var(--g-dim);}
+.pack-closed{border:1px dashed var(--g-line);}
+.modal-box .pack-hint,.pack-screen p{color:var(--g-dim);}
+
+/* ---- Elternbereich (dunkel, sachlich) ---- */
+.parent-login h2,.parent-area h2{font-family:var(--font-serif);color:var(--g-hi);}
+.parent-section{background:rgba(243,234,217,.05);border:1px solid var(--g-line-soft);border-radius:14px;color:var(--g-tx);}
+.parent-section h3{font-family:var(--font-serif);color:rgba(201,169,97,.85);}
+.parent-area p,.parent-login p{color:var(--g-dim);}
+
+/* ---- Neue Elemente: Avatar, Pill, Ringe, Quest ---- */
+.avatar{width:46px;height:46px;border-radius:14px;border:1px solid var(--g-line);
+  background:linear-gradient(140deg,rgba(201,169,97,.28),rgba(201,169,97,.08));
+  display:grid;place-items:center;font-family:var(--font-serif);font-size:19px;font-weight:700;color:var(--g-hi);}
+.pill-gold{border:1px solid var(--g-line);border-radius:99px;padding:7px 14px;font-size:12.5px;font-weight:600;
+  color:var(--g-hi);display:inline-flex;align-items:center;gap:7px;}
+.ring-row{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:16px 0;}
+.ring-card{padding:15px 10px;border-radius:12px;text-align:center;
+  background:rgba(243,234,217,.055);border:1px solid var(--g-line-soft);}
+.ring-card .wrap{position:relative;display:inline-block;}
+.ring-card .val{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-serif);
+  font-size:17px;font-weight:700;color:var(--g-tx);}
+.ring-card .lab{font-size:12px;font-weight:600;color:var(--g-hi);margin-top:9px;}
+.ring-card .sub{font-size:10.5px;color:var(--g-faint);margin-top:2px;}
+.quest-reward{width:56px;height:79px;object-fit:cover;border-radius:8px;border:1px solid rgba(122,26,26,.22);
+  box-shadow:0 8px 18px rgba(42,26,16,.28);flex-shrink:0;}
+
+/* ---- Willkommens-/Profilauswahl-Screen ---- */
+.welcome h1{font-family:var(--font-serif);color:var(--g-hi);letter-spacing:.03em;}
+.welcome .subtitle{color:var(--g-dim);}
+.welcome .hogwarts-star{filter:drop-shadow(0 0 18px rgba(232,205,138,.5));}
+.welcome .who-label{color:var(--g-faint);font-size:14px;margin-bottom:12px;}
+.profile-btn{background:rgba(243,234,217,.06);border:1px solid var(--g-line-soft);color:var(--g-tx);
+  font-family:var(--font-serif);box-shadow:0 6px 18px rgba(0,0,0,.28);}
+.profile-btn:hover{background:rgba(243,234,217,.12);border-color:var(--g-line);}
+.profile-btn:active{background:linear-gradient(180deg,#e8cd8a,#c9a961);color:#2a1a10;border-color:transparent;}
+.profile-btn.add-profile{border-style:dashed;color:rgba(201,169,97,.85);font-family:var(--font-sans);}
+
+/* ---- Dashboard-Details (Hybrid) ---- */
+.dash-sub{font-size:12px;color:var(--g-faint);margin-top:4px;}
+.hero-in{display:flex;align-items:center;gap:20px;}
+.hero-title{font-family:var(--font-serif);font-size:23px;color:var(--g-tx);margin-bottom:7px;letter-spacing:.01em;}
+.hero-sub{font-size:13px;color:var(--g-dim);line-height:1.45;}
+.hero-ringval{position:absolute;inset:0;display:grid;place-items:center;font-size:26px;}
+.wc-body{display:flex;gap:16px;align-items:center;margin-top:14px;}
+.wc-body .wc-bar{flex:1;}
+.stat-line{display:flex;gap:26px;justify-content:center;margin:20px 0 8px;}
+.stat-line .sn{font-family:var(--font-serif);font-size:20px;color:var(--g-tx);font-weight:700;}
+.stat-line .sl{color:var(--g-faint);font-size:12.5px;letter-spacing:.04em;}
+
 /* ===== iPad-Format (≥768px Breite) ===== */
 @media (min-width: 768px) {
   .app {
@@ -1687,67 +1894,127 @@ html, body {
     <div class="hogwarts-star">🪄</div>
     <h1>Magische Belohnungen</h1>
     <p class="subtitle">Ein Harry-Potter-Kartenspiel für fleißige Zauberer!</p>
-    <p style="margin-bottom:12px;color:var(--dark-light);font-size:14px;">Wer bist du?</p>
+    <p class="who-label">Wer bist du?</p>
     <div class="profile-grid" id="profileGrid"></div>
   </div>
 </div>
 
 <!-- ==================== SCREEN: DASHBOARD ==================== -->
 <div class="screen" id="screen-dashboard">
+  <!-- Kopf: Avatar + Begrüßung + Serie -->
   <div class="dash-header">
-    <h2>📜 Übersicht</h2>
+    <div style="display:flex;align-items:center;gap:13px;min-width:0;">
+      <div class="avatar" id="dashAvatar">J</div>
+      <div style="min-width:0;">
+        <div class="dash-welcome">Hallo, <strong id="dashName">Zauberer</strong></div>
+        <div class="dash-sub" id="dashSub"></div>
+      </div>
+    </div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <button class="logout-btn" onclick="logout()">🚪</button>
+      <button class="logout-btn" onclick="logout()" title="Abmelden">🚪</button>
     </div>
   </div>
-  <div class="dash-welcome">Hallo, <strong id="dashName">Zauberer</strong>! 👋</div>
 
+  <!-- Held: Packs mit Ring -->
   <div class="pack-reminder" id="packReminder" onclick="navigateTo('packs')">
-    <span class="emoji">🎁</span>
-    <span>Du hast <span class="count" id="dashPackCount">0</span> Pack<span id="dashPackPlural">s</span> zu öffnen!</span>
+    <div class="hero-in">
+      <div style="flex:1;min-width:0;">
+        <div class="hero-title"><span id="dashPackCount">0</span> Pack<span id="dashPackPlural">s</span> warten auf dich</div>
+        <div class="hero-sub">Jedes Pack enthält 3 Karten – öffne sie und vervollständige dein Album.</div>
+      </div>
+      <div style="position:relative;flex-shrink:0;">
+        <svg width="86" height="86" viewBox="0 0 86 86">
+          <circle cx="43" cy="43" r="35" fill="none" stroke="rgba(201,169,97,.20)" stroke-width="8"/>
+          <circle cx="43" cy="43" r="35" fill="none" stroke="url(#heroGrad)" stroke-width="8" stroke-linecap="round"
+            stroke-dasharray="220" stroke-dashoffset="150" transform="rotate(-90 43 43)"/>
+          <defs><linearGradient id="heroGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#a8842c"/><stop offset="100%" stop-color="#f0dca0"/></linearGradient></defs>
+        </svg>
+        <div class="hero-ringval">🎁</div>
+      </div>
+    </div>
   </div>
 
+  <!-- Serie-Kacheln (bestehende IDs) -->
   <div class="streak-box" id="streakBox" style="display:none;">
-  <span class="streak-icon">🔥</span>
-  <div class="streak-info">
-    <div class="streak-num"><span id="instrumentStreakNum">0</span> Tage</div>
-    <div class="streak-label">Üben am Stück</div>
-  </div>
-</div>
-<div class="streak-box" id="weekStreakBox" style="display:none;">
-  <span class="streak-icon">📅</span>
-  <div class="streak-info">
-    <div class="streak-num"><span id="weekStreakNum">0</span> Tage</div>
-    <div class="streak-label">Serie</div>
-    <div class="streak-progress" id="weekStreakHint">Alle 7 Tage gibt's ein Bonus-Pack!</div>
-  </div>
-</div>
-<div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-num" id="statTasks">0</div>
-      <div class="stat-label">Aufgaben erledigt</div>
+    <span class="streak-icon">🔥</span>
+    <div class="streak-info">
+      <div class="streak-num"><span id="instrumentStreakNum">0</span> Tage</div>
+      <div class="streak-label">Üben am Stück</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-num" id="statCards">0</div>
-      <div class="stat-label">Karten gesammelt</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" id="statUnique">0/30</div>
-      <div class="stat-label">verschiedene</div>
+  </div>
+  <div class="streak-box" id="weekStreakBox" style="display:none;">
+    <span class="streak-icon">📅</span>
+    <div class="streak-info">
+      <div class="streak-num"><span id="weekStreakNum">0</span> Tage</div>
+      <div class="streak-label">Serie</div>
+      <div class="streak-progress" id="weekStreakHint">Alle 7 Tage gibt's ein Bonus-Pack!</div>
     </div>
   </div>
 
+  <!-- Fortschritts-Ringe -->
+  <div class="ring-row">
+    <div class="ring-card">
+      <div class="wrap">
+        <svg width="70" height="70" viewBox="0 0 70 70">
+          <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(201,169,97,.16)" stroke-width="7"/>
+          <circle id="ringSammlung" cx="35" cy="35" r="28" fill="none" stroke="#c9a961" stroke-width="7"
+            stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176" transform="rotate(-90 35 35)"/>
+        </svg>
+        <div class="val" id="ringSammlungPct">0%</div>
+      </div>
+      <div class="lab">Sammlung</div>
+      <div class="sub" id="statUnique">0/0</div>
+    </div>
+    <div class="ring-card">
+      <div class="wrap">
+        <svg width="70" height="70" viewBox="0 0 70 70">
+          <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(201,169,97,.16)" stroke-width="7"/>
+          <circle id="ringQuest" cx="35" cy="35" r="28" fill="none" stroke="#e8cd8a" stroke-width="7"
+            stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176" transform="rotate(-90 35 35)"/>
+        </svg>
+        <div class="val" id="ringQuestPct">0%</div>
+      </div>
+      <div class="lab">Familien-Quest</div>
+      <div class="sub" id="ringQuestSub">0/20</div>
+    </div>
+    <div class="ring-card">
+      <div class="wrap">
+        <svg width="70" height="70" viewBox="0 0 70 70">
+          <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(201,169,97,.16)" stroke-width="7"/>
+          <circle id="ringOrden" cx="35" cy="35" r="28" fill="none" stroke="#c9a961" stroke-width="7"
+            stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176" transform="rotate(-90 35 35)"/>
+        </svg>
+        <div class="val" id="ringOrdenPct">0%</div>
+      </div>
+      <div class="lab">Orden</div>
+      <div class="sub" id="achNum">0/0</div>
+    </div>
+  </div>
+
+  <!-- Familien-Quest (Pergament-Karte mit Belohnung) -->
   <div class="week-challenge" id="weekChallenge">
     <div class="wc-header">
       <span class="wc-icon">📅</span>
-      <div class="wc-title">Familien-Challenge</div>
+      <div class="wc-title">Familien-Quest</div>
       <span class="wc-status" id="wcStatus">0/20</span>
     </div>
-    <div class="wc-bar"><div class="wc-fill" id="wcFill" style="width:0%"></div></div>
-    <div class="wc-hint" id="wcHint">Gemeinsam 20 Aufgaben schaffen – dann gibt's für alle ein Familien-Pack! 🎁</div>
+    <div class="wc-body">
+      <img class="quest-reward" src="cards/hp-125.jpg" alt="Belohnung" id="questRewardImg">
+      <div style="flex:1;min-width:0;">
+        <div class="wc-bar"><div class="wc-fill" id="wcFill" style="width:0%"></div></div>
+        <div class="wc-hint" id="wcHint">Gemeinsam 20 Aufgaben schaffen – dann gibt's für alle ein Band-Pack! 🎁</div>
+      </div>
+    </div>
   </div>
 
-  <div class="section-title">⚡ Erledigte Aufgabe eintragen</div>
+  <!-- Kompakte Kennzahlen (bestehende IDs) -->
+  <div class="stat-line">
+    <div><span class="sn" id="statTasks">0</span> <span class="sl">Aufgaben</span></div>
+    <div><span class="sn" id="statCards">0</span> <span class="sl">Karten</span></div>
+  </div>
+
+  <div class="section-title">Aufgabe eintragen</div>
   <div class="task-grid" id="taskGrid"></div>
 </div>
 
@@ -2097,31 +2364,31 @@ html, body {
 <!-- ==================== BOTTOM NAV ==================== -->
 <div class="bottom-nav" id="bottomNav">
   <button class="nav-item active" data-screen="dashboard" onclick="navigateTo('dashboard')">
-    <span class="nav-icon">🏠</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg></span>
     <span>Start</span>
   </button>
   <button class="nav-item" data-screen="packs" onclick="navigateTo('packs')">
-    <span class="nav-icon">🎁</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7S9.5 3 7 4.5 8 8 12 7zM12 7s2.5-4 5-2.5S16 8 12 7z"/></svg></span>
     <span>Packs</span>
   </button>
   <button class="nav-item" data-screen="collection" onclick="navigateTo('collection')">
-    <span class="nav-icon">🃏</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="13" height="16" rx="2"/><path d="M8 2h11a2 2 0 0 1 2 2v14"/></svg></span>
     <span>Sammlung</span>
   </button>
   <button class="nav-item" data-screen="album" onclick="navigateTo('album')">
-    <span class="nav-icon">📖</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
     <span>Album</span>
   </button>
   <button class="nav-item" data-screen="trades" onclick="navigateTo('trades')">
-    <span class="nav-icon">🔄</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 16H3l4-4-4-4h4M17 8h4l-4 4 4 4h-4M14 4l-4 16"/></svg></span>
     <span>Tauschen</span>
   </button>
   <button class="nav-item" data-screen="achievements" onclick="navigateTo('achievements')">
-    <span class="nav-icon">🏆</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 21h8M12 17v4M17 4H7v6a5 5 0 0 0 10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/></svg></span>
     <span>Orden</span>
   </button>
   <button class="nav-item" data-screen="parent-login" onclick="navigateTo('parent-login')">
-    <span class="nav-icon">⚙️</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.7 1.1 2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.7-1.1 2 2 0 1 1-2.8-2.8A1.6 1.6 0 0 0 3 14.2a2 2 0 1 1 0-4A1.6 1.6 0 0 0 4.6 7a2 2 0 1 1 2.8-2.8A1.6 1.6 0 0 0 9 3a2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.7 1.1 2 2 0 1 1 2.8 2.8A1.6 1.6 0 0 0 21 9a2 2 0 1 1 0 4 1.6 1.6 0 0 0-1.6 2z"/></svg></span>
     <span>Eltern</span>
   </button>
 </div>
@@ -2588,6 +2855,9 @@ function renderWeekChallenge() {
   const pct = Math.min(100, Math.round((wc.count / wc.target) * 100));
   document.getElementById('wcFill').style.width = pct + '%';
   document.getElementById('wcStatus').textContent = `${wc.count}/${wc.target}`;
+  setRing('ringQuest', 'ringQuestPct', pct);
+  const qSub = document.getElementById('ringQuestSub');
+  if (qSub) qSub.textContent = `${wc.count}/${wc.target}`;
   const hint = document.getElementById('wcHint');
   // Einlöse-Status des aktuellen Profils
   let claimed = false;
@@ -2864,6 +3134,15 @@ function selectProfile(name) {
   navigateTo('dashboard');
 }
 
+// Ring-Helfer: setzt Fortschritt im Kreis (r=28 → Umfang 176)
+function setRing(ringId, pctId, pct) {
+  const p = Math.max(0, Math.min(100, Math.round(pct)));
+  const ring = document.getElementById(ringId);
+  if (ring) ring.setAttribute('stroke-dashoffset', String(176 * (1 - p / 100)));
+  const val = document.getElementById(pctId);
+  if (val) val.textContent = p + '%';
+}
+
 // ===================== DASHBOARD =====================
 function renderDashboard() {
   if (!currentProfile) return;
@@ -2885,7 +3164,18 @@ function renderDashboard() {
   document.getElementById('dashPackCount').textContent = totalPacks;
   document.getElementById('statTasks').textContent = taskCount;
   document.getElementById('statCards').textContent = cardCount;
-  document.getElementById('statUnique').textContent = `${uniqueCount}/${CARD_DB.length + Object.keys(FUNNY_CARDS).length}`;
+  const totalAll = CARD_DB.length + Object.keys(FUNNY_CARDS).length;
+  document.getElementById('statUnique').textContent = `${uniqueCount}/${totalAll}`;
+
+  // Avatar-Initiale + Fortschritts-Ringe (Untertitel folgt nach der Streak-Berechnung)
+  const av = document.getElementById('dashAvatar');
+  if (av) av.textContent = (currentProfile || '?').trim().charAt(0).toUpperCase();
+  const earnedAch = Object.keys(prof.achievements || {}).length;
+
+  setRing('ringSammlung', 'ringSammlungPct', totalAll ? uniqueCount / totalAll * 100 : 0);
+  setRing('ringOrden', 'ringOrdenPct', ACHIEVEMENTS.length ? earnedAch / ACHIEVEMENTS.length * 100 : 0);
+  const achNumEl = document.getElementById('achNum');
+  if (achNumEl) achNumEl.textContent = `${earnedAch}/${ACHIEVEMENTS.length}`;
 
   // Streaks
   const today = new Date().toISOString().slice(0,10);
@@ -2902,6 +3192,16 @@ function renderDashboard() {
   const remaining = 7 - (displayStreak % 7);
   const hint = remaining === 7 ? 'Morgen gibt es ein Bonus-Pack!' : `${remaining} Tage bis zum nächsten Bonus-Pack`;
   document.getElementById('weekStreakHint').textContent = hint;
+
+  // Untertitel unter der Begrüßung
+  const sub = document.getElementById('dashSub');
+  if (sub) {
+    const parts = [];
+    if (displayStreak > 0) parts.push(`${displayStreak} Tage Serie`);
+    parts.push(`${earnedAch} von ${ACHIEVEMENTS.length} Orden`);
+    parts.push(`${completedStoryBands(prof)} Bände vollständig`);
+    sub.textContent = parts.join(' · ');
+  }
 
   // Familien-Wochenchallenge
   renderWeekChallenge();
