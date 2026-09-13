@@ -2392,8 +2392,10 @@ const ACHIEVEMENTS = [
   // ---- Album & Familie ----
   { id:'band1', cat:'Album', icon:'📖', name:'Band-Meister', desc:'Vervollständige dein erstes Album-Band', goal:1, val: p => completedBands(p) },
   { id:'band3', cat:'Album', icon:'🏰', name:'Dreifacher Meister', desc:'Vervollständige 3 Album-Bände', goal:3, val: p => completedBands(p) },
+  { id:'bandAll', cat:'Album', icon:'🧙', name:'Herr der sieben Bände', desc:'Vervollständige alle 7 Bücherbände', goal:7, val: p => completedStoryBands(p) },
   { id:'magicworld', cat:'Album', icon:'🌍', name:'Entdecker der Magischen Welt', desc:'Sammle 5 Karten aus „Die Magische Welt"', goal:5, val: p => cardsFromBand(p, 9) },
   { id:'beachparty', cat:'Album', icon:'🏖️', name:'Strandparty-Gast', desc:'Erschaffe deine erste Strandparty-Edition', goal:1, val: p => funnyOwned(p) },
+  { id:'funnyAll', cat:'Album', icon:'🌴', name:'Strandparty-König', desc:'Sammle ALLE Strandpartykarten', goal: () => allFunnyCount(), val: p => funnyOwned(p) },
   { id:'animated', cat:'Album', icon:'🎬', name:'Lebendiges Porträt', desc:'Erwecke ein Gründer-Porträt zum Leben', goal:1, val: p => Object.keys(p.animatedPortraits || {}).length },
   { id:'family5', cat:'Album', icon:'👨‍👩‍👧', name:'Familien-Champion', desc:'Schaffe 5× die Familien-Challenge', goal:5, val: p => p.weekWins || 0 },
 ];
@@ -2414,6 +2416,13 @@ function completedBands(p) {
   return ALBUM_BANDS.filter(band => band.cards.length > 0 &&
     band.cards.every(id => (p.cards || {})[id] > 0)).length;
 }
+// Nur die 7 Bücherbände (Indizes 0-6), ohne Strandparty/Gründer/Magische Welt
+function completedStoryBands(p) {
+  return ALBUM_BANDS.slice(0, 7).filter(band => band.cards.length > 0 &&
+    band.cards.every(id => (p.cards || {})[id] > 0)).length;
+}
+// Gesamtzahl der Strandparty-Karten (für den "alle Strandpartykarten"-Orden)
+function allFunnyCount() { return Object.keys(FUNNY_CARDS).length; }
 function cardsFromBand(p, bandIdx) {
   const band = ALBUM_BANDS[bandIdx];
   if (!band) return 0;
