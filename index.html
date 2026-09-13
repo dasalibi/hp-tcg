@@ -878,6 +878,165 @@ html, body {
   border-radius: 10px;
 }
 
+/* ========== Orden / Errungenschaften ========== */
+.ach-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.ach-header h2 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--burgundy);
+}
+.ach-count {
+  font-size: 14px;
+  color: var(--dark-light);
+  font-weight: 600;
+}
+.ach-progress-wrap { margin-bottom: 18px; }
+.ach-progress {
+  height: 10px;
+  background: rgba(110,50,30,0.15);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.ach-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #a8842c, #e8c96a);
+  transition: width 0.5s ease;
+}
+.ach-cat {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: var(--burgundy);
+  margin: 20px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ach-cat::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(110,50,30,0.35), transparent);
+}
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.ach-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255,250,240,0.6);
+  border: 2px solid rgba(110,50,30,0.15);
+  transition: transform 0.2s;
+}
+.ach-item.unlocked {
+  border-color: #c5a55a;
+  background: linear-gradient(135deg, rgba(255,248,225,0.95), rgba(250,235,195,0.85));
+  box-shadow: 0 3px 12px rgba(197,165,90,0.35);
+}
+.ach-item.locked { opacity: 0.62; }
+.ach-icon {
+  font-size: 30px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(110,50,30,0.08);
+}
+.ach-item.unlocked .ach-icon {
+  background: radial-gradient(circle, #ffe9a8, #d9b95c);
+  box-shadow: 0 0 12px rgba(217,185,92,0.6);
+}
+.ach-body { min-width: 0; flex: 1; }
+.ach-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--dark);
+  margin-bottom: 2px;
+}
+.ach-desc {
+  font-size: 11px;
+  color: var(--dark-light);
+  line-height: 1.3;
+  margin-bottom: 5px;
+}
+.ach-bar {
+  height: 5px;
+  background: rgba(110,50,30,0.14);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.ach-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #a8842c, #e8c96a);
+  border-radius: 4px;
+}
+.ach-meta {
+  font-size: 10px;
+  color: #8a6a1f;
+  font-weight: 600;
+  margin-top: 3px;
+}
+.ach-done-tick {
+  font-size: 15px;
+  color: #a8842c;
+}
+
+/* Orden-Popup */
+.ach-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(20,8,4,0.82);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 24px;
+}
+.ach-popup.active { display: flex; }
+.ach-popup-box {
+  background: linear-gradient(160deg, #fffaf0, #f3e3c0);
+  border: 3px solid #c5a55a;
+  border-radius: 18px;
+  padding: 28px 24px;
+  text-align: center;
+  max-width: 330px;
+  box-shadow: 0 0 40px rgba(232,201,106,0.55);
+  animation: achPop 0.45s cubic-bezier(0.2, 1.4, 0.5, 1);
+}
+@keyframes achPop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.ach-popup-icon { font-size: 54px; line-height: 1; margin-bottom: 8px; }
+.ach-popup-kicker {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #8a6a1f;
+  font-weight: 700;
+}
+.ach-popup-name {
+  font-family: var(--font-serif);
+  font-size: 23px;
+  color: var(--burgundy);
+  margin: 6px 0;
+}
+.ach-popup-desc { font-size: 13px; color: var(--dark-light); margin-bottom: 16px; }
+
 /* ========== Collection ========== */
 .collection-header {
   display: flex;
@@ -1497,7 +1656,14 @@ html, body {
   /* Pack-Enthüllung: mehr Karten nebeneinander */
   .reveal-cards { flex-direction: row; gap: 16px; justify-content: center; }
   .reveal-cards .mini-card { width: 160px; }
-  /* Album-Tabs größer */
+  /* Orden: 3 Spalten auf iPad */
+  .ach-grid { grid-template-columns: repeat(3, 1fr); }
+  .ach-header h2 { font-size: 26px; }
+  .ach-item { padding: 13px; }
+  .ach-icon { width: 46px; height: 46px; font-size: 34px; }
+  .ach-name { font-size: 14px; }
+  .ach-desc { font-size: 12px; }
+
   .album-tab { font-size: 14px; padding: 9px 16px; }
   .album-band-title { font-size: 22px; }
   .album-band-sub { font-size: 13px; }
@@ -1656,6 +1822,18 @@ html, body {
       <button class="album-nav-btn" id="albumNext">▶</button>
     </div>
   </div>
+</div>
+
+<!-- ==================== SCREEN: ORDEN ==================== -->
+<div class="screen" id="screen-achievements">
+  <div class="ach-header">
+    <h2>🏆 Meine Orden</h2>
+    <span id="achCount" class="ach-count">0 / 0</span>
+  </div>
+  <div class="ach-progress-wrap">
+    <div class="ach-progress"><div class="ach-progress-fill" id="achProgressFill"></div></div>
+  </div>
+  <div id="achList"></div>
 </div>
 
 <!-- ==================== SCREEN: PARENT LOGIN ==================== -->
@@ -1905,6 +2083,17 @@ html, body {
   </div>
 </div>
 
+<!-- ==================== POPUP: Neuer Orden ==================== -->
+<div class="ach-popup" id="achPopup">
+  <div class="ach-popup-box">
+    <div class="ach-popup-icon" id="achPopupIcon">🏆</div>
+    <div class="ach-popup-kicker">Neuer Orden</div>
+    <div class="ach-popup-name" id="achPopupName"></div>
+    <div class="ach-popup-desc" id="achPopupDesc"></div>
+    <button class="btn-primary" onclick="closeAchievementPopup()">Weiter ✨</button>
+  </div>
+</div>
+
 <!-- ==================== BOTTOM NAV ==================== -->
 <div class="bottom-nav" id="bottomNav">
   <button class="nav-item active" data-screen="dashboard" onclick="navigateTo('dashboard')">
@@ -1926,6 +2115,10 @@ html, body {
   <button class="nav-item" data-screen="trades" onclick="navigateTo('trades')">
     <span class="nav-icon">🔄</span>
     <span>Tauschen</span>
+  </button>
+  <button class="nav-item" data-screen="achievements" onclick="navigateTo('achievements')">
+    <span class="nav-icon">🏆</span>
+    <span>Orden</span>
   </button>
   <button class="nav-item" data-screen="parent-login" onclick="navigateTo('parent-login')">
     <span class="nav-icon">⚙️</span>
@@ -2170,6 +2363,83 @@ const FUNNY_CARDS = {
   'hp-112': { id:'hp-fun-034', name:'Strandparty-Viktor Krum', rarity:'common', type:'Charakter', subtype:'Strandparty', house:'-', desc:'Viktor Krum trainiert am Strand: Badehose, Handtuch um den Hals, verbissen übt er mit einem goldenen Ball - den Schnatz hat er längst gefangen, aber die Wellen ignorieren seinen Star-Blick.', image:'cards/hp-fun-034.jpg' }
 };
 
+// ===================== ORDEN / ERRUNGENSCHAFTEN =====================
+// Reines Prestige – keine Belohnungen. Wird nach Aktionen + beim Öffnen geprüft.
+const ACHIEVEMENTS = [
+  // ---- Sammlung ----
+  { id:'coll10', cat:'Sammlung', icon:'🎴', name:'Erste Schritte', desc:'Sammle 10 verschiedene Karten', goal:10, val: p => uniqueCards(p) },
+  { id:'coll50', cat:'Sammlung', icon:'🃏', name:'Eifriger Sammler', desc:'Sammle 50 verschiedene Karten', goal:50, val: p => uniqueCards(p) },
+  { id:'coll75', cat:'Sammlung', icon:'📚', name:'Halbe Sammlung', desc:'Sammle 75 verschiedene Karten', goal:75, val: p => uniqueCards(p) },
+  { id:'coll125', cat:'Sammlung', icon:'💎', name:'Sammler-Legende', desc:'Sammle 125 verschiedene Karten', goal:125, val: p => uniqueCards(p) },
+  { id:'collAll', cat:'Sammlung', icon:'👑', name:'Der Zauberermeister', desc:'Sammle ALLE Karten', goal: () => totalCards(), val: p => uniqueCards(p) },
+  // ---- Fleiß ----
+  { id:'task1', cat:'Fleiß', icon:'⚡', name:'Der erste Zauber', desc:'Erledige deine erste Aufgabe', goal:1, val: p => taskCount(p) },
+  { id:'task50', cat:'Fleiß', icon:'🐝', name:'Fleißige Biene', desc:'Erledige 50 Aufgaben', goal:50, val: p => taskCount(p) },
+  { id:'task100', cat:'Fleiß', icon:'📅', name:'Arbeitsame Woche', desc:'Erledige 100 Aufgaben', goal:100, val: p => taskCount(p) },
+  { id:'task250', cat:'Fleiß', icon:'💪', name:'Unermüdlich', desc:'Erledige 250 Aufgaben', goal:250, val: p => taskCount(p) },
+  { id:'task500', cat:'Fleiß', icon:'🏅', name:'Meisterhaft', desc:'Erledige 500 Aufgaben', goal:500, val: p => taskCount(p) },
+  // ---- Ausdauer ----
+  { id:'streak3', cat:'Ausdauer', icon:'🔥', name:'Drei am Stück', desc:'3 Tage in Folge geübt', goal:3, val: p => p.instrumentStreak || 0 },
+  { id:'streak7', cat:'Ausdauer', icon:'📆', name:'Eine ganze Woche', desc:'7 Tage in Folge geübt', goal:7, val: p => p.instrumentStreak || 0 },
+  { id:'streak14', cat:'Ausdauer', icon:'🗓️', name:'Zwei Wochen stark', desc:'14 Tage in Folge geübt', goal:14, val: p => p.instrumentStreak || 0 },
+  { id:'streak30', cat:'Ausdauer', icon:'🌟', name:'Monat der Magie', desc:'30 Tage in Folge geübt', goal:30, val: p => p.instrumentStreak || 0 },
+  // ---- Packs ----
+  { id:'pack1', cat:'Packs', icon:'🎁', name:'Das erste Pack', desc:'Öffne dein erstes Pack', goal:1, val: p => p.packsOpened || 0 },
+  { id:'pack50', cat:'Packs', icon:'📦', name:'Pack-Jäger', desc:'Öffne 50 Packs', goal:50, val: p => p.packsOpened || 0 },
+  { id:'pack150', cat:'Packs', icon:'🎊', name:'Pack-Meister', desc:'Öffne 150 Packs', goal:150, val: p => p.packsOpened || 0 },
+  { id:'firstLegendary', cat:'Packs', icon:'✨', name:'Glückspilz', desc:'Ziehe deine erste legendäre Karte', goal:1, val: p => countByRarity(p, 'legendary') },
+  { id:'firstRelikt', cat:'Packs', icon:'🟣', name:'Hüter der Gründer', desc:'Finde eine Relikt-Karte', goal:1, val: p => countByRarity(p, 'relikt') },
+  // ---- Album & Familie ----
+  { id:'band1', cat:'Album', icon:'📖', name:'Band-Meister', desc:'Vervollständige dein erstes Album-Band', goal:1, val: p => completedBands(p) },
+  { id:'band3', cat:'Album', icon:'🏰', name:'Dreifacher Meister', desc:'Vervollständige 3 Album-Bände', goal:3, val: p => completedBands(p) },
+  { id:'magicworld', cat:'Album', icon:'🌍', name:'Entdecker der Magischen Welt', desc:'Sammle 5 Karten aus „Die Magische Welt"', goal:5, val: p => cardsFromBand(p, 9) },
+  { id:'beachparty', cat:'Album', icon:'🏖️', name:'Strandparty-Gast', desc:'Erschaffe deine erste Strandparty-Edition', goal:1, val: p => funnyOwned(p) },
+  { id:'animated', cat:'Album', icon:'🎬', name:'Lebendiges Porträt', desc:'Erwecke ein Gründer-Porträt zum Leben', goal:1, val: p => Object.keys(p.animatedPortraits || {}).length },
+  { id:'family5', cat:'Album', icon:'👨‍👩‍👧', name:'Familien-Champion', desc:'Schaffe 5× die Familien-Challenge', goal:5, val: p => p.weekWins || 0 },
+];
+
+const ACH_CATS = ['Sammlung', 'Fleiß', 'Ausdauer', 'Packs', 'Album'];
+
+// ---- Hilfszähler für die Orden ----
+function uniqueCards(p) { return Object.keys(p.cards || {}).length; }
+function totalCards() { return CARD_DB.length + Object.keys(FUNNY_CARDS).length; }
+function taskCount(p) { return (p.tasks || []).length; }
+function countByRarity(p, rarity) {
+  return Object.keys(p.cards || {}).filter(id => {
+    const c = getCardById(id);
+    return c && c.rarity === rarity;
+  }).length;
+}
+function completedBands(p) {
+  return ALBUM_BANDS.filter(band => band.cards.length > 0 &&
+    band.cards.every(id => (p.cards || {})[id] > 0)).length;
+}
+function cardsFromBand(p, bandIdx) {
+  const band = ALBUM_BANDS[bandIdx];
+  if (!band) return 0;
+  return band.cards.filter(id => (p.cards || {})[id] > 0).length;
+}
+function funnyOwned(p) {
+  return Object.keys(p.cards || {}).filter(id => id.startsWith('hp-fun-')).length;
+}
+
+// Prüft alle Orden: schaltet neue frei und gibt sie zurück (für Popup)
+function checkAchievements(prof) {
+  if (!prof) return [];
+  if (!prof.achievements) prof.achievements = {};
+  const fresh = [];
+  ACHIEVEMENTS.forEach(a => {
+    if (prof.achievements[a.id]) return;
+    const goal = typeof a.goal === 'function' ? a.goal() : a.goal;
+    if (a.val(prof) >= goal) {
+      prof.achievements[a.id] = Date.now();
+      fresh.push(a);
+    }
+  });
+  return fresh;
+}
+
+
 // ===================== TASKS =====================
 const TASKS = [
   { id:'instrument', icon:'🎵', label:'Instrument geübt', needParent:false, adultOnly:false },
@@ -2392,8 +2662,10 @@ function openBandPack(bandIdx) {
     prof.cards[card.id] = (prof.cards[card.id] || 0) + 1;
   }
 
-  // Einlöse-Status setzen (Woche merken) + speichern
+  // Einlöse-Status setzen (Woche merken) + Orden-Zähler + speichern
   prof.weekRewardClaimed = wc.week;
+  prof.weekWins = (prof.weekWins || 0) + 1;
+  const freshAch = checkAchievements(prof);
   save();
 
   closeBandPick();
@@ -2402,7 +2674,72 @@ function openBandPack(bandIdx) {
     renderDashboard();
     renderAlbum();
     renderPackScreen();
+    queueAchievementPopups(freshAch);
   });
+}
+
+// ---- Orden rendern ----
+function renderAchievements() {
+  if (!currentProfile) return;
+  const prof = getProfile(currentProfile);
+  if (!prof) return;
+  checkAchievements(prof);   // rückwirkende Prüfung (z.B. nach Updates)
+
+  const list = document.getElementById('achList');
+  if (!list) return;
+  const earned = Object.keys(prof.achievements || {}).length;
+
+  list.innerHTML = ACH_CATS.map(cat => {
+    const items = ACHIEVEMENTS.filter(a => a.cat === cat);
+    if (!items.length) return '';
+    const cards = items.map(a => {
+      const goal = typeof a.goal === 'function' ? a.goal() : a.goal;
+      const cur = Math.min(goal, a.val(prof));
+      const done = !!prof.achievements[a.id];
+      const pct = goal > 0 ? Math.round(cur / goal * 100) : 0;
+      const when = done ? new Date(prof.achievements[a.id]).toLocaleDateString('de-DE') : '';
+      return `
+        <div class="ach-item ${done ? 'unlocked' : 'locked'}">
+          <div class="ach-icon">${a.icon}</div>
+          <div class="ach-body">
+            <div class="ach-name">${a.name} ${done ? '<span class="ach-done-tick">✔</span>' : ''}</div>
+            <div class="ach-desc">${a.desc}</div>
+            ${done
+              ? `<div class="ach-meta">Erreicht am ${when}</div>`
+              : `<div class="ach-bar"><div class="ach-bar-fill" style="width:${pct}%"></div></div>
+                 <div class="ach-meta">${cur} / ${goal}</div>`}
+          </div>
+        </div>`;
+    }).join('');
+    return `<div class="ach-cat">${cat}</div><div class="ach-grid">${cards}</div>`;
+  }).join('');
+
+  document.getElementById('achCount').textContent = `${earned} / ${ACHIEVEMENTS.length}`;
+  document.getElementById('achProgressFill').style.width =
+    `${Math.round(earned / ACHIEVEMENTS.length * 100)}%`;
+}
+
+// ---- Popups für neu erreichte Orden (nacheinander) ----
+let achPopupQueue = [];
+function queueAchievementPopups(fresh) {
+  if (!fresh || !fresh.length) return;
+  achPopupQueue = achPopupQueue.concat(fresh);
+  if (!document.getElementById('achPopup').classList.contains('active')) showNextAchievementPopup();
+}
+function showNextAchievementPopup() {
+  const popup = document.getElementById('achPopup');
+  if (!popup) return;
+  const next = achPopupQueue.shift();
+  if (!next) { popup.classList.remove('active'); return; }
+  document.getElementById('achPopupIcon').textContent = next.icon;
+  document.getElementById('achPopupName').textContent = next.name;
+  document.getElementById('achPopupDesc').textContent = next.desc;
+  popup.classList.add('active');
+}
+function closeAchievementPopup() {
+  const popup = document.getElementById('achPopup');
+  popup.classList.remove('active');
+  setTimeout(() => { if (achPopupQueue.length) showNextAchievementPopup(); }, 250);
 }
 
 // ===================== NAVIGATION =====================
@@ -2434,6 +2771,9 @@ function navigateTo(screen) {
   } else if (screen === 'album') {
     document.getElementById('screen-album').classList.add('active');
     renderAlbum();
+  } else if (screen === 'achievements') {
+    document.getElementById('screen-achievements').classList.add('active');
+    renderAchievements();
   } else if (screen === 'trades') {
     document.getElementById('screen-trades').classList.add('active');
     renderTrades();
@@ -2520,6 +2860,10 @@ function renderDashboard() {
   if (!currentProfile) return;
   const prof = getProfile(currentProfile);
   document.getElementById('dashName').textContent = currentProfile;
+
+  // Orden rückwirkend prüfen (z.B. nach App-Updates) – neue Orden werden gefeiert
+  const freshAch = checkAchievements(prof);
+  if (freshAch.length) { save(); queueAchievementPopups(freshAch); }
 
   const taskCount = prof.tasks ? prof.tasks.length : 0;
   const cardCount = Object.values(prof.cards || {}).reduce((a,b) => a + b, 0);
@@ -2716,6 +3060,8 @@ function completeTask(label) {
     flashText = '⭐ Aufgabe erledigt! Du erhältst ein Pack + 🎁 Extra-Karte: ' + bonusCard.name + '!';
   }
   familyPackAwarded = false;
+  const freshAch = checkAchievements(prof);
+  save();
   const flash = document.getElementById('successFlash');
   document.getElementById('successFlashText').textContent = flashText;
   flash.style.display = 'block';
@@ -2729,6 +3075,7 @@ function completeTask(label) {
     if (revealCards.length > 0) {
       setTimeout(() => showCardReveal(revealCards, () => { renderDashboard(); }), 300);
     }
+    queueAchievementPopups(freshAch);
   }, 2000);
 }
 
@@ -2776,6 +3123,7 @@ function openPack() {
     isBonus = true;
   }
   prof.packs--;
+  prof.packsOpened = (prof.packsOpened || 0) + 1;
 
   currentPackCards = [];
   if (!prof.cards) prof.cards = {};
@@ -2789,7 +3137,9 @@ function openPack() {
     currentPackCards.push({ ...card, isNew });
     prof.cards[card.id] = (prof.cards[card.id] || 0) + 1;
   }
+  const freshAch = checkAchievements(prof);
   save();
+  queueAchievementPopups(freshAch);
 
   document.getElementById('packIdle').style.display = 'none';
   document.getElementById('packOpening').classList.add('active');
@@ -3322,12 +3672,14 @@ function executeTrade() {
     owned[cardId] = (owned[cardId] || 0) - 3;
     if (owned[cardId] <= 0) delete owned[cardId];
     owned[funny.id] = (owned[funny.id] || 0) + 1;
+    const freshAch = checkAchievements(prof);
     save();
     closeCardDetail();
     setTimeout(() => showCardReveal([{...funny, isNew: true}], () => {
       renderCollection();
       renderAlbum();
       renderDashboard();
+      queueAchievementPopups(freshAch);
     }), 100);
   } else if (count >= 2 && ANIMATED_PORTRAITS[cardId] && !(prof.animatedPortraits && prof.animatedPortraits[cardId])) {
     // Upgrade to animated portrait
@@ -3337,9 +3689,10 @@ function executeTrade() {
     owned[cardId] = (owned[cardId] || 0) - 1;
     prof.animatedPortraits = prof.animatedPortraits || {};
     prof.animatedPortraits[cardId] = true;
+    const freshAch2 = checkAchievements(prof);
     save();
     closeCardDetail();
-    setTimeout(() => renderCollection(), 100);
+    setTimeout(() => { renderCollection(); queueAchievementPopups(freshAch2); }, 100);
   } else if (card.type !== 'Charakter' && count >= 2) {
     // Trade 2:1 for random card with pack rarity distribution
     if (!confirm('2x ' + card.name + ' gegen 1 zufällige Karte tauschen?')) return;
@@ -3377,12 +3730,14 @@ function executeTrade() {
       : rarityPool[Math.floor(Math.random() * rarityPool.length)];
     const alreadyOwned = owned[randomCard.id] > 0;
     owned[randomCard.id] = (owned[randomCard.id] || 0) + 1;
+    const freshAch3 = checkAchievements(prof);
     save();
     closeCardDetail();
     setTimeout(() => showCardReveal([{...randomCard, isNew: !alreadyOwned}], () => {
       renderCollection();
       renderAlbum();
       renderDashboard();
+      queueAchievementPopups(freshAch3);
     }), 100);
   }
 }
