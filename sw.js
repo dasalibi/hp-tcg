@@ -2,7 +2,7 @@
    Magische Belohnungen – Service Worker
    Cached animierte Porträt-Videos für sofortige Wiedergabe
    ============================================================ */
-const CACHE_NAME = 'hp-tcg-v19';
+const CACHE_NAME = 'hp-tcg-v20';
 const BASE = '.';
 
 const PRECACHE_URLS = [
@@ -32,7 +32,6 @@ const PRECACHE_URLS = [
   `${BASE}/album/bg-band7.jpg`,
   `${BASE}/album/bg-beach.jpg`,
   `${BASE}/album/bg-founders.jpg`,
-  `${BASE}/album/bg-magicalworld.jpg`,
 ];
 
 // Install: Pre-Cache alle wichtigen Dateien
@@ -55,7 +54,13 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch: Cache-first für gecachte Assets, sonst Netzwerk
+// Nachricht von der App: sofort übernehmen (für den Update-Button)
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+// Fetch: App-Shell (index.html) network-first → Updates greifen sofort.
+// Bilder/Videos cache-first → sofortige Wiedergabe, offline verfügbar.
 self.addEventListener('fetch', event => {
   // Nur GET-Anfragen cachen
   if (event.request.method !== 'GET') return;
@@ -63,6 +68,30 @@ self.addEventListener('fetch', event => {
   // API-Anfragen niemals cachen
   if (event.request.url.includes('/api/')) return;
 
+  // Navigation / index.html → NETWORK-FIRST (Cache nur als Offline-Fallback)
+  const url = event.request.url;
+  const isShell = event.request.mode === 'navigate' ||
+                  event.request.destination === 'document' ||
+                  /\/index\.html(\?|$)/.test(url) ||
+                  /\/$/.test(new URL(url).pathname);
+
+  if (isShell) {
+    event.respondWith(
+      fetch(event.request).then(response => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() =>
+        // Offline: gespeicherte Shell ausliefern
+        caches.match(event.request).then(c => c || caches.match(`${BASE}/index.html`))
+      )
+    );
+    return;
+  }
+
+  // Alle übrigen Assets → cache-first (mit Nachladen in den Cache)
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;

@@ -1858,6 +1858,19 @@ body{
 .stat-line .sn{font-family:var(--font-serif);font-size:20px;color:var(--g-tx);font-weight:700;}
 .stat-line .sl{color:var(--g-faint);font-size:12.5px;letter-spacing:.04em;}
 
+/* ---- Update-Banner ---- */
+.update-banner{position:fixed;top:0;left:0;right:0;z-index:300;display:none;align-items:center;gap:14px;
+  padding:14px 20px;background:linear-gradient(180deg,#f0dca0,#c9a961);color:#2a1a10;
+  box-shadow:0 6px 24px rgba(0,0,0,.45);transform:translateY(-100%);transition:transform .3s ease}
+.update-banner.active{display:flex;transform:translateY(0)}
+.update-banner .ub-text{flex:1;min-width:0}
+.update-banner .ub-text b{display:block;font-size:14.5px;font-weight:700}
+.update-banner .ub-text span{font-size:12.5px;color:rgba(42,26,16,.75)}
+.update-banner .ub-btn{background:#2a1a10;color:#f7f1e6;border:0;font-family:inherit;font-weight:700;
+  font-size:13.5px;padding:10px 18px;border-radius:99px;cursor:pointer;white-space:nowrap}
+.update-banner .ub-btn:hover{background:#000}
+.version-line{font-size:12.5px;color:var(--g-faint);margin-top:6px}
+
 /* ===== iPad-Format (≥768px Breite) ===== */
 @media (min-width: 768px) {
   .app {
@@ -2233,6 +2246,16 @@ body{
     </div>
 
     <div class="parent-section">
+      <h3>🔄 App &amp; Updates</h3>
+      <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Die App lädt neue Versionen jetzt automatisch beim Öffnen. Falls ein Gerät hinterherhinkt: hier prüfen.</p>
+      <div class="assign-row">
+        <button class="btn-primary btn-small" onclick="checkForUpdate()">Auf Updates prüfen</button>
+      </div>
+      <p class="version-line" id="versionLine"></p>
+      <p id="versionMsg" style="font-size:13px;margin-top:4px;color:var(--dark-light);"></p>
+    </div>
+
+    <div class="parent-section">
       <h3>⚠️ Daten zurücksetzen</h3>
       <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Löscht alle Profile, Karten und Aufgaben. Nicht rückgängig machbar!</p>
       <button class="btn-danger btn-small" onclick="resetAllData()">Alle Daten löschen</button>
@@ -2376,6 +2399,15 @@ body{
     <div class="ach-popup-desc" id="achPopupDesc"></div>
     <button class="btn-primary" onclick="closeAchievementPopup()">Weiter ✨</button>
   </div>
+</div>
+
+<!-- ==================== UPDATE-BANNER ==================== -->
+<div class="update-banner" id="updateBanner">
+  <div class="ub-text">
+    <b>Neue Version verfügbar</b>
+    <span>Lade die neuesten Karten und Funktionen.</span>
+  </div>
+  <button class="ub-btn" onclick="applyUpdate()">Jetzt laden</button>
 </div>
 
 <!-- ==================== BOTTOM NAV ==================== -->
@@ -3081,6 +3113,7 @@ function navigateTo(screen) {
     resetPinPad();
   } else if (screen === 'parent-area') {
     document.getElementById('screen-parent-area').classList.add('active');
+    if (typeof renderVersionInfo === 'function') renderVersionInfo();
     renderParentArea();
   } else if (screen === 'dashboard') {
     document.getElementById('screen-dashboard').classList.add('active');
@@ -4702,12 +4735,72 @@ function setStreak() {
 
 init();
 
-// Service Worker für Offline-Cache der Videos
+// ===================== APP-VERSION & UPDATES =====================
+const APP_VERSION = '2.5';        // bei jedem Deploy erhöhen
+const APP_DATE = '13.09.2026';
+
+function renderVersionInfo() {
+  const el = document.getElementById('versionLine');
+  if (!el) return;
+  const ctrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? 'aktiv' : 'wird eingerichtet';
+  el.textContent = `App-Stand ${APP_VERSION} (${APP_DATE}) · Offline-Cache: ${ctrl}`;
+}
+
+function showUpdateBanner() {
+  const b = document.getElementById('updateBanner');
+  if (b) b.classList.add('active');
+}
+
+function applyUpdate() {
+  const b = document.getElementById('updateBanner');
+  if (b) b.classList.remove('active');
+  navigator.serviceWorker.getRegistration().then(reg => {
+    if (reg && reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    else window.location.reload();
+  }).catch(() => window.location.reload());
+}
+
+function checkForUpdate() {
+  const msg = document.getElementById('versionMsg');
+  renderVersionInfo();
+  if (msg) msg.textContent = 'Prüfe auf Updates …';
+  const reg = window.__swReg;
+  if (!reg) {
+    if (msg) msg.textContent = 'Kein Update-Dienst verfügbar (nur online).';
+    return;
+  }
+  reg.update().then(() => {
+    setTimeout(() => {
+      if (reg.waiting) { showUpdateBanner(); if (msg) msg.textContent = 'Update gefunden – Banner antippen.'; }
+      else if (msg) msg.textContent = '✅ Du hast bereits die neueste Version.';
+    }, 1200);
+  }).catch(() => { if (msg) msg.textContent = 'Prüfung fehlgeschlagen (offline?).'; });
+}
+
+// Service Worker: Offline-Cache + Update-Erkennung
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(reg => {
-    console.log('SW registered:', reg.scope);
-  }).catch(err => {
-    console.log('SW registration failed:', err);
+    window.__swReg = reg;
+    reg.update();                                   // bei jedem Start prüfen
+    setInterval(() => reg.update(), 60 * 60 * 1000); // stündlich
+
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      if (!newWorker) return;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdateBanner();
+        }
+      });
+    });
+  }).catch(err => { console.log('SW registration failed:', err); });
+
+  // Sobald die neue Version übernimmt → einmal neu laden
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
   });
 }
 </script>
