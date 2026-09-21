@@ -2475,6 +2475,10 @@ body{
     <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:22px;height:22px;vertical-align:-4px;margin-right:7px"><path d="M7 16H3l4-4-4-4h4M17 8h4l-4 4 4 4h-4M14 4l-4 16"/></svg>Tauschbörse</h2>
   </div>
   <div id="tradesContent">
+    <div class="trades-section" id="halTradeSection" style="display:none;">
+      <button class="btn-hal-upgrade" onclick="openCreateTradeModal('')">🎃 Nur Kürbis-Taler anbieten</button>
+      <p style="font-size:12px;color:var(--dark-light);text-align:center;margin:6px 0 0;">Biete Marken ohne Karte als Einsatz – z.B. „5 🎃 für Hermine".</p>
+    </div>
     <div class="trades-section">
       <h3>📩 Angebote von anderen</h3>
       <div id="incomingTrades"><p style="color:var(--dark-light);font-size:14px;">Lade Angebote...</p></div>
@@ -4897,6 +4901,10 @@ function renderTrades() {
   const myName = currentProfile;
   const myCards = (getProfile(myName).cards || {});
   
+  // „Nur Kürbis-Taler anbieten" nur während der Saison
+  const halSec = document.getElementById('halTradeSection');
+  if (halSec) halSec.style.display = halloweenActive() ? 'block' : 'none';
+  
   // Incoming offers (from others)
   const incoming = offers.filter(o => o.from !== myName);
   const incomingDiv = document.getElementById('incomingTrades');
@@ -4936,8 +4944,10 @@ function getCardById(id) {
 }
 
 function renderTradeOffer(offer, container, mode) {
-  const offerCard = getCardById(offer.offerCard);
-  if (!offerCard) return;
+  const offerCard = offer.offerCard ? getCardById(offer.offerCard) : null;
+  if (offer.offerCard && !offerCard) return;      // Karte angegeben, aber unbekannt
+  const oT = parseInt(offer.offerTokens, 10) || 0;
+  const wT = parseInt(offer.wantTokens, 10) || 0;
   
   const myCards = (getProfile(currentProfile).cards || {});
   const myName = currentProfile;
@@ -4966,22 +4976,25 @@ function renderTradeOffer(offer, container, mode) {
     wantHtml += `<span class="trade-want-tag ${cls}">${have ? '✅' : '❌'} ${wCard.name}</span>`;
   });
   
-  const oT = parseInt(offer.offerTokens, 10) || 0;
-  const wT = parseInt(offer.wantTokens, 10) || 0;
   let tokenHtml = '';
   if (oT || wT) {
     const teile = [];
-    if (oT) teile.push(`+ ${oT} 🎃 wird dazugelegt`);
+    if (oT && offerCard) teile.push(`+ ${oT} 🎃 wird dazugelegt`);
     if (wT) teile.push(`${wT} 🎃 werden verlangt`);
-    tokenHtml = `<div class="trade-tokens">${teile.join(' · ')}</div>`;
+    if (teile.length) tokenHtml = `<div class="trade-tokens">${teile.join(' · ')}</div>`;
   }
   const canAccept = !isMyOffer && (offer.wantMode === 'any' ? ownsAny : ownsAll)
-                    && (!wT || halTokens(myName) >= wT);
+                    && (!wT || halTokens(myName) >= wT)
+                    && (!oT || halTokens(offer.from) >= oT);
   
+  const angebotImg = offerCard
+    ? (offerCard.image ? '<img src="' + offerCard.image + '" alt="">' : '🃏')
+    : '🎃';
+  const angebotName = offerCard ? offerCard.name : (oT + ' Kürbis-Taler');
   div.innerHTML = `
-    <div class="trade-offer-img">${offerCard.image ? '<img src="' + offerCard.image + '" alt="">' : '🃏'}</div>
+    <div class="trade-offer-img">${angebotImg}</div>
     <div class="trade-offer-info">
-      <div class="trade-offer-name">${offerCard.name}</div>
+      <div class="trade-offer-name">${angebotName}</div>
       <div class="trade-offer-from">von ${offer.from}</div>
       <div class="trade-want-list">${wantHtml}</div>
       ${tokenHtml}
@@ -5000,7 +5013,7 @@ function openTradeConfirm(offerId) {
   const offer = (data.tradeOffers || []).find(o => o.id === offerId);
   if (!offer) return;
   window._pendingTradeId = offerId;
-  const offerCard = getCardById(offer.offerCard);
+  const offerCard = offer.offerCard ? getCardById(offer.offerCard) : null;
   const wantNames = offer.wantCards.map(id => {
     const c = getCardById(id);
     return c ? c.name : '?';
@@ -5011,11 +5024,14 @@ function openTradeConfirm(offerId) {
   if (wantNames) gebeTeile.push('"' + wantNames + '"');
   if (wT > 0) gebeTeile.push(wT + ' Kürbis-Taler');
   const gebe = gebeTeile.length ? gebeTeile.join(' und ') : 'nichts';
-  const bekomme = oT > 0
-    ? `"${offerCard ? offerCard.name : '?'}" + ${oT} Kürbis-Taler`
-    : `"${offerCard ? offerCard.name : '?'}"`;
+  const bekommeTeile = [];
+  if (offerCard) bekommeTeile.push('"' + offerCard.name + '"');
+  if (oT > 0) bekommeTeile.push(oT + ' Kürbis-Taler');
+  const bekomme = bekommeTeile.length ? bekommeTeile.join(' + ') : 'nichts';
   document.getElementById('tradeConfirmText').textContent =
     `Du bekommst ${bekomme} von ${offer.from}. Gibst du dafür ${gebe}?`;
+  const errEl = document.getElementById('tradeConfirmError');
+  if (errEl) errEl.textContent = '';
   document.getElementById('tradeConfirmModal').classList.add('active');
 }
 
@@ -5047,8 +5063,8 @@ function confirmTradeAccept() {
       return;
     }
   }
-  // Besitzt der Anbieter seine angebotene Karte noch?
-  if (!theirProf.cards[offer.offerCard] || theirProf.cards[offer.offerCard] < 1) {
+  // Besitzt der Anbieter seine angebotene Karte noch? (nur wenn eine Karte angeboten wird)
+  if (offer.offerCard && (!theirProf.cards[offer.offerCard] || theirProf.cards[offer.offerCard] < 1)) {
     offers.splice(idx, 1);
     save();
     closeTradeConfirm();
@@ -5077,10 +5093,12 @@ function confirmTradeAccept() {
     theirProf.cards[wId] = (theirProf.cards[wId] || 0) + 1;
   }
 
-  // Transfer offered card from them -> me
-  theirProf.cards[offer.offerCard]--;
-  if (theirProf.cards[offer.offerCard] <= 0) delete theirProf.cards[offer.offerCard];
-  myProf.cards[offer.offerCard] = (myProf.cards[offer.offerCard] || 0) + 1;
+  // Transfer offered card from them -> me (nur wenn eine Karte angeboten wurde)
+  if (offer.offerCard) {
+    theirProf.cards[offer.offerCard]--;
+    if (theirProf.cards[offer.offerCard] <= 0) delete theirProf.cards[offer.offerCard];
+    myProf.cards[offer.offerCard] = (myProf.cards[offer.offerCard] || 0) + 1;
+  }
 
   // Taler-Beilagen übertragen
   if (halloweenActive()) {
@@ -5115,10 +5133,12 @@ function deleteTradeOffer(offerId) {
 
 function openCreateTradeModal(cardId) {
   closeCardDetail();
-  const card = getCardById(cardId);
-  if (!card) return;
-  window._pendingTradeCardId = cardId;
-  document.getElementById('tradeOfferCardName').textContent = card.name;
+  const nurTaler = !cardId;                                   // Angebot ohne Karte (nur Kürbis-Taler)
+  const card = cardId ? getCardById(cardId) : null;
+  if (nurTaler && !halloweenActive()) return;                 // nur während der Saison möglich
+  if (!nurTaler && !card) return;
+  window._pendingTradeCardId = cardId || '';
+  document.getElementById('tradeOfferCardName').textContent = card ? card.name : 'nur Kürbis-Taler 🎃';
   
   // Build want cards checklist (unowned first)
   const container = document.getElementById('tradeWantCards');
@@ -5133,7 +5153,7 @@ function openCreateTradeModal(cardId) {
     return a.name.localeCompare(b.name);
   });
   sorted.forEach(c => {
-    if (c.id === cardId) return; // can't want the same card
+    if (cardId && c.id === cardId) return; // can't want the same card
     const isOwned = owned[c.id] > 0;
     const label = document.createElement('label');
     label.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 8px;cursor:pointer;font-size:13px;';
@@ -5163,8 +5183,7 @@ function closeTradeModal() {
 }
 
 function submitTradeOffer() {
-  const cardId = window._pendingTradeCardId;
-  if (!cardId) return;
+  const cardId = window._pendingTradeCardId || '';
   const checks = document.querySelectorAll('#tradeWantCards input[type="checkbox"]:checked');
   const wantCards = Array.from(checks).map(c => c.value);
   const wantMode = document.querySelector('input[name="tradeMode"]:checked').value;
@@ -5175,6 +5194,11 @@ function submitTradeOffer() {
     const meine = halTokens(currentProfile);
     offerTokens = Math.min(Math.max(parseInt(document.getElementById('tradeOfferTokens').value, 10) || 0, 0), meine);
     wantTokens = Math.max(parseInt(document.getElementById('tradeWantTokens').value, 10) || 0, 0);
+  }
+  // Bieten: mindestens eine Karte ODER Kürbis-Taler
+  if (!cardId && offerTokens <= 0) {
+    document.getElementById('tradeModalError').textContent = '❌ Gib mindestens eine Karte oder Kürbis-Taler ins Angebot.';
+    return;
   }
   // Wunsch: mindestens eine Karte ODER Kürbis-Taler
   if (wantCards.length === 0 && wantTokens <= 0) {
