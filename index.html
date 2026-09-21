@@ -2093,6 +2093,9 @@ body{
 
   <div class="section-title">Aufgabe eintragen</div>
   <div class="task-grid" id="taskGrid"></div>
+
+  <!-- Halloween-Edition (nur während der Saison sichtbar) -->
+  <div id="halShop" style="display:none;"></div>
 </div>
 
 <!-- ==================== SCREEN: PACKS ==================== -->
@@ -2141,7 +2144,6 @@ body{
     <button class="filter-btn" data-filter="rare" onclick="setFilter('rare')">Selten</button>
     <button class="filter-btn" data-filter="common" onclick="setFilter('common')">Gewöhnlich</button>
     <button class="filter-btn" data-filter="funny" onclick="setFilter('funny')">Strandparty</button>
-    <button class="filter-btn" data-filter="halloween" onclick="setFilter('halloween')">🎃 Halloween</button>
   </div>
   <div class="collection-grid" id="collectionGrid"></div>
   <div class="collection-empty" id="collectionEmpty" style="display:none;">
@@ -2440,8 +2442,6 @@ body{
     <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:22px;height:22px;vertical-align:-4px;margin-right:7px"><path d="M7 16H3l4-4-4-4h4M17 8h4l-4 4 4 4h-4M14 4l-4 16"/></svg>Tauschbörse</h2>
   </div>
   <div id="tradesContent">
-    <!-- Halloween-Edition (nur während der Saison sichtbar) -->
-    <div id="halShop" style="display:none;"></div>
     <div class="trades-section">
       <h3>📩 Angebote von anderen</h3>
       <div id="incomingTrades"><p style="color:var(--dark-light);font-size:14px;">Lade Angebote...</p></div>
@@ -2746,6 +2746,9 @@ const ALBUM_BANDS = [
   { id: 11, title: 'Der Orden des Phönix', short: 'Orden', icon: '🔥', bg: 'album/bg-order.jpg',
     cards: ['hp-126','hp-127','hp-128','hp-129','hp-130','hp-131','hp-132','hp-133','hp-134','hp-135','hp-136','hp-137'],
     reward: 9 },
+  { id: 12, title: 'Halloween-Edition', short: 'Halloween', icon: '🎃', bg: 'album/bg-halloween.jpg',
+    cards: ['hp-hal-001','hp-hal-002','hp-hal-003','hp-hal-004','hp-hal-005','hp-hal-006','hp-hal-007','hp-hal-008','hp-hal-009','hp-hal-010','hp-hal-011','hp-hal-012','hp-hal-013'],
+    reward: null }
 ];
 
 // ===================== FUNNY VARIANT CARDS (WIP) =====================
@@ -3245,7 +3248,6 @@ function navigateTo(screen) {
   } else if (screen === 'trades') {
     document.getElementById('screen-trades').classList.add('active');
     renderTrades();
-    if (typeof renderHalloweenShop === 'function') renderHalloweenShop();
   } else if (screen === 'welcome') {
     document.getElementById('screen-welcome').classList.add('active');
   }
@@ -3412,6 +3414,9 @@ function renderDashboard() {
     btn.onclick = () => openTaskModal(t);
     grid.appendChild(btn);
   });
+
+  // Halloween-Edition (Taler-Stand, Countdown, Kacheln) aktualisieren
+  if (typeof renderHalloweenShop === 'function') renderHalloweenShop();
 }
 
 // ===================== TASK MODAL =====================
@@ -3734,9 +3739,7 @@ function renderCollection(filter) {
   document.getElementById('collectionProgress').style.width = `${(totalUnique / totalCards) * 100}%`;
 
   let cards;
-  if (currentFilter === 'halloween') {
-    cards = Object.values(HALLOWEEN_CARDS).map(hc => ({ ...hc, count: owned[hc.id] || 0 }));
-  } else if (currentFilter === 'funny') {
+  if (currentFilter === 'funny') {
     // Only show funny/strandparty cards
     cards = Object.values(FUNNY_CARDS).map(fc => ({
       ...fc,
@@ -3763,7 +3766,7 @@ function renderCollection(filter) {
   }
 
   if (filter) currentFilter = filter;
-  if (currentFilter !== 'all' && currentFilter !== 'funny' && currentFilter !== 'halloween') {
+  if (currentFilter !== 'all' && currentFilter !== 'funny') {
     cards = cards.filter(c => c.rarity === currentFilter);
   }
 
