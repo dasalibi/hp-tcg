@@ -1215,6 +1215,10 @@ html, body {
   height: 100%;
   object-fit: cover;
 }
+/* Breitformat (z. B. Panorama-Video): ganzen Ausschnitt zeigen statt beschneiden */
+.card-detail-box .detail-img.detail-img-wide { aspect-ratio: 3/2; background: #120c06; }
+.card-detail-box .detail-img.detail-img-wide img,
+.card-detail-box .detail-img.detail-img-wide video { object-fit: contain; }
 .detail-body { padding: 16px 20px 20px; }
 .detail-body .detail-name {
   font-family: var(--font-serif);
@@ -2617,6 +2621,7 @@ const REWARD_CARDS = {
   6: { id:'hp-107', name:'Horace Slughorn', type:'Charakter', subtype:'Meister der Zaubertränke', house:'Slytherin', desc:'„Berühmte Hexen und Zauberer - meine Leidenschaft!" Horace Slughorn sammelt Begabte wie andere Briefmarken. Seine Erinnerung an den jungen Tom Riddle ist sein dunkelstes Geheimnis - und der Schlüssel zum Sieg.', image:'cards/hp-107.jpg' },
   7: { id:'hp-108', name:'Die Schlacht von Hogwarts', type:'Ereignis', subtype:'Das große Finale', house:'-', desc:'„Alle für einen, einer für alle.“ Der letzte Kampf: Schüler, Lehrer, Hauselfen und Phönixorden gegen Voldemorts Armee. Die Mauern von Hogwarts wanken, aber der Mut seiner Verteidiger nicht.', image:'cards/hp-108.jpg' },
   8: { id:'hp-125', name:'Der Goldene Schnatz', type:'Gegenstand', subtype:'Das Herz des Quidditch', house:'-', desc:'„Der Schnatz hat Fleisch und Blut.“ Ein winziger goldener Ball mit silbernen Flügeln, der nur denjenigen berührt, der ihn zuerst fängt. Wer den Schnatz fängt, beendet das Spiel - und gewinnt 150 Punkte. Das schönste Objekt der Zauberwelt, und jetzt gehört er dir.', image:'cards/hp-125.jpg' },
+  9: { id:'hp-138', name:'Das lebendige Ordensfoto', type:'Gegenstand', subtype:'Das Foto der ersten Gruppe', house:'-', desc:'„Das ist der Orden des Phönix – das Foto der ersten Gruppe.“ Zwölf Menschen blicken aus dem Rahmen, als wäre gerade eben noch gelacht worden. Wer genau hinsieht, merkt: Sie bewegen sich noch immer – als hätte der Krieg nie begonnen.', image:'cards/hp-138.jpg' }
 };
 
 // ===================== ALBUM BANDS =====================
@@ -2655,7 +2660,7 @@ const ALBUM_BANDS = [
     reward: 8 },
   { id: 11, title: 'Der Orden des Phönix', short: 'Orden', icon: '🔥', bg: 'album/bg-order.jpg',
     cards: ['hp-126','hp-127','hp-128','hp-129','hp-130','hp-131','hp-132','hp-133','hp-134','hp-135','hp-136','hp-137'],
-    reward: null },
+    reward: 9 },
 ];
 
 // ===================== FUNNY VARIANT CARDS (WIP) =====================
@@ -3959,7 +3964,12 @@ const REWARD_VIDEOS = {
   'hp-107': 'cards/hp-107-anim-5s.mp4',
   'hp-108': 'cards/hp-108-anim-3s.mp4',
   'hp-125': 'cards/hp-125-anim-5s.mp4',
+  'hp-138': 'cards/order-panorama.mp4',
 };
+
+// Medien im Breitformat (Panorama) – werden mit "contain" statt "cover" gezeigt,
+// damit nichts abgeschnitten wird.
+const WIDE_MEDIA = { 'hp-138': true };
 
 function showCardDetail(cardId) {
   let card = getCardById(cardId);
@@ -3984,6 +3994,7 @@ function showCardDetail(cardId) {
   if (REWARD_VIDEOS[cardId]) videoSrc = REWARD_VIDEOS[cardId];
   else if (isAnimated && ANIMATED_PORTRAITS[cardId]) videoSrc = ANIMATED_PORTRAITS[cardId];
 
+  document.getElementById('detailImg').className = 'detail-img' + (WIDE_MEDIA[cardId] ? ' detail-img-wide' : '');
   document.getElementById('detailImg').innerHTML = videoSrc
     ? `<video src="${videoSrc}" autoplay loop muted playsinline></video>`
     : hasImage 
