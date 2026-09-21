@@ -4461,9 +4461,7 @@ function showCardDetail(cardId) {
   const tradeDiv = document.getElementById('detailTrade');
   const tradeBtn = document.getElementById('detailTradeBtn');
   const tradeInfo = document.getElementById('detailTradeInfo');
-  // Charakterkarten werden 2:1 tauschbar, sobald man ihre Strandparty-Version einmal erstellt hat
-  const funnyZielId = FUNNY_CARDS[cardId] ? FUNNY_CARDS[cardId].id : null;
-  const hatStrandparty = !!(funnyZielId && owned[funnyZielId] > 0);
+  // Jede Karte ist ab 2 Kopien 2:1 tauschbar
   if (count >= 3 && FUNNY_CARDS[card.id]) {
     const funny = FUNNY_CARDS[card.id];
     tradeBtn.textContent = 'Zu ' + funny.name + ' upgraden';
@@ -4475,11 +4473,9 @@ function showCardDetail(cardId) {
     tradeInfo.textContent = 'Verschmelze 2x ' + card.name + ' zu einem lebendigen Zaubererporträt – die Karte erwacht zum Leben!';
     tradeBtn.className = 'btn-magic-upgrade';
     tradeDiv.style.display = 'block';
-  } else if (count >= 2 && (card.type !== 'Charakter' || hatStrandparty)) {
+  } else if (count >= 2) {
     tradeBtn.textContent = '2:1 Eintauschen';
-    tradeInfo.textContent = hatStrandparty
-      ? 'Tausche 2x ' + card.name + ' gegen eine zufällige neue Karte · Strandparty-Version freigeschaltet'
-      : 'Tausche 2x ' + card.name + ' gegen eine zufällige neue Karte';
+    tradeInfo.textContent = 'Tausche 2x ' + card.name + ' gegen eine zufällige neue Karte';
     tradeBtn.className = 'btn-primary btn-small';
     tradeDiv.style.display = 'block';
   } else {
@@ -4556,8 +4552,6 @@ function executeTrade() {
   const prof = getProfile(currentProfile);
   const owned = prof.cards || {};
   const count = owned[cardId] || 0;
-  const funnyZielId = FUNNY_CARDS[cardId] ? FUNNY_CARDS[cardId].id : null;
-  const hatStrandparty = !!(funnyZielId && owned[funnyZielId] > 0);
   
   if (count >= 3 && FUNNY_CARDS[card.id]) {
     // Upgrade to funny variant
@@ -4587,7 +4581,7 @@ function executeTrade() {
     save();
     closeCardDetail();
     setTimeout(() => { renderCollection(); queueAchievementPopups(freshAch2); }, 100);
-  } else if (count >= 2 && (card.type !== 'Charakter' || hatStrandparty)) {
+  } else if (count >= 2) {
     // Trade 2:1 for random card with pack rarity distribution
     if (!confirm('2x ' + card.name + ' gegen 1 zufällige Karte tauschen?')) return;
     owned[cardId] = (owned[cardId] || 0) - 2;
