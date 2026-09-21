@@ -1778,6 +1778,15 @@ body{
 .hal-item.locked{opacity:.6;}
 .hal-item.affordable{border-color:rgba(255,140,0,.65);box-shadow:0 0 12px rgba(255,140,0,.28);cursor:pointer;}
 .hal-item.owned{cursor:pointer;}
+.btn-hal-upgrade{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,140,0,.75);
+  background:linear-gradient(180deg,rgba(255,140,0,.28),rgba(120,50,0,.35));color:#ffd9a0;
+  font-weight:700;font-size:13.5px;font-family:inherit;cursor:pointer;transition:filter .15s,transform .1s;}
+.btn-hal-upgrade:hover:not(:disabled){filter:brightness(1.15);}
+.btn-hal-upgrade:active:not(:disabled){transform:scale(.985);}
+.btn-hal-upgrade:disabled{cursor:default;}
+.btn-hal-upgrade.hal-locked{opacity:.55;border-color:var(--g-line-soft);background:rgba(243,234,217,.06);color:var(--dark-light);}
+.btn-hal-upgrade.hal-owned{border-color:rgba(120,200,120,.55);background:rgba(60,120,60,.18);color:#bfe6bf;}
+.hal-upgrade-info{font-size:12px;color:var(--dark-light);margin-top:5px;text-align:center;}
 .hal-silhouette{display:grid;place-items:center;height:72%;font-size:34px;opacity:.55;}
 .hal-name{position:absolute;left:0;right:0;bottom:0;padding:5px 6px;font-size:10.5px;line-height:1.3;
   background:linear-gradient(0deg,rgba(0,0,0,.88),transparent);color:#fff;}
@@ -2424,6 +2433,10 @@ body{
               <div id="detailTradeOffer" style="display:none;margin-top:8px;">
                 <button class="btn-primary" onclick="openCreateTradeModal(document.getElementById('cardDetailOverlay').dataset.cardId)" style="width:100%;font-size:13px;">🔄 Zum Tausch anbieten</button>
               </div>
+              <div id="detailHalUpgrade" style="display:none;margin-top:8px;">
+                <button class="btn-hal-upgrade" id="detailHalBtn" onclick="halUpgradeFromDetail()"></button>
+                <p class="hal-upgrade-info" id="detailHalInfo"></p>
+              </div>
       <button class="detail-close" onclick="closeCardDetail()">Schließen</button>
     </div>
   </div>
@@ -2676,6 +2689,22 @@ const HALLOWEEN_SEASON = {
   end:   '2026-10-31',
   price: 10,                       // Taler pro Karte
   rewardId: 'hp-hal-013'           // Der Blutige Baron (gratis bei 12/12)
+};
+
+// Welche Charakterkarte lässt sich in welche Halloween-Version verwandeln?
+const HALLOWEEN_UPGRADES = {
+  'hp-001': 'hp-hal-004',   // Severus Snape      -> Vampir-Snape
+  'hp-002': 'hp-hal-001',   // Harry Potter       -> Skelett-Zauberer
+  'hp-003': 'hp-hal-005',   // Albus Dumbledore   -> Kürbis-Dumbledore
+  'hp-004': 'hp-hal-006',   // Lord Voldemort     -> Skelett-König
+  'hp-005': 'hp-hal-002',   // Hermine Granger    -> Hexen-Hermine
+  'hp-006': 'hp-hal-003',   // Ron Weasley        -> Zombie-Ron
+  'hp-007': 'hp-hal-007',   // Rubeus Hagrid      -> Frankenstein-Hagrid
+  'hp-008': 'hp-hal-008',   // Minerva McGonagall -> Hexen-McGonagall
+  'hp-009': 'hp-hal-009',   // Sirius Black       -> Nebel-Sirius
+  'hp-010': 'hp-hal-011',   // Draco Malfoy       -> Graf Draco
+  'hp-017': 'hp-hal-010',   // Dobby              -> Geister-Dobby
+  'hp-063': 'hp-hal-012'    // Bellatrix Lestrange-> Hexen-Bellatrix
 };
 
 const HALLOWEEN_CARDS = {
@@ -3023,12 +3052,12 @@ function getWeekKey(date) {
 function getWeekChallenge() {
   const wk = getWeekKey(new Date());
   if (!data.weekChallenge || data.weekChallenge.week !== wk) {
-    // Dynamisches Ziel: letzte Woche geschafft -> +5 (max 50), verfehlt -> -5 (min 20)
+    // Dynamisches Ziel: letzte Woche geschafft -> +5 (max 35), verfehlt -> -5 (min 20)
     const prev = data.weekChallenge;
     let target = 20;
     if (prev && prev.week) {
       target = prev.rewarded
-        ? Math.min(50, (prev.target || 20) + 5)
+        ? Math.min(35, (prev.target || 20) + 5)
         : Math.max(20, (prev.target || 20) - 5);
     }
     data.weekChallenge = { week: wk, target: target, count: 0, rewarded: false };
@@ -4157,6 +4186,30 @@ function halBuy(cardId) {
   }
 }
 
+// Halloween-Upgrade direkt aus dem Karten-Detail heraus (Karte anwählen -> 10 Taler)
+function halUpgradeFromDetail() {
+  if (!currentProfile) return;
+  const overlay = document.getElementById('cardDetailOverlay');
+  const cardId = overlay ? overlay.dataset.cardId : null;
+  const zielId = cardId ? HALLOWEEN_UPGRADES[cardId] : null;
+  if (!zielId) return;
+  if (!halloweenActive()) { alert('Die Halloween-Saison ist beendet – die Kürbis-Taler sind verfallen.'); return; }
+  const st = halState();
+  const bought = st.bought[currentProfile] || [];
+  if (bought.includes(zielId)) return;
+  const preis = HALLOWEEN_SEASON.price;
+  const haben = st.tokens[currentProfile] || 0;
+  const ziel = HALLOWEEN_CARDS[zielId];
+  if (!ziel) return;
+  if (haben < preis) {
+    alert(`Du brauchst ${preis} Kürbis-Taler für ${ziel.name} – du hast erst ${haben}.`);
+    return;
+  }
+  if (!confirm(`${preis} Kürbis-Taler für ${ziel.name} einlösen?`)) return;
+  halBuy(zielId);
+  closeCardDetail();
+}
+
 // Taler tauschen (an ein anderes Profil schenken)
 function halGiftTokens(toName) {
   if (!currentProfile || !halloweenActive()) return;
@@ -4295,23 +4348,22 @@ function showCardDetail(cardId) {
   const tradeDiv = document.getElementById('detailTrade');
   const tradeBtn = document.getElementById('detailTradeBtn');
   const tradeInfo = document.getElementById('detailTradeInfo');
-  if (count > 0 && card.type === 'Charakter' && count >= 3) {
+  // Strandparty-Karten (upgegradete Funny-Varianten) sind wie normale Karten 2:1 tauschbar
+  const istStrandparty = cardId.indexOf('hp-fun-') === 0;
+  if (count >= 3 && FUNNY_CARDS[card.id]) {
     const funny = FUNNY_CARDS[card.id];
-    if (funny) {
-      tradeBtn.textContent = 'Zu ' + funny.name + ' upgraden';
-      tradeInfo.textContent = 'Tausche 3x ' + card.name + ' gegen diese lustige Variante';
-      tradeDiv.style.display = 'block';
-    } else {
-      tradeDiv.style.display = 'none';
-    }
+    tradeBtn.textContent = 'Zu ' + funny.name + ' upgraden';
+    tradeInfo.textContent = 'Tausche 3x ' + card.name + ' gegen diese lustige Variante';
+    tradeDiv.style.display = 'block';
   } else if (count >= 2 && ANIMATED_PORTRAITS[card.id] && !isAnimated) {
     tradeBtn.textContent = 'Magisches Upgrade';
     tradeInfo.textContent = 'Verschmelze 2x ' + card.name + ' zu einem lebendigen Zaubererporträt – die Karte erwacht zum Leben!';
     tradeBtn.className = 'btn-magic-upgrade';
     tradeDiv.style.display = 'block';
-  } else if (count > 0 && card.type !== 'Charakter' && count >= 2) {
+  } else if (count >= 2 && (card.type !== 'Charakter' || istStrandparty)) {
     tradeBtn.textContent = '2:1 Eintauschen';
     tradeInfo.textContent = 'Tausche 2x ' + card.name + ' gegen eine zufällige neue Karte';
+    tradeBtn.className = 'btn-primary btn-small';
     tradeDiv.style.display = 'block';
   } else {
     tradeDiv.style.display = 'none';
@@ -4323,6 +4375,32 @@ function showCardDetail(cardId) {
     tradeOfferDiv.style.display = 'block';
   } else {
     tradeOfferDiv.style.display = 'none';
+  }
+
+  // Halloween-Upgrade: diese Karte gegen Kürbis-Taler in ihre Halloween-Version verwandeln
+  const halDiv = document.getElementById('detailHalUpgrade');
+  const halBtn = document.getElementById('detailHalBtn');
+  const halInfo = document.getElementById('detailHalInfo');
+  const halZielId = HALLOWEEN_UPGRADES[cardId];
+  const halZiel = halZielId ? HALLOWEEN_CARDS[halZielId] : null;
+  const halWirbt = halZiel && halloweenActive();
+  if (halWirbt) {
+    const preis = HALLOWEEN_SEASON.price;
+    const haben = currentProfile ? halTokens(currentProfile) : 0;
+    const schon = currentProfile ? halBought(currentProfile).includes(halZielId) : false;
+    halDiv.style.display = 'block';
+    halBtn.textContent = schon
+      ? '✓ ' + halZiel.name + ' freigeschaltet'
+      : '🎃 Zu ' + halZiel.name + ' upgraden · ' + preis + ' Taler';
+    halBtn.disabled = schon || haben < preis;
+    halBtn.className = 'btn-hal-upgrade' + (schon ? ' hal-owned' : (haben >= preis ? '' : ' hal-locked'));
+    halInfo.textContent = schon
+      ? 'Diese Halloween-Karte gehört dir schon.'
+      : (haben >= preis
+          ? 'Du hast ' + haben + ' Taler – das reicht!'
+          : 'Du hast ' + haben + ' von ' + preis + ' Talern.');
+  } else {
+    halDiv.style.display = 'none';
   }
 
   // Set effect class + particles on detail box
@@ -4352,17 +4430,17 @@ function executeTrade() {
   const cardId = overlay.dataset.cardId;
   if (!cardId) return;
   
-  const card = CARD_DB.find(c => c.id === cardId);
+  const card = getCardById(cardId);
   if (!card) return;
   
   const prof = getProfile(currentProfile);
   const owned = prof.cards || {};
   const count = owned[cardId] || 0;
+  const istStrandparty = cardId.indexOf('hp-fun-') === 0;
   
-  if (card.type === 'Charakter' && count >= 3) {
+  if (count >= 3 && FUNNY_CARDS[card.id]) {
     // Upgrade to funny variant
     const funny = FUNNY_CARDS[card.id];
-    if (!funny) return;
     if (!confirm('3x ' + card.name + ' gegen 1x ' + funny.name + ' tauschen?')) return;
     owned[cardId] = (owned[cardId] || 0) - 3;
     if (owned[cardId] <= 0) delete owned[cardId];
@@ -4388,7 +4466,7 @@ function executeTrade() {
     save();
     closeCardDetail();
     setTimeout(() => { renderCollection(); queueAchievementPopups(freshAch2); }, 100);
-  } else if (card.type !== 'Charakter' && count >= 2) {
+  } else if (count >= 2 && (card.type !== 'Charakter' || istStrandparty)) {
     // Trade 2:1 for random card with pack rarity distribution
     if (!confirm('2x ' + card.name + ' gegen 1 zufällige Karte tauschen?')) return;
     owned[cardId] = (owned[cardId] || 0) - 2;
