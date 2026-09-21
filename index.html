@@ -1778,6 +1778,7 @@ body{
 .hal-item.locked{opacity:.6;}
 .hal-item.affordable{border-color:rgba(255,140,0,.65);box-shadow:0 0 12px rgba(255,140,0,.28);cursor:pointer;}
 .hal-item.owned{cursor:pointer;}
+.hal-price.hal-need-basis{background:rgba(110,110,110,.6);color:#e0e0e0;}
 .btn-hal-upgrade{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,140,0,.75);
   background:linear-gradient(180deg,rgba(255,140,0,.28),rgba(120,50,0,.35));color:#ffd9a0;
   font-weight:700;font-size:13.5px;font-family:inherit;cursor:pointer;transition:filter .15s,transform .1s;}
@@ -2735,7 +2736,8 @@ const REWARD_CARDS = {
   6: { id:'hp-107', name:'Horace Slughorn', type:'Charakter', subtype:'Meister der Zaubertränke', house:'Slytherin', desc:'„Berühmte Hexen und Zauberer - meine Leidenschaft!" Horace Slughorn sammelt Begabte wie andere Briefmarken. Seine Erinnerung an den jungen Tom Riddle ist sein dunkelstes Geheimnis - und der Schlüssel zum Sieg.', image:'cards/hp-107.jpg' },
   7: { id:'hp-108', name:'Die Schlacht von Hogwarts', type:'Ereignis', subtype:'Das große Finale', house:'-', desc:'„Alle für einen, einer für alle.“ Der letzte Kampf: Schüler, Lehrer, Hauselfen und Phönixorden gegen Voldemorts Armee. Die Mauern von Hogwarts wanken, aber der Mut seiner Verteidiger nicht.', image:'cards/hp-108.jpg' },
   8: { id:'hp-125', name:'Der Goldene Schnatz', type:'Gegenstand', subtype:'Das Herz des Quidditch', house:'-', desc:'„Der Schnatz hat Fleisch und Blut.“ Ein winziger goldener Ball mit silbernen Flügeln, der nur denjenigen berührt, der ihn zuerst fängt. Wer den Schnatz fängt, beendet das Spiel - und gewinnt 150 Punkte. Das schönste Objekt der Zauberwelt, und jetzt gehört er dir.', image:'cards/hp-125.jpg' },
-  9: { id:'hp-138', name:'Das lebendige Ordensfoto', type:'Gegenstand', subtype:'Das Foto der ersten Gruppe', house:'-', desc:'„Das ist der Orden des Phönix – das Foto der ersten Gruppe.“ Zwölf Menschen blicken aus dem Rahmen, als wäre gerade eben noch gelacht worden. Wer genau hinsieht, merkt: Sie bewegen sich noch immer – als hätte der Krieg nie begonnen.', image:'cards/hp-138.jpg' }
+  9: { id:'hp-138', name:'Das lebendige Ordensfoto', type:'Gegenstand', subtype:'Das Foto der ersten Gruppe', house:'-', desc:'„Das ist der Orden des Phönix – das Foto der ersten Gruppe.“ Zwölf Menschen blicken aus dem Rahmen, als wäre gerade eben noch gelacht worden. Wer genau hinsieht, merkt: Sie bewegen sich noch immer – als hätte der Krieg nie begonnen.', image:'cards/hp-138.jpg' },
+  10: { id:'hp-hal-013', name:'Der Blutige Baron', type:'Charakter', subtype:'Hausgeist von Slytherin', house:'Slytherin', desc:'„Silbern durchscheinend schwebt er über den Steinstufen, die Ketten klirren leise, und auf seiner Robe glänzen alte Flecken.“ Der Blutige Baron ist der gruseligste Geist von Hogwarts – und der Einzige, der Peeves zum Schweigen bringt.', image:'cards/hp-hal-013.jpg' }
 };
 
 // ===================== ALBUM BANDS =====================
@@ -2776,8 +2778,8 @@ const ALBUM_BANDS = [
     cards: ['hp-126','hp-127','hp-128','hp-129','hp-130','hp-131','hp-132','hp-133','hp-134','hp-135','hp-136','hp-137'],
     reward: 9 },
   { id: 12, title: 'Halloween-Edition', short: 'Halloween', icon: '🎃', bg: 'album/bg-halloween.jpg',
-    cards: ['hp-hal-001','hp-hal-002','hp-hal-003','hp-hal-004','hp-hal-005','hp-hal-006','hp-hal-007','hp-hal-008','hp-hal-009','hp-hal-010','hp-hal-011','hp-hal-012','hp-hal-013'],
-    reward: null }
+    cards: ['hp-hal-001','hp-hal-002','hp-hal-003','hp-hal-004','hp-hal-005','hp-hal-006','hp-hal-007','hp-hal-008','hp-hal-009','hp-hal-010','hp-hal-011','hp-hal-012'],
+    reward: 10 }
 ];
 
 // ===================== FUNNY VARIANT CARDS (WIP) =====================
@@ -4146,8 +4148,17 @@ function halAddTokens(name, n) {
   return st.tokens[name];
 }
 
-// Halloween-Karte kaufen
-function halBuy(cardId) {
+// Zu einer Halloween-Karte die zugehörige Basiskarte finden
+function halBasisFuerZiel(zielId) {
+  for (const origId in HALLOWEEN_UPGRADES) {
+    if (HALLOWEEN_UPGRADES[origId] === zielId) return origId;
+  }
+  return null;
+}
+
+// Halloween-Karte kaufen (Preis: Taler + 1 Basiskarte als Einsatz)
+// opferId: optional – die im Karten-Detail bereits angezeigte Einsatz-Karte
+function halBuy(cardId, opferId) {
   if (!currentProfile || !halloweenActive()) return;
   const st = halState();
   const bought = st.bought[currentProfile] || (st.bought[currentProfile] = []);
@@ -4155,13 +4166,31 @@ function halBuy(cardId) {
   const card = HALLOWEEN_CARDS[cardId];
   if (!card) return;
   const have = st.tokens[currentProfile] || 0;
-  if (have < HALLOWEEN_SEASON.price) return;
+  if (have < HALLOWEEN_SEASON.price) {
+    alert(`Du brauchst ${HALLOWEEN_SEASON.price} Kürbis-Taler – du hast erst ${have}.`);
+    return;
+  }
+
+  const prof = getProfile(currentProfile);
+  prof.cards = prof.cards || {};
+
+  // Einsatz einlösen: im Detail gewählte Karte, sonst Basiskarte bzw. deren Strandparty-Version
+  const basisId = halBasisFuerZiel(cardId);
+  const opfer = opferId
+    ? ((prof.cards[opferId] || 0) > 0 ? getCardById(opferId) : null)
+    : (basisId ? halOpferKarte(basisId, prof.cards) : null);
+  if (basisId && !opfer) {
+    alert(`Für ${card.name} brauchst du 1× ${getCardById(basisId) ? getCardById(basisId).name : 'die Basiskarte'} als Einsatz.`);
+    return;
+  }
+  if (opfer) {
+    prof.cards[opfer.id] = (prof.cards[opfer.id] || 0) - 1;
+    if (prof.cards[opfer.id] <= 0) delete prof.cards[opfer.id];
+  }
 
   st.tokens[currentProfile] = have - HALLOWEEN_SEASON.price;
   bought.push(cardId);
 
-  const prof = getProfile(currentProfile);
-  prof.cards = prof.cards || {};
   prof.cards[cardId] = (prof.cards[cardId] || 0) + 1;
 
   // Alle 12 gekauft -> Blutigen Baron gratis dazu
@@ -4186,14 +4215,42 @@ function halBuy(cardId) {
   }
 }
 
-// Halloween-Upgrade direkt aus dem Karten-Detail heraus (Karte anwählen -> 10 Taler)
+// Findet die Halloween-Version zu einer Karte – egal ob Basis- oder Strandparty-Variante
+function halZielFuerKarte(cardId) {
+  if (HALLOWEEN_UPGRADES[cardId]) return HALLOWEEN_UPGRADES[cardId];
+  for (const origId in FUNNY_CARDS) {
+    if (FUNNY_CARDS[origId].id === cardId) return HALLOWEEN_UPGRADES[origId] || null;
+  }
+  return null;
+}
+
+// Welche Karte wird als Einsatz verbraucht? Die angewählte Karte bevorzugt, sonst ihre andere Variante.
+function halOpferKarte(cardId, owned) {
+  const kandidaten = [cardId];                                   // die angewählte Karte selbst
+  const funny = FUNNY_CARDS[cardId];
+  if (funny) {
+    kandidaten.push(funny.id);                                   // ihre Strandparty-Version
+  } else {
+    for (const oid in FUNNY_CARDS) {                             // ihre Basiskarte
+      if (FUNNY_CARDS[oid].id === cardId) kandidaten.push(oid);
+    }
+  }
+  for (const id of kandidaten) {
+    if ((owned[id] || 0) > 0) return getCardById(id);
+  }
+  return null;
+}
+
+// Halloween-Upgrade direkt aus dem Karten-Detail (10 Taler + 1 Karte als Einsatz)
 function halUpgradeFromDetail() {
   if (!currentProfile) return;
   const overlay = document.getElementById('cardDetailOverlay');
   const cardId = overlay ? overlay.dataset.cardId : null;
-  const zielId = cardId ? HALLOWEEN_UPGRADES[cardId] : null;
+  const zielId = cardId ? halZielFuerKarte(cardId) : null;
   if (!zielId) return;
   if (!halloweenActive()) { alert('Die Halloween-Saison ist beendet – die Kürbis-Taler sind verfallen.'); return; }
+  const prof = getProfile(currentProfile);
+  const owned = prof.cards || {};
   const st = halState();
   const bought = st.bought[currentProfile] || [];
   if (bought.includes(zielId)) return;
@@ -4201,12 +4258,20 @@ function halUpgradeFromDetail() {
   const haben = st.tokens[currentProfile] || 0;
   const ziel = HALLOWEEN_CARDS[zielId];
   if (!ziel) return;
+  const opfer = halOpferKarte(cardId, owned);
+  if (!opfer) {
+    alert(`Für ${ziel.name} brauchst du 1× ${getCardById(cardId) ? getCardById(cardId).name : 'diese Karte'} als Einsatz.`);
+    return;
+  }
   if (haben < preis) {
     alert(`Du brauchst ${preis} Kürbis-Taler für ${ziel.name} – du hast erst ${haben}.`);
     return;
   }
-  if (!confirm(`${preis} Kürbis-Taler für ${ziel.name} einlösen?`)) return;
-  halBuy(zielId);
+  if (!confirm(`${preis} Kürbis-Taler + 1× ${opfer.name} für ${ziel.name} einlösen?`)) return;
+
+  // halBuy löst Einsatz (angezeigte Karte + Taler) ein und gibt die Halloween-Karte (+ Baron-Bonus)
+  halBuy(zielId, opfer.id);
+  renderCollection();
   closeCardDetail();
 }
 
@@ -4248,17 +4313,23 @@ function renderHalloweenShop() {
     ? `<span class="hal-days">noch ${tage} ${tage === 1 ? 'Tag' : 'Tage'}</span>`
     : `<span class="hal-days hal-over">Saison beendet</span>`;
 
+  const profCards = (currentProfile ? (getProfile(currentProfile).cards || {}) : {});
   const kacheln = ids.map(id => {
     const c = HALLOWEEN_CARDS[id];
     const hat = bought.includes(id);
-    const leistbar = tokens >= HALLOWEEN_SEASON.price && aktiv && !hat;
+    const basisId = halBasisFuerZiel(id);
+    const opfer = basisId ? halOpferKarte(basisId, profCards) : null;
+    const einsatzOk = !basisId || !!opfer;
+    const leistbar = tokens >= HALLOWEEN_SEASON.price && aktiv && !hat && einsatzOk;
     return `<div class="hal-item ${hat ? 'owned' : 'locked'} ${leistbar ? 'affordable' : ''}"
-                 ${hat ? `onclick="showCardDetail('${id}')"` : `onclick="halBuy('${id}')"`}>
+                 ${hat ? `onclick="showCardDetail('${id}')"` : (einsatzOk ? `onclick="halBuy('${id}')"` : '')}>
       ${hat ? `<img src="${c.image}" alt="${c.name}" loading="lazy">`
             : `<div class="hal-silhouette">🎃</div>`}
       <div class="hal-name">${c.name}</div>
       ${hat ? '<div class="hal-owned-tag">✓</div>'
-            : `<div class="hal-price">🎃 ${HALLOWEEN_SEASON.price}</div>`}
+            : (einsatzOk
+                ? `<div class="hal-price">🎃 ${HALLOWEEN_SEASON.price} + 1 Karte</div>`
+                : `<div class="hal-price hal-need-basis">1 Karte fehlt</div>`)}
     </div>`;
   }).join('');
 
@@ -4289,7 +4360,7 @@ function renderHalloweenShop() {
     </div>
     <p class="hal-hint">
       <strong>Taler verdienen:</strong> 1 pro Aufgabe · 1 pro 3er-Serie · 5 pro Wochenchallenge.
-      ${aktiv ? `Taler verfallen am 31.10. – jede Karte kostet ${HALLOWEEN_SEASON.price} Taler.` : ''}
+      ${aktiv ? `Taler verfallen am 31.10. – jede Karte kostet ${HALLOWEEN_SEASON.price} Taler + 1 Basiskarte (oder deren Strandparty-Version).` : ''}
     </p>
     <div class="hal-progress">${gekauft12} von 12 Halloween-Karten gesammelt</div>
     <div class="hal-grid">${kacheln}${baronKachel}</div>
@@ -4348,21 +4419,25 @@ function showCardDetail(cardId) {
   const tradeDiv = document.getElementById('detailTrade');
   const tradeBtn = document.getElementById('detailTradeBtn');
   const tradeInfo = document.getElementById('detailTradeInfo');
-  // Strandparty-Karten (upgegradete Funny-Varianten) sind wie normale Karten 2:1 tauschbar
-  const istStrandparty = cardId.indexOf('hp-fun-') === 0;
+  // Charakterkarten werden 2:1 tauschbar, sobald man ihre Strandparty-Version einmal erstellt hat
+  const funnyZielId = FUNNY_CARDS[cardId] ? FUNNY_CARDS[cardId].id : null;
+  const hatStrandparty = !!(funnyZielId && owned[funnyZielId] > 0);
   if (count >= 3 && FUNNY_CARDS[card.id]) {
     const funny = FUNNY_CARDS[card.id];
     tradeBtn.textContent = 'Zu ' + funny.name + ' upgraden';
     tradeInfo.textContent = 'Tausche 3x ' + card.name + ' gegen diese lustige Variante';
+    tradeBtn.className = 'btn-primary btn-small';
     tradeDiv.style.display = 'block';
   } else if (count >= 2 && ANIMATED_PORTRAITS[card.id] && !isAnimated) {
     tradeBtn.textContent = 'Magisches Upgrade';
     tradeInfo.textContent = 'Verschmelze 2x ' + card.name + ' zu einem lebendigen Zaubererporträt – die Karte erwacht zum Leben!';
     tradeBtn.className = 'btn-magic-upgrade';
     tradeDiv.style.display = 'block';
-  } else if (count >= 2 && (card.type !== 'Charakter' || istStrandparty)) {
+  } else if (count >= 2 && (card.type !== 'Charakter' || hatStrandparty)) {
     tradeBtn.textContent = '2:1 Eintauschen';
-    tradeInfo.textContent = 'Tausche 2x ' + card.name + ' gegen eine zufällige neue Karte';
+    tradeInfo.textContent = hatStrandparty
+      ? 'Tausche 2x ' + card.name + ' gegen eine zufällige neue Karte · Strandparty-Version freigeschaltet'
+      : 'Tausche 2x ' + card.name + ' gegen eine zufällige neue Karte';
     tradeBtn.className = 'btn-primary btn-small';
     tradeDiv.style.display = 'block';
   } else {
@@ -4381,24 +4456,27 @@ function showCardDetail(cardId) {
   const halDiv = document.getElementById('detailHalUpgrade');
   const halBtn = document.getElementById('detailHalBtn');
   const halInfo = document.getElementById('detailHalInfo');
-  const halZielId = HALLOWEEN_UPGRADES[cardId];
+  const halZielId = halZielFuerKarte(cardId);
   const halZiel = halZielId ? HALLOWEEN_CARDS[halZielId] : null;
   const halWirbt = halZiel && halloweenActive();
   if (halWirbt) {
     const preis = HALLOWEEN_SEASON.price;
     const haben = currentProfile ? halTokens(currentProfile) : 0;
     const schon = currentProfile ? halBought(currentProfile).includes(halZielId) : false;
+    const opfer = halOpferKarte(cardId, owned);
     halDiv.style.display = 'block';
     halBtn.textContent = schon
       ? '✓ ' + halZiel.name + ' freigeschaltet'
       : '🎃 Zu ' + halZiel.name + ' upgraden · ' + preis + ' Taler';
-    halBtn.disabled = schon || haben < preis;
-    halBtn.className = 'btn-hal-upgrade' + (schon ? ' hal-owned' : (haben >= preis ? '' : ' hal-locked'));
+    halBtn.disabled = schon || haben < preis || !opfer;
+    halBtn.className = 'btn-hal-upgrade' + (schon ? ' hal-owned' : ((haben >= preis && opfer) ? '' : ' hal-locked'));
     halInfo.textContent = schon
       ? 'Diese Halloween-Karte gehört dir schon.'
-      : (haben >= preis
-          ? 'Du hast ' + haben + ' Taler – das reicht!'
-          : 'Du hast ' + haben + ' von ' + preis + ' Talern.');
+      : (!opfer
+          ? 'Du brauchst 1× ' + (card.name || 'diese Karte') + ' als Einsatz.'
+          : (haben >= preis
+              ? 'Einsatz: 1× ' + opfer.name + ' + ' + preis + ' Taler'
+              : 'Du hast ' + haben + ' von ' + preis + ' Talern.'));
   } else {
     halDiv.style.display = 'none';
   }
@@ -4436,7 +4514,8 @@ function executeTrade() {
   const prof = getProfile(currentProfile);
   const owned = prof.cards || {};
   const count = owned[cardId] || 0;
-  const istStrandparty = cardId.indexOf('hp-fun-') === 0;
+  const funnyZielId = FUNNY_CARDS[cardId] ? FUNNY_CARDS[cardId].id : null;
+  const hatStrandparty = !!(funnyZielId && owned[funnyZielId] > 0);
   
   if (count >= 3 && FUNNY_CARDS[card.id]) {
     // Upgrade to funny variant
@@ -4466,7 +4545,7 @@ function executeTrade() {
     save();
     closeCardDetail();
     setTimeout(() => { renderCollection(); queueAchievementPopups(freshAch2); }, 100);
-  } else if (count >= 2 && (card.type !== 'Charakter' || istStrandparty)) {
+  } else if (count >= 2 && (card.type !== 'Charakter' || hatStrandparty)) {
     // Trade 2:1 for random card with pack rarity distribution
     if (!confirm('2x ' + card.name + ' gegen 1 zufällige Karte tauschen?')) return;
     owned[cardId] = (owned[cardId] || 0) - 2;
