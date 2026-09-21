@@ -1779,6 +1779,16 @@ body{
 .hal-item.affordable{border-color:rgba(255,140,0,.65);box-shadow:0 0 12px rgba(255,140,0,.28);cursor:pointer;}
 .hal-item.owned{cursor:pointer;}
 .hal-price.hal-need-basis{background:rgba(110,110,110,.6);color:#e0e0e0;}
+/* Hinweis, wenn Kürbis-Taler verdient wurden */
+.hal-toast{position:fixed;left:50%;bottom:80px;transform:translate(-50%,18px);z-index:9500;
+  display:flex;align-items:center;gap:10px;padding:11px 18px;border-radius:14px;max-width:88vw;
+  background:linear-gradient(180deg,rgba(48,28,8,.97),rgba(26,14,4,.97));
+  border:1px solid rgba(255,150,40,.75);box-shadow:0 6px 26px rgba(0,0,0,.55),0 0 16px rgba(255,140,0,.3);
+  color:#ffd9a0;font-family:inherit;font-weight:700;font-size:14.5px;
+  opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;}
+.hal-toast.show{opacity:1;transform:translate(-50%,0);}
+.hal-toast-icon{font-size:23px;line-height:1;}
+.hal-toast-sub{display:block;font-weight:400;font-size:11.5px;color:#e8cfa0;opacity:.85;margin-top:2px;}
 .btn-hal-upgrade{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,140,0,.75);
   background:linear-gradient(180deg,rgba(255,140,0,.28),rgba(120,50,0,.35));color:#ffd9a0;
   font-weight:700;font-size:13.5px;font-family:inherit;cursor:pointer;transition:filter .15s,transform .1s;}
@@ -2447,6 +2457,15 @@ body{
 <div class="success-flash" id="successFlash">
   <span class="flash-icon">⭐</span>
   <span id="successFlashText">Aufgabe erledigt! Du erhältst ein Pack!</span>
+</div>
+
+<!-- Hinweis beim Verdienen von Kürbis-Talern -->
+<div class="hal-toast" id="halToast">
+  <span class="hal-toast-icon">🎃</span>
+  <span>
+    <span id="halToastText"></span>
+    <span class="hal-toast-sub" id="halToastSub"></span>
+  </span>
 </div>
 
 
@@ -3165,7 +3184,7 @@ function openBandPack(bandIdx) {
   prof.weekRewardClaimed = wc.week;
   prof.weekWins = (prof.weekWins || 0) + 1;
   // Halloween-Taler für die geschaffte Wochenchallenge
-  if (halloweenActive()) halAddTokens(currentProfile, 5);
+  if (halloweenActive()) { halAddTokens(currentProfile, 5); halTokenToast(5, 'Familien-Quest geschafft!'); }
   const freshAch = checkAchievements(prof);
   save();
 
@@ -3562,7 +3581,11 @@ function completeTask(label) {
   }
 
   // ---- Halloween-Taler: 1 pro Aufgabe, +1 beim 3er-Streak ----
-  if (halloweenActive()) halAddTokens(currentProfile, 1 + (halStreakBonus ? 1 : 0));
+  if (halloweenActive()) {
+    const taler = 1 + (halStreakBonus ? 1 : 0);
+    halAddTokens(currentProfile, taler);
+    halTokenToast(taler, halStreakBonus ? 'Aufgabe + 3er-Serie' : 'Für deine erledigte Aufgabe');
+  }
 
   save();
 
@@ -4146,6 +4169,21 @@ function halAddTokens(name, n) {
   const st = halState();
   st.tokens[name] = (st.tokens[name] || 0) + n;
   return st.tokens[name];
+}
+
+// Kleiner Hinweis, wenn Kürbis-Taler verdient wurden
+let halToastTimer = null;
+function halTokenToast(n, grund) {
+  if (!n || n <= 0 || !halloweenActive()) return;
+  const el = document.getElementById('halToast');
+  if (!el) return;
+  const txt = document.getElementById('halToastText');
+  const sub = document.getElementById('halToastSub');
+  if (txt) txt.textContent = '+' + n + ' Kürbis-Taler';
+  if (sub) sub.textContent = grund || '';
+  el.classList.add('show');
+  clearTimeout(halToastTimer);
+  halToastTimer = setTimeout(() => el.classList.remove('show'), 3400);
 }
 
 // Zu einer Halloween-Karte die zugehörige Basiskarte finden
