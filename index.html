@@ -2439,6 +2439,7 @@ body{
       <div class="detail-copies" id="detailCopies"></div>
       <div class="detail-trade" id="detailTrade" style="display:none;margin-top:8px;">
         <button class="btn-primary btn-small" id="detailTradeBtn" onclick="executeTrade()"></button>
+        <button class="btn-primary btn-small" id="detailTradeBtn2" onclick="executeTrade2zu1()" style="display:none;margin-top:6px;width:100%;"></button>
         <p class="trade-info" id="detailTradeInfo" style="font-size:12px;color:var(--dark-light);margin-top:4px;"></p>
               </div>
               <div id="detailTradeOffer" style="display:none;margin-top:8px;">
@@ -4460,17 +4461,27 @@ function showCardDetail(cardId) {
   // Trade/upgrade button
   const tradeDiv = document.getElementById('detailTrade');
   const tradeBtn = document.getElementById('detailTradeBtn');
+  const tradeBtn2 = document.getElementById('detailTradeBtn2');
   const tradeInfo = document.getElementById('detailTradeInfo');
-  // Jede Karte ist ab 2 Kopien 2:1 tauschbar
+  // Ab 2 Kopien ist 2:1 immer möglich. Zusätzlich kann ein Upgrade (3:1 Strandparty
+  // oder magisches Porträt) verfügbar sein – dann erscheinen BEIDE Knöpfe.
+  const hatUpgrade = (count >= 3 && FUNNY_CARDS[card.id]) ||
+                     (count >= 2 && ANIMATED_PORTRAITS[card.id] && !isAnimated);
+  if (hatUpgrade && count >= 2) {
+    tradeBtn2.textContent = '2:1 Eintauschen (2x ' + card.name + ' gegen 1 zufällige Karte)';
+    tradeBtn2.style.display = 'block';
+  } else {
+    tradeBtn2.style.display = 'none';
+  }
   if (count >= 3 && FUNNY_CARDS[card.id]) {
     const funny = FUNNY_CARDS[card.id];
     tradeBtn.textContent = 'Zu ' + funny.name + ' upgraden';
-    tradeInfo.textContent = 'Tausche 3x ' + card.name + ' gegen diese lustige Variante';
+    tradeInfo.textContent = 'Tausche 3x ' + card.name + ' gegen diese lustige Variante – oder 2:1 für eine zufällige Karte';
     tradeBtn.className = 'btn-primary btn-small';
     tradeDiv.style.display = 'block';
   } else if (count >= 2 && ANIMATED_PORTRAITS[card.id] && !isAnimated) {
     tradeBtn.textContent = 'Magisches Upgrade';
-    tradeInfo.textContent = 'Verschmelze 2x ' + card.name + ' zu einem lebendigen Zaubererporträt – die Karte erwacht zum Leben!';
+    tradeInfo.textContent = 'Verschmelze 2x ' + card.name + ' zu einem lebendigen Zaubererporträt – oder tausche 2:1';
     tradeBtn.className = 'btn-magic-upgrade';
     tradeDiv.style.display = 'block';
   } else if (count >= 2) {
@@ -4582,52 +4593,67 @@ function executeTrade() {
     closeCardDetail();
     setTimeout(() => { renderCollection(); queueAchievementPopups(freshAch2); }, 100);
   } else if (count >= 2) {
-    // Trade 2:1 for random card with pack rarity distribution
-    if (!confirm('2x ' + card.name + ' gegen 1 zufällige Karte tauschen?')) return;
-    owned[cardId] = (owned[cardId] || 0) - 2;
-    if (owned[cardId] <= 0) delete owned[cardId];
-    // Pick random card from base set (no funny cards) with pack rarity odds
-    let rarityPool = CARD_DB.filter(c => c.id !== cardId);
-    if (rarityPool.length === 0) { alert('Keine Karten zum Tauschen verfügbar!'); return; }
-    // Roll rarity based on traded card's rarity
-    let rarityTable;
-    if (card.rarity === 'legendary') {
-      rarityTable = [
-        { rarity:'legendary', prob:98 },
-        { rarity:'relikt', prob:2 }
-      ];
-    } else if (card.rarity === 'rare') {
-      rarityTable = [
-        { rarity:'rare', prob:94 },
-        { rarity:'legendary', prob:5 },
-        { rarity:'relikt', prob:1 }
-      ];
-    } else {
-      rarityTable = PACK_RARITY; // common: standard pack odds
-    }
-    const r = Math.random() * 100;
-    let cumulative = 0;
-    let rolledRarity = 'common';
-    for (const tier of rarityTable) {
-      cumulative += tier.prob;
-      if (r < cumulative) { rolledRarity = tier.rarity; break; }
-    }
-    const filtered = rarityPool.filter(c => c.rarity === rolledRarity);
-    const randomCard = filtered.length > 0
-      ? filtered[Math.floor(Math.random() * filtered.length)]
-      : rarityPool[Math.floor(Math.random() * rarityPool.length)];
-    const alreadyOwned = owned[randomCard.id] > 0;
-    owned[randomCard.id] = (owned[randomCard.id] || 0) + 1;
-    const freshAch3 = checkAchievements(prof);
-    save();
-    closeCardDetail();
-    setTimeout(() => showCardReveal([{...randomCard, isNew: !alreadyOwned}], () => {
-      renderCollection();
-      renderAlbum();
-      renderDashboard();
-      queueAchievementPopups(freshAch3);
-    }), 100);
+    executeTrade2zu1();          // 2:1-Tausch (eigene Funktion, auch parallel zum Upgrade nutzbar)
   }
+}
+
+// 2:1-Tausch: 2 Kopien gegen 1 zufaellige Karte.
+// Eigenstaendig, damit sie auch dann verfuegbar ist, wenn zusaetzlich ein
+// 3:1-Strandparty-Upgrade oder ein magisches Portraet moeglich waere.
+function executeTrade2zu1() {
+  if (!currentProfile) return;
+  const overlay = document.getElementById('cardDetailOverlay');
+  const cardId = overlay.dataset.cardId;
+  if (!cardId) return;
+  const card = getCardById(cardId);
+  if (!card) return;
+  const prof = getProfile(currentProfile);
+  const owned = prof.cards || {};
+  const count = owned[cardId] || 0;
+  if (count < 2) return;
+  if (!confirm('2x ' + card.name + ' gegen 1 zufällige Karte tauschen?')) return;
+  owned[cardId] = owned[cardId] - 2;
+  if (owned[cardId] <= 0) delete owned[cardId];
+  // Zufaellige Karte mit Pack-Raritaetsverteilung
+  const rarityPool = CARD_DB.filter(c => c.id !== cardId);
+  if (rarityPool.length === 0) { alert('Keine Karten zum Tauschen verfügbar!'); return; }
+  let rarityTable;
+  if (card.rarity === 'legendary') {
+    rarityTable = [
+      { rarity:'legendary', prob:98 },
+      { rarity:'relikt', prob:2 }
+    ];
+  } else if (card.rarity === 'rare') {
+    rarityTable = [
+      { rarity:'rare', prob:94 },
+      { rarity:'legendary', prob:5 },
+      { rarity:'relikt', prob:1 }
+    ];
+  } else {
+    rarityTable = PACK_RARITY;
+  }
+  const r = Math.random() * 100;
+  let cumulative = 0;
+  let rolledRarity = 'common';
+  for (const tier of rarityTable) {
+    cumulative += tier.prob;
+    if (r < cumulative) { rolledRarity = tier.rarity; break; }
+  }
+  const filtered = rarityPool.filter(c => c.rarity === rolledRarity);
+  const randomCard = filtered.length > 0
+    ? filtered[Math.floor(Math.random() * filtered.length)]
+    : rarityPool[Math.floor(Math.random() * rarityPool.length)];
+  const alreadyOwned = owned[randomCard.id] > 0;
+  owned[randomCard.id] = (owned[randomCard.id] || 0) + 1;
+  const freshAch = checkAchievements(prof);
+  save();
+  closeCardDetail();
+  setTimeout(() => showCardReveal([{...randomCard, isNew: !alreadyOwned}], () => {
+    renderCollection();
+    renderAlbum();
+    renderDashboard();
+    queueAchievementPopups(freshAch);
+  }), 100);
 }
 
 function showSuccess(msg) {
@@ -5337,7 +5363,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v34';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v35';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
