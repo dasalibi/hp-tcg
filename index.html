@@ -1249,9 +1249,15 @@ html, body {
   font-size: 14px;
   line-height: 1.7;
   color: var(--dark-light);
-  font-style: italic;
+  font-style: normal;
   border-top: 1px solid var(--parchment-dark);
   padding-top: 12px;
+}
+/* Nur das Zitat am Textanfang wird hervorgehoben */
+.detail-body .detail-desc em {
+  font-style: italic;
+  color: var(--gold-light);
+  font-weight: 600;
 }
 .detail-body .detail-copies {
   margin-top: 12px;
@@ -3971,6 +3977,13 @@ const REWARD_VIDEOS = {
 // damit nichts abgeschnitten wird.
 const WIDE_MEDIA = { 'hp-138': true };
 
+// Hebt ein Zitat am Anfang einer Beschreibung hervor („…“), Rest bleibt Normalschrift
+function formatDesc(desc) {
+  if (!desc) return '';
+  const m = desc.match(/^(„[^“]*“)/);
+  return m ? '<em>' + m[1] + '</em>' + desc.slice(m[1].length) : desc;
+}
+
 function showCardDetail(cardId) {
   let card = getCardById(cardId);
   if (!card) return;
@@ -4006,7 +4019,7 @@ function showCardDetail(cardId) {
   document.getElementById('detailType').textContent = `${card.type} · ${card.subtype}`;
   document.getElementById('detailHouse').textContent = card.house === '—' ? '' : `🏠 ${card.house}`;
   document.getElementById('detailHouse').style.display = card.house === '—' ? 'none' : 'inline-block';
-  document.getElementById('detailDesc').innerHTML = card.desc;
+  document.getElementById('detailDesc').innerHTML = formatDesc(card.desc);
   document.getElementById('detailCopies').textContent = count > 0 
     ? `Du besitzt diese Karte ${count}x` 
     : 'Du besitzt diese Karte noch nicht.';
