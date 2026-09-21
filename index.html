@@ -5336,14 +5336,15 @@ function setStreak() {
 init();
 
 // ===================== APP-VERSION & UPDATES =====================
-const APP_VERSION = '2.5';        // bei jedem Deploy erhöhen
-const APP_DATE = '13.09.2026';
+const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
+const APP_BUILD = 'v34';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
   const el = document.getElementById('versionLine');
   if (!el) return;
   const ctrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? 'aktiv' : 'wird eingerichtet';
-  el.textContent = `App-Stand ${APP_VERSION} (${APP_DATE}) · Offline-Cache: ${ctrl}`;
+  el.textContent = `App-Stand ${APP_VERSION} (${APP_BUILD}) · Offline-Cache: ${ctrl}`;
 }
 
 function showUpdateBanner() {
