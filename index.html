@@ -5005,8 +5005,17 @@ function openTradeConfirm(offerId) {
     const c = getCardById(id);
     return c ? c.name : '?';
   }).join(offer.wantMode === 'all' ? '" und "' : '" oder "');
+  const oT = parseInt(offer.offerTokens, 10) || 0;
+  const wT = parseInt(offer.wantTokens, 10) || 0;
+  const gebeTeile = [];
+  if (wantNames) gebeTeile.push('"' + wantNames + '"');
+  if (wT > 0) gebeTeile.push(wT + ' Kürbis-Taler');
+  const gebe = gebeTeile.length ? gebeTeile.join(' und ') : 'nichts';
+  const bekomme = oT > 0
+    ? `"${offerCard ? offerCard.name : '?'}" + ${oT} Kürbis-Taler`
+    : `"${offerCard ? offerCard.name : '?'}"`;
   document.getElementById('tradeConfirmText').textContent =
-    `Du tauschst deine Karten gegen "${offerCard ? offerCard.name : '?'}" von ${offer.from}. Gibst du: "${wantNames}"?`;
+    `Du bekommst ${bekomme} von ${offer.from}. Gibst du dafür ${gebe}?`;
   document.getElementById('tradeConfirmModal').classList.add('active');
 }
 
@@ -5029,7 +5038,7 @@ function confirmTradeAccept() {
   if (!myProf.cards) myProf.cards = {};
   if (!theirProf.cards) theirProf.cards = {};
   
-  // Check my cards
+  // ---- 1) ALLE Voraussetzungen prüfen, BEVOR etwas übertragen wird ----
   for (const wId of offer.wantCards) {
     if (!myProf.cards[wId] || myProf.cards[wId] < 1) {
       document.getElementById('tradeConfirmError').textContent = '❌ Du besitzt die benötigte Karte nicht mehr.';
@@ -5038,36 +5047,50 @@ function confirmTradeAccept() {
       return;
     }
   }
-  
+  // Besitzt der Anbieter seine angebotene Karte noch?
+  if (!theirProf.cards[offer.offerCard] || theirProf.cards[offer.offerCard] < 1) {
+    offers.splice(idx, 1);
+    save();
+    closeTradeConfirm();
+    renderTrades();
+    showSuccess('❌ Dieses Angebot ist nicht mehr gültig – die Karte wurde bereits weggetauscht.');
+    return;
+  }
+  // Taler-Beilagen prüfen (nur wenn Saison aktiv)
+  const stT = halState();
+  const oT = halloweenActive() ? (parseInt(offer.offerTokens, 10) || 0) : 0;
+  const wT = halloweenActive() ? (parseInt(offer.wantTokens, 10) || 0) : 0;
+  if (wT > 0 && (stT.tokens[myName] || 0) < wT) {
+    document.getElementById('tradeConfirmError').textContent = `❌ Du hast nur ${stT.tokens[myName] || 0} von ${wT} Kürbis-Talern.`;
+    return;
+  }
+  if (oT > 0 && (stT.tokens[offer.from] || 0) < oT) {
+    document.getElementById('tradeConfirmError').textContent = `❌ ${offer.from} hat nicht mehr genug Kürbis-Taler für dieses Angebot.`;
+    return;
+  }
+
+  // ---- 2) Jetzt übertragen ----
   // Transfer wanted cards from me -> them
   for (const wId of offer.wantCards) {
     myProf.cards[wId]--;
     if (myProf.cards[wId] <= 0) delete myProf.cards[wId];
     theirProf.cards[wId] = (theirProf.cards[wId] || 0) + 1;
   }
-  
+
   // Transfer offered card from them -> me
   theirProf.cards[offer.offerCard]--;
   if (theirProf.cards[offer.offerCard] <= 0) delete theirProf.cards[offer.offerCard];
   myProf.cards[offer.offerCard] = (myProf.cards[offer.offerCard] || 0) + 1;
-  
-  // Taler-Beilagen uebertragen (nur wenn Saison aktiv)
+
+  // Taler-Beilagen übertragen
   if (halloweenActive()) {
-    const st = halState();
-    const oT = parseInt(offer.offerTokens, 10) || 0;
-    const wT = parseInt(offer.wantTokens, 10) || 0;
-    // Ich muss die geforderten Taler haben
-    if (wT > 0 && (st.tokens[myName] || 0) < wT) {
-      document.getElementById('tradeConfirmError').textContent = '❌ Du hast nicht genug Kürbis-Taler.';
-      return;
-    }
     if (oT > 0) {                                     // Anbieter legt Taler dazu
-      st.tokens[offer.from] = Math.max(0, (st.tokens[offer.from] || 0) - oT);
-      st.tokens[myName] = (st.tokens[myName] || 0) + oT;
+      stT.tokens[offer.from] = Math.max(0, (stT.tokens[offer.from] || 0) - oT);
+      stT.tokens[myName] = (stT.tokens[myName] || 0) + oT;
     }
     if (wT > 0) {                                     // Ich zahle Taler
-      st.tokens[myName] = Math.max(0, (st.tokens[myName] || 0) - wT);
-      st.tokens[offer.from] = (st.tokens[offer.from] || 0) + wT;
+      stT.tokens[myName] = Math.max(0, (stT.tokens[myName] || 0) - wT);
+      stT.tokens[offer.from] = (stT.tokens[offer.from] || 0) + wT;
     }
   }
   // Remove offer
@@ -5143,10 +5166,6 @@ function submitTradeOffer() {
   const cardId = window._pendingTradeCardId;
   if (!cardId) return;
   const checks = document.querySelectorAll('#tradeWantCards input[type="checkbox"]:checked');
-  if (checks.length === 0) {
-    document.getElementById('tradeModalError').textContent = '❌ Wähle mindestens eine Wunsch-Karte aus.';
-    return;
-  }
   const wantCards = Array.from(checks).map(c => c.value);
   const wantMode = document.querySelector('input[name="tradeMode"]:checked').value;
   
@@ -5156,6 +5175,11 @@ function submitTradeOffer() {
     const meine = halTokens(currentProfile);
     offerTokens = Math.min(Math.max(parseInt(document.getElementById('tradeOfferTokens').value, 10) || 0, 0), meine);
     wantTokens = Math.max(parseInt(document.getElementById('tradeWantTokens').value, 10) || 0, 0);
+  }
+  // Wunsch: mindestens eine Karte ODER Kürbis-Taler
+  if (wantCards.length === 0 && wantTokens <= 0) {
+    document.getElementById('tradeModalError').textContent = '❌ Wähle mindestens eine Wunsch-Karte oder fordere Kürbis-Taler.';
+    return;
   }
   if (!data.tradeOffers) data.tradeOffers = [];
   data.tradeOffers.push({
