@@ -2449,6 +2449,10 @@ body{
                 <button class="btn-hal-upgrade" id="detailHalBtn" onclick="halUpgradeFromDetail()"></button>
                 <p class="hal-upgrade-info" id="detailHalInfo"></p>
               </div>
+              <div id="detailHalTokenTrade" style="display:none;margin-top:8px;">
+                <button class="btn-hal-upgrade" id="detailHalTokenBtn" onclick="halKarteFuerTaler()"></button>
+                <p class="hal-upgrade-info" id="detailHalTokenInfo"></p>
+              </div>
       <button class="detail-close" onclick="closeCardDetail()">Schließen</button>
     </div>
   </div>
@@ -4530,6 +4534,27 @@ function showCardDetail(cardId) {
     halDiv.style.display = 'none';
   }
 
+  // Direkter Halloween-Umtausch: Karten gegen 1 Kürbis-Taler.
+  // Nur Basis-Karten und nur während der Halloween-Saison.
+  const halTokenDiv = document.getElementById('detailHalTokenTrade');
+  const halTokenBtn = document.getElementById('detailHalTokenBtn');
+  const halTokenInfo = document.getElementById('detailHalTokenInfo');
+  const basisKarte = CARD_DB.find(c => c.id === cardId);
+  const halTokenPreis = basisKarte && basisKarte.rarity === 'common' ? 2
+    : (basisKarte && (basisKarte.rarity === 'rare' || basisKarte.rarity === 'legendary') ? 1 : 0);
+  if (halTokenPreis > 0 && halloweenActive() && currentProfile && count > 0) {
+    const genugKarten = count >= halTokenPreis;
+    halTokenDiv.style.display = 'block';
+    halTokenBtn.textContent = (halTokenPreis === 2 ? '2x ' : '1x ') + card.name + ' gegen 1 🎃 tauschen';
+    halTokenBtn.disabled = !genugKarten;
+    halTokenBtn.className = 'btn-hal-upgrade' + (genugKarten ? '' : ' hal-locked');
+    halTokenInfo.textContent = genugKarten
+      ? 'Du besitzt ' + count + 'x – 1 Kürbis-Taler wird gutgeschrieben.'
+      : 'Du brauchst ' + halTokenPreis + 'x ' + card.name + ' (du besitzt ' + count + 'x).';
+  } else {
+    halTokenDiv.style.display = 'none';
+  }
+
   // Set effect class + particles on detail box
   const detailBox = document.querySelector('.card-detail-box');
   if (detailBox) {
@@ -4544,6 +4569,36 @@ function showCardDetail(cardId) {
   }
   overlay.classList.add('active');
   document.getElementById('detailImg').innerHTML
+}
+
+function halKarteFuerTaler() {
+  if (!currentProfile || !halloweenActive()) return;
+  const overlay = document.getElementById('cardDetailOverlay');
+  const cardId = overlay.dataset.cardId;
+  const card = CARD_DB.find(c => c.id === cardId);
+  if (!card) return; // Nur Basis-Karten sind hierfür zugelassen.
+
+  const preis = card.rarity === 'common' ? 2
+    : ((card.rarity === 'rare' || card.rarity === 'legendary') ? 1 : 0);
+  if (!preis) return;
+
+  const prof = getProfile(currentProfile);
+  const owned = prof.cards || {};
+  const count = owned[cardId] || 0;
+  if (count < preis) return;
+
+  const menge = preis === 2 ? '2x ' : '1x ';
+  if (!confirm(menge + card.name + ' gegen 1 Kürbis-Taler eintauschen?')) return;
+
+  owned[cardId] -= preis;
+  if (owned[cardId] <= 0) delete owned[cardId];
+  halAddTokens(currentProfile, 1);
+  save();
+  halTokenToast(1, 'Kartentausch im Halloween-Shop');
+  renderCollection();
+  renderAlbum();
+  renderDashboard();
+  showCardDetail(cardId);
 }
 
 function getFunnyCardId(cardId) {
@@ -5368,7 +5423,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v36';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v37';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
