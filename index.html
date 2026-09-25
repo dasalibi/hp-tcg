@@ -5003,7 +5003,12 @@ function renderTradeOffer(offer, container, mode) {
     if (wT) teile.push(`${wT} 🎃 werden verlangt`);
     if (teile.length) tokenHtml = `<div class="trade-tokens">${teile.join(' · ')}</div>`;
   }
-  const canAccept = !isMyOffer && (offer.wantMode === 'any' ? ownsAny : ownsAll)
+  // Bei einem reinen Taler-Wunsch gibt es keine Wunschkarte, die ownsAny
+  // erfüllen könnte. Dann reicht das vorhandene Taler-Guthaben aus.
+  const cardRequirement = offer.wantCards.length === 0
+    ? true
+    : (offer.wantMode === 'any' ? ownsAny : ownsAll);
+  const canAccept = !isMyOffer && cardRequirement
                     && (!wT || halTokens(myName) >= wT)
                     && (!oT || halTokens(offer.from) >= oT);
   
@@ -5363,7 +5368,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v35';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v36';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
