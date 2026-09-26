@@ -2857,12 +2857,16 @@ const ACHIEVEMENTS = [
   { id:'coll75', cat:'Sammlung', icon:'📚', name:'Halbe Sammlung', desc:'Sammle 75 verschiedene Karten', goal:75, val: p => uniqueCards(p) },
   { id:'coll125', cat:'Sammlung', icon:'💎', name:'Sammler-Legende', desc:'Sammle 125 verschiedene Karten', goal:125, val: p => uniqueCards(p) },
   { id:'collAll', cat:'Sammlung', icon:'👑', name:'Der Zauberermeister', desc:'Sammle ALLE Karten', goal: () => totalCards(), val: p => uniqueCards(p) },
+  { id:'dup5', cat:'Sammlung', icon:'🃏', name:'Doppelt hält besser', desc:'Besitze 5 Kopien derselben Karte', goal:5, val: p => maxCopies(p) },
   // ---- Fleiß ----
   { id:'task1', cat:'Fleiß', icon:'⚡', name:'Der erste Zauber', desc:'Erledige deine erste Aufgabe', goal:1, val: p => taskCount(p) },
   { id:'task50', cat:'Fleiß', icon:'🐝', name:'Fleißige Biene', desc:'Erledige 50 Aufgaben', goal:50, val: p => taskCount(p) },
   { id:'task100', cat:'Fleiß', icon:'📅', name:'Arbeitsame Woche', desc:'Erledige 100 Aufgaben', goal:100, val: p => taskCount(p) },
   { id:'task250', cat:'Fleiß', icon:'💪', name:'Unermüdlich', desc:'Erledige 250 Aufgaben', goal:250, val: p => taskCount(p) },
   { id:'task500', cat:'Fleiß', icon:'🏅', name:'Meisterhaft', desc:'Erledige 500 Aufgaben', goal:500, val: p => taskCount(p) },
+  { id:'day3', cat:'Fleiß', icon:'📅', name:'Dreifacher Fleiß', desc:'Erledige 3 Aufgaben an einem Tag', goal:3, val: p => bestDayTasks(p) },
+  { id:'day5', cat:'Fleiß', icon:'⭐', name:'Tagesmeister', desc:'Erledige 5 Aufgaben an einem Tag', goal:5, val: p => bestDayTasks(p) },
+  { id:'day7', cat:'Fleiß', icon:'🌟', name:'Unaufhaltsamer Tag', desc:'Erledige 7 Aufgaben an einem Tag', goal:7, val: p => bestDayTasks(p) },
   // ---- Ausdauer ----
   { id:'streak3', cat:'Ausdauer', icon:'🔥', name:'Drei am Stück', desc:'3 Tage in Folge geübt', goal:3, val: p => p.instrumentStreak || 0 },
   { id:'streak7', cat:'Ausdauer', icon:'📆', name:'Eine ganze Woche', desc:'7 Tage in Folge geübt', goal:7, val: p => p.instrumentStreak || 0 },
@@ -2874,6 +2878,14 @@ const ACHIEVEMENTS = [
   { id:'pack150', cat:'Packs', icon:'🎊', name:'Pack-Meister', desc:'Öffne 150 Packs', goal:150, val: p => p.packsOpened || 0 },
   { id:'firstLegendary', cat:'Packs', icon:'✨', name:'Glückspilz', desc:'Ziehe deine erste legendäre Karte', goal:1, val: p => countByRarity(p, 'legendary') },
   { id:'firstRelikt', cat:'Packs', icon:'🟣', name:'Hüter der Gründer', desc:'Finde eine Relikt-Karte', goal:1, val: p => countByRarity(p, 'relikt') },
+  { id:'packTriple', cat:'Packs', icon:'🌈', name:'Glück im Dreierpack', desc:'Erhalte 3 verschiedene Seltenheiten in einem Pack', goal:1, val: p => p.packTriRarities || 0 },
+  { id:'rareTriple', cat:'Packs', icon:'💠', name:'Dreifache Seltenheit', desc:'Erhalte 3 seltene Karten in einem Pack', goal:1, val: p => p.packsWith3Rare || 0 },
+  // ---- Tauschen ----
+  { id:'trade1', cat:'Tauschen', icon:'🤝', name:'Erster Handel', desc:'Schließe einen Tausch über die Tauschbörse ab', goal:1, val: p => p.tradesDone || 0 },
+  { id:'tokenEx1', cat:'Tauschen', icon:'🎃', name:'Kürbis-Kaufmann', desc:'Tausche zum ersten Mal eine Karte gegen Kürbis-Taler', goal:1, val: p => p.tokenExchanges || 0 },
+  // ---- Halloween ----
+  { id:'tokens10', cat:'Halloween', icon:'🪙', name:'Kürbis-Sammler', desc:'Verdiene 10 Kürbis-Taler insgesamt', goal:10, val: p => tokensEarnedTotal(p) },
+  { id:'halCard1', cat:'Halloween', icon:'🌙', name:'Nächtlicher Zauber', desc:'Erwerbe deine erste Halloween-Karte', goal:1, val: p => halCardsOwned(p) },
   // ---- Album & Familie ----
   { id:'band1', cat:'Album', icon:'📖', name:'Band-Meister', desc:'Vervollständige dein erstes Album-Band', goal:1, val: p => completedBands(p) },
   { id:'band3', cat:'Album', icon:'🏰', name:'Dreifacher Meister', desc:'Vervollständige 3 Album-Bände', goal:3, val: p => completedBands(p) },
@@ -2885,7 +2897,7 @@ const ACHIEVEMENTS = [
   { id:'family5', cat:'Album', icon:'👨‍👩‍👧', name:'Familien-Champion', desc:'Schaffe 5× die Familien-Challenge', goal:5, val: p => p.weekWins || 0 },
 ];
 
-const ACH_CATS = ['Sammlung', 'Fleiß', 'Ausdauer', 'Packs', 'Album'];
+const ACH_CATS = ['Sammlung', 'Fleiß', 'Ausdauer', 'Packs', 'Tauschen', 'Halloween', 'Album'];
 
 // ---- Hilfszähler für die Orden ----
 function uniqueCards(p) { return Object.keys(p.cards || {}).length; }
@@ -2917,6 +2929,33 @@ function cardsFromBand(p, bandIdx) {
 }
 function funnyOwned(p) {
   return Object.keys(p.cards || {}).filter(id => id.startsWith('hp-fun-')).length;
+}
+// Höchste Anzahl identischer Karten im Besitz (für „Doppelt hält besser")
+function maxCopies(p) {
+  return Object.values(p.cards || {}).reduce((m, c) => Math.max(m, c || 0), 0);
+}
+// Meiste Aufgaben an einem einzigen Tag (für die Tages-Rekorde)
+function bestDayTasks(p) {
+  const perDay = {};
+  (p.tasks || []).forEach(t => {
+    const d = t.date || '';
+    perDay[d] = (perDay[d] || 0) + 1;
+  });
+  return Object.values(perDay).reduce((m, c) => Math.max(m, c), 0);
+}
+// Anzahl besessener Halloween-Karten
+function halCardsOwned(p) {
+  return Object.keys(p.cards || {}).filter(id => HALLOWEEN_CARDS[id]).length;
+}
+// Profil-Objekt → Name (für den Taler-Rückfall-Reader)
+function profileName(p) {
+  return Object.keys(data.profiles || {}).find(k => data.profiles[k] === p) || null;
+}
+// Insgesamt verdiente Taler: Zähler, sonst Rückfall auf den aktuellen Bestand
+function tokensEarnedTotal(p) {
+  if (p.tokensEarned !== undefined) return p.tokensEarned;
+  const name = profileName(p);
+  return name ? halTokens(name) : 0;
 }
 
 // Prüft alle Orden: schaltet neue frei und gibt sie zurück (für Popup)
@@ -3188,6 +3227,11 @@ function openBandPack(bandIdx) {
     drawn.push({ ...card, isNew });
     prof.cards[card.id] = (prof.cards[card.id] || 0) + 1;
   }
+
+  // Sonder-Packs: 3 verschiedene Seltenheiten oder 3 seltene Karten
+  const gezogeneRaritaeten = drawn.map(c => c.rarity);
+  if (new Set(gezogeneRaritaeten).size >= 3) prof.packTriRarities = 1;
+  if (gezogeneRaritaeten.filter(r => r === 'rare').length >= 3) prof.packsWith3Rare = 1;
 
   // Einlöse-Status setzen (Woche merken) + Orden-Zähler + speichern
   prof.weekRewardClaimed = wc.week;
@@ -3710,6 +3754,10 @@ function openPack() {
     currentPackCards.push({ ...card, isNew });
     prof.cards[card.id] = (prof.cards[card.id] || 0) + 1;
   }
+  // Sonder-Packs: 3 verschiedene Seltenheiten oder 3 seltene Karten
+  const gezogeneRaritaeten = currentPackCards.map(c => c.rarity);
+  if (new Set(gezogeneRaritaeten).size >= 3) prof.packTriRarities = 1;
+  if (gezogeneRaritaeten.filter(r => r === 'rare').length >= 3) prof.packsWith3Rare = 1;
   const freshAch = checkAchievements(prof);
   save();
   queueAchievementPopups(freshAch);
@@ -4177,6 +4225,12 @@ function halAddTokens(name, n) {
   if (!halloweenActive()) return 0;
   const st = halState();
   st.tokens[name] = (st.tokens[name] || 0) + n;
+  // Orden-Zähler: insgesamt verdiente Taler (Startbestand zählt als verdient)
+  const p = data.profiles[name];
+  if (p) {
+    if (p.tokensEarned === undefined) p.tokensEarned = st.tokens[name];
+    else p.tokensEarned += n;
+  }
   return st.tokens[name];
 }
 
@@ -4593,12 +4647,15 @@ function halKarteFuerTaler() {
   owned[cardId] -= preis;
   if (owned[cardId] <= 0) delete owned[cardId];
   halAddTokens(currentProfile, 1);
+  prof.tokenExchanges = (prof.tokenExchanges || 0) + 1;
+  const freshAch = checkAchievements(prof);
   save();
   halTokenToast(1, 'Kartentausch im Halloween-Shop');
   renderCollection();
   renderAlbum();
   renderDashboard();
   showCardDetail(cardId);
+  queueAchievementPopups(freshAch);
 }
 
 function getFunnyCardId(cardId) {
@@ -5193,10 +5250,16 @@ function confirmTradeAccept() {
   }
   // Remove offer
   offers.splice(idx, 1);
+  // Orden-Zähler: beide Profile haben einen Tausch abgeschlossen
+  myProf.tradesDone = (myProf.tradesDone || 0) + 1;
+  theirProf.tradesDone = (theirProf.tradesDone || 0) + 1;
+  const freshAch = checkAchievements(myProf);
+  checkAchievements(theirProf);          // beim nächsten Login sichtbar
   save();
   closeTradeConfirm();
   showSuccess('🔄 Tausch erfolgreich!');
   renderTrades();
+  queueAchievementPopups(freshAch);
 }
 
 function deleteTradeOffer(offerId) {
@@ -5423,7 +5486,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v37';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v38';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
