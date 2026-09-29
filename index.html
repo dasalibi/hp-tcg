@@ -2273,7 +2273,7 @@ body{
 
     <div class="parent-section">
       <h3>🃏 Karte zuweisen</h3>
-      <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Wähle Kind und Karte (auch Strandparty):</p>
+      <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Wähle Kind und Karte (auch Strandparty & Halloween):</p>
       <div class="assign-row">
         <select id="assignCardProfile"></select>
         <select id="assignCardSelect"></select>
@@ -2291,6 +2291,18 @@ body{
         <button class="btn-danger btn-small" onclick="removeCard()">Entfernen</button>
       </div>
       <p class="assign-msg" id="removeCardMsg"></p>
+    </div>
+
+    <div class="parent-section">
+      <h3>🎃 Kürbis-Taler verwalten</h3>
+      <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Wähle Kind und Anzahl – Taler geben oder entnehmen:</p>
+      <div class="assign-row">
+        <select id="assignTokenProfile"></select>
+        <input type="number" id="assignTokenCount" value="5" min="1" max="999">
+        <button class="btn-primary btn-small" onclick="assignTokens(1)">Taler geben</button>
+        <button class="btn-danger btn-small" onclick="assignTokens(-1)">Entnehmen</button>
+      </div>
+      <p class="assign-msg" id="assignTokenMsg"></p>
     </div>
 
     <div class="parent-section">
@@ -2711,13 +2723,13 @@ const CARD_DB = [
 ];
 
 // ===================== HALLOWEEN-EDITION (Saison 2026) =====================
-// Token-System: Taler sammeln, Karten kaufen. Taler verfallen am Saisonende.
+// Token-System: Taler sammeln, Karten kaufen. Verdienst nur waehrend der Saison – Taler verfallen NICHT.
 const HALLOWEEN_SEASON = {
   year: 2026,
   start: '2026-09-21',
   end:   '2026-10-31',
   price: 10,                       // Taler pro Karte
-  rewardId: 'hp-hal-013'           // Halloween-Baron (gratis bei 12/12)
+  rewardId: 'hp-hal-013'           // Der Blutige Baron (gratis bei 12/12)
 };
 
 // Welche Charakterkarte lässt sich in welche Halloween-Version verwandeln?
@@ -2749,7 +2761,7 @@ const HALLOWEEN_CARDS = {
   'hp-hal-010': { id:'hp-hal-010', name:'Halloween-Dobby', rarity:'common', type:'Charakter', subtype:'Halloween-Edition', house:'-', desc:'Ein weißes Gespensterkostüm, bunte Socken in Orange und Grün und ein leuchtender Kürbis in den Händen: Dobby hat sein Halloween-Kostüm selbst gebastelt. Und er ist unendlich stolz darauf – völlig zu Recht.', image:'cards/hp-hal-010.jpg' },
   'hp-hal-011': { id:'hp-hal-011', name:'Halloween-Draco', rarity:'common', type:'Charakter', subtype:'Halloween-Edition', house:'Slytherin', desc:'Rotes Kostüm mit goldenen Verzierungen, langer schwarzer Umhang und ein Handspiegel in der Hand: Draco feiert Halloween mit viel Stil. Der Spiegel bestätigt ihm Minute für Minute, wie gut das aussieht.', image:'cards/hp-hal-011.jpg' },
   'hp-hal-012': { id:'hp-hal-012', name:'Halloween-Bellatrix', rarity:'rare', type:'Charakter', subtype:'Halloween-Edition', house:'Slytherin', desc:'Zerzauste Haare, ein zerrissenes schwarzes Kleid mit knallpinkem Tüllrock und zarte Schmetterlingsflügel: Bellatrix als Fee. Gruselig war sie schon immer – als Fee ist sie es doppelt.', image:'cards/hp-hal-012.jpg' },
-  'hp-hal-013': { id:'hp-hal-013', name:'Halloween-Baron', type:'Charakter', subtype:'Hausgeist von Slytherin', house:'Slytherin', desc:'Durch den dunklen steinernen Gang schwebt er, das zerschlissene graue Gewand mit den ornamentalen Mustern weht im Fackelschein, und der Boden liegt im Nebel. Der Baron sagt kein Wort – doch wer ihn sieht, vergisst ihn nie wieder.', image:'cards/hp-hal-013.jpg' }
+  'hp-hal-013': { id:'hp-hal-013', name:'Der Blutige Baron', type:'Charakter', subtype:'Hausgeist von Slytherin', house:'Slytherin', desc:'Durch den dunklen steinernen Gang schwebt er, das zerschlissene graue Gewand mit den ornamentalen Mustern weht im Fackelschein, und der Boden liegt im Nebel. Der Baron sagt kein Wort – doch wer ihn sieht, vergisst ihn nie wieder.', image:'cards/hp-hal-013.jpg' }
 };
 
 // ===================== ALBUM REWARD CARDS =====================
@@ -2765,7 +2777,7 @@ const REWARD_CARDS = {
   7: { id:'hp-108', name:'Die Schlacht von Hogwarts', type:'Ereignis', subtype:'Das große Finale', house:'-', desc:'„Alle für einen, einer für alle.“ Der letzte Kampf: Schüler, Lehrer, Hauselfen und Phönixorden gegen Voldemorts Armee. Die Mauern von Hogwarts wanken, aber der Mut seiner Verteidiger nicht.', image:'cards/hp-108.jpg' },
   8: { id:'hp-125', name:'Der Goldene Schnatz', type:'Gegenstand', subtype:'Das Herz des Quidditch', house:'-', desc:'„Der Schnatz hat Fleisch und Blut.“ Ein winziger goldener Ball mit silbernen Flügeln, der nur denjenigen berührt, der ihn zuerst fängt. Wer den Schnatz fängt, beendet das Spiel - und gewinnt 150 Punkte. Das schönste Objekt der Zauberwelt, und jetzt gehört er dir.', image:'cards/hp-125.jpg' },
   9: { id:'hp-138', name:'Das lebendige Ordensfoto', type:'Gegenstand', subtype:'Das Foto der ersten Gruppe', house:'-', desc:'„Das ist der Orden des Phönix – das Foto der ersten Gruppe.“ Zwölf Menschen blicken aus dem Rahmen, als wäre gerade eben noch gelacht worden. Wer genau hinsieht, merkt: Sie bewegen sich noch immer – als hätte der Krieg nie begonnen.', image:'cards/hp-138.jpg' },
-  10: { id:'hp-hal-013', name:'Halloween-Baron', type:'Charakter', subtype:'Hausgeist von Slytherin', house:'Slytherin', desc:'Durch den dunklen steinernen Gang schwebt er, das zerschlissene graue Gewand mit den ornamentalen Mustern weht im Fackelschein, und der Boden liegt im Nebel. Der Baron sagt kein Wort – doch wer ihn sieht, vergisst ihn nie wieder.', image:'cards/hp-hal-013.jpg' }
+  10: { id:'hp-hal-013', name:'Der Blutige Baron', type:'Charakter', subtype:'Hausgeist von Slytherin', house:'Slytherin', desc:'Durch den dunklen steinernen Gang schwebt er, das zerschlissene graue Gewand mit den ornamentalen Mustern weht im Fackelschein, und der Boden liegt im Nebel. Der Baron sagt kein Wort – doch wer ihn sieht, vergisst ihn nie wieder.', image:'cards/hp-hal-013.jpg' }
 };
 
 // ===================== ALBUM BANDS =====================
@@ -2984,6 +2996,7 @@ const ICONS = {
   ruecken:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12h4l2-5 3 10 2.5-5H21"/></svg>',
   tisch:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="13" r="6"/><circle cx="12" cy="13" r="2.5"/><path d="M12 3v2M5 6l1.5 1.5M19 6l-1.5 1.5"/></svg>',
   sonstiges:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l2.6 5.5 6 .9-4.3 4.2 1 6-5.3-2.8L6.7 19.6l1-6L3.4 9.4l6-.9z"/></svg>',
+  smartphone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18.5h2"/></svg>',
   flame:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3s4.5 5.5 4.5 9.5a4.5 4.5 0 0 1-9 0C7.5 8.5 12 3 12 3z"/><path d="M12 21a6 6 0 0 0 6-6"/><path d="M12 21a6 6 0 0 1-6-6"/></svg>',
   calendar:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
   gift:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7S9.5 3 7 4.5 8 8 12 7zM12 7s2.5-4 5-2.5S16 8 12 7z"/></svg>',
@@ -3007,8 +3020,9 @@ function icon(name, cls) {
 const TASKS = [
   { id:'instrument', iconKey:'instrument', label:'Instrument geübt', needParent:false, adultOnly:false },
   { id:'sport', iconKey:'sport', label:'Sport gemacht', needParent:false, adultOnly:true },
-  { id:'haushalt', iconKey:'haushalt', label:'Haushaltsheldentat vollbracht', needParent:false, adultOnly:true },
+  { id:'haushalt', iconKey:'haushalt', label:'Besonderer Verdienst um Haushalt und Familie', needParent:false, adultOnly:true },
   { id:'ruecken', iconKey:'ruecken', label:'Rückenübungen gemacht', needParent:false, adultOnly:true },
+  { id:'smartphone', iconKey:'smartphone', label:'Smartphonezeit eingehalten', needParent:false, adultOnly:true },
   { id:'tisch', iconKey:'tisch', label:'Tisch gedeckt oder abgeräumt', needParent:false, adultOnly:false },
   { id:'sonstiges', iconKey:'sonstiges', label:'Sonstiges (Mama oder Papa fragen)', needParent:true, adultOnly:false }
 ];
@@ -4204,19 +4218,21 @@ function halloweenDaysLeft() {
   return Math.max(0, Math.ceil(diff / 86400000));
 }
 
-// Taler-Stand (leert sich nach Saisonende; gekaufte Karten bleiben)
+// Taler-Stand (verfallen NICHT – Restbestaende bleiben auch nach der Saison eintauschbar)
 function halState() {
   const key = String(HALLOWEEN_SEASON.year);
   if (!data.halloween || data.halloween.season !== key) {
     data.halloween = { season: key, tokens: {}, bought: {}, tokensCleared: false };
   }
-  if (!data.halloween.tokensCleared && new Date() > halEnd()) {
-    data.halloween.tokens = {};                 // Taler verfallen am 31.10.
-    data.halloween.tokensCleared = true;
-    save();
-  }
   return data.halloween;
 }
+
+// Taler-Einsatz bleibt nach der Saison moeglich, solange noch welche da sind
+function halTokensImUmlauf() {
+  const st = halState();
+  return Object.values(st.tokens || {}).some(v => (v || 0) > 0);
+}
+function halTalerNutzen() { return halloweenActive() || halTokensImUmlauf(); }
 function halTokens(name) { return halState().tokens[name] || 0; }
 function halBought(name) { return halState().bought[name] || []; }
 
@@ -4260,7 +4276,7 @@ function halBasisFuerZiel(zielId) {
 // Halloween-Karte kaufen (Preis: Taler + 1 Basiskarte als Einsatz)
 // opferId: optional – die im Karten-Detail bereits angezeigte Einsatz-Karte
 function halBuy(cardId, opferId) {
-  if (!currentProfile || !halloweenActive()) return;
+  if (!currentProfile) return;
   const st = halState();
   const bought = st.bought[currentProfile] || (st.bought[currentProfile] = []);
   if (bought.includes(cardId)) return;
@@ -4294,7 +4310,7 @@ function halBuy(cardId, opferId) {
 
   prof.cards[cardId] = (prof.cards[cardId] || 0) + 1;
 
-  // Alle 12 gekauft -> Halloween-Baron gratis dazu
+  // Alle 12 gekauft -> Blutigen Baron gratis dazu
   const alleZwölf = HALLOWEEN_CARDS && Object.keys(HALLOWEEN_CARDS)
     .filter(id => id !== HALLOWEEN_SEASON.rewardId)
     .every(id => bought.includes(id));
@@ -4349,7 +4365,6 @@ function halUpgradeFromDetail() {
   const cardId = overlay ? overlay.dataset.cardId : null;
   const zielId = cardId ? halZielFuerKarte(cardId) : null;
   if (!zielId) return;
-  if (!halloweenActive()) { alert('Die Halloween-Saison ist beendet – die Kürbis-Taler sind verfallen.'); return; }
   const prof = getProfile(currentProfile);
   const owned = prof.cards || {};
   const st = halState();
@@ -4378,7 +4393,7 @@ function halUpgradeFromDetail() {
 
 // Taler tauschen (an ein anderes Profil schenken)
 function halGiftTokens(toName) {
-  if (!currentProfile || !halloweenActive()) return;
+  if (!currentProfile) return;
   const st = halState();
   const have = st.tokens[currentProfile] || 0;
   if (have <= 0) { alert('Du hast keine Taler zum Verschenken.'); return; }
@@ -4407,12 +4422,12 @@ function renderHalloweenShop() {
   const baronDa = bought.includes(HALLOWEEN_SEASON.rewardId);
   const tage = halloweenDaysLeft();
 
-  if (!aktiv && !bought.length) { box.style.display = 'none'; return; }
+  if (!aktiv && !bought.length && !tokens) { box.style.display = 'none'; return; }
   box.style.display = 'block';
 
   const countdown = aktiv
     ? `<span class="hal-days">noch ${tage} ${tage === 1 ? 'Tag' : 'Tage'}</span>`
-    : `<span class="hal-days hal-over">Saison beendet</span>`;
+    : `<span class="hal-days hal-over">Saison beendet · Taler bleiben gültig</span>`;
 
   const profCards = (currentProfile ? (getProfile(currentProfile).cards || {}) : {});
   const kacheln = ids.map(id => {
@@ -4421,7 +4436,7 @@ function renderHalloweenShop() {
     const basisId = halBasisFuerZiel(id);
     const opfer = basisId ? halOpferKarte(basisId, profCards) : null;
     const einsatzOk = !basisId || !!opfer;
-    const leistbar = tokens >= HALLOWEEN_SEASON.price && aktiv && !hat && einsatzOk;
+    const leistbar = tokens >= HALLOWEEN_SEASON.price && !hat && einsatzOk;
     return `<div class="hal-item ${hat ? 'owned' : 'locked'} ${leistbar ? 'affordable' : ''}"
                  ${hat ? `onclick="showCardDetail('${id}')"` : (einsatzOk ? `onclick="halBuy('${id}')"` : '')}>
       ${hat ? `<img src="${c.image}" alt="${c.name}" loading="lazy">`
@@ -4446,7 +4461,7 @@ function renderHalloweenShop() {
 
   // Schenken (nur wenn es andere Profile gibt)
   const andere = Object.keys(data.profiles || {}).filter(n => n !== currentProfile);
-  const giftButtons = (aktiv && andere.length)
+  const giftButtons = (halTalerNutzen() && andere.length)
     ? andere.map(n => `<button class="hal-gift-btn" onclick="halGiftTokens('${n.replace(/'/g, "\\'")}')">🎃 an ${n} verschenken</button>`).join('')
     : '';
 
@@ -4460,8 +4475,8 @@ function renderHalloweenShop() {
       <div class="hal-token-label">deine Kürbis-Taler</div>
     </div>
     <p class="hal-hint">
-      <strong>Taler verdienen:</strong> 1 pro Aufgabe · 1 pro 3er-Serie · 5 pro Wochenchallenge.
-      ${aktiv ? `Taler verfallen am 31.10. – jede Karte kostet ${HALLOWEEN_SEASON.price} Taler + 1 Basiskarte (oder deren Strandparty-Version).` : ''}
+      ${aktiv ? `<strong>Taler verdienen:</strong> 1 pro Aufgabe · 1 pro 3er-Serie · 5 pro Wochenchallenge – nur während der Saison.` : '<strong>Die Saison ist beendet – neue Taler gibt es nicht mehr.</strong>'}
+      Deine Taler verfallen nicht: Jede Karte kostet ${HALLOWEEN_SEASON.price} Taler + 1 Basiskarte (oder deren Strandparty-Version) – auch später noch.
     </p>
     <div class="hal-progress">${gekauft12} von 12 Halloween-Karten gesammelt</div>
     <div class="hal-grid">${kacheln}${baronKachel}</div>
@@ -4565,7 +4580,7 @@ function showCardDetail(cardId) {
   const halInfo = document.getElementById('detailHalInfo');
   const halZielId = halZielFuerKarte(cardId);
   const halZiel = halZielId ? HALLOWEEN_CARDS[halZielId] : null;
-  const halWirbt = halZiel && halloweenActive();
+  const halWirbt = halZiel && (halloweenActive() || (currentProfile && halTokens(currentProfile) > 0));
   if (halWirbt) {
     const preis = HALLOWEEN_SEASON.price;
     const haben = currentProfile ? halTokens(currentProfile) : 0;
@@ -4863,7 +4878,7 @@ function renderParentArea() {
   selectDiv.innerHTML = '';
 
   // Populate assign dropdowns
-  ['assignPackProfile','assignCardProfile','removeCardProfile','streakProfileSelect'].forEach(id => {
+  ['assignPackProfile','assignCardProfile','removeCardProfile','assignTokenProfile','streakProfileSelect'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     sel.innerHTML = '';
@@ -4893,7 +4908,15 @@ function renderParentArea() {
       opt.textContent = '🏖️ ' + fc.name + ' (Strandparty)';
       cardSel.appendChild(opt);
     });
+    // Halloween-Karten
+    Object.values(HALLOWEEN_CARDS).forEach(hc => {
+      const opt = document.createElement('option');
+      opt.value = hc.id;
+      opt.textContent = '🎃 ' + hc.name + ' (Halloween)';
+      cardSel.appendChild(opt);
+    });
   }
+  updateRemoveCardList();
   
   profiles.forEach(name => {
     const btn = document.createElement('button');
@@ -5035,7 +5058,7 @@ function renderTrades() {
   
   // „Nur Kürbis-Taler anbieten" nur während der Saison
   const halSec = document.getElementById('halTradeSection');
-  if (halSec) halSec.style.display = halloweenActive() ? 'block' : 'none';
+  if (halSec) halSec.style.display = halTalerNutzen() ? 'block' : 'none';
   
   // Incoming offers (from others)
   const incoming = offers.filter(o => o.from !== myName);
@@ -5209,10 +5232,10 @@ function confirmTradeAccept() {
     showSuccess('❌ Dieses Angebot ist nicht mehr gültig – die Karte wurde bereits weggetauscht.');
     return;
   }
-  // Taler-Beilagen prüfen (nur wenn Saison aktiv)
+  // Taler-Beilagen prüfen (Taler bleiben auch nach der Saison gültig)
   const stT = halState();
-  const oT = halloweenActive() ? (parseInt(offer.offerTokens, 10) || 0) : 0;
-  const wT = halloweenActive() ? (parseInt(offer.wantTokens, 10) || 0) : 0;
+  const oT = parseInt(offer.offerTokens, 10) || 0;
+  const wT = parseInt(offer.wantTokens, 10) || 0;
   if (wT > 0 && (stT.tokens[myName] || 0) < wT) {
     document.getElementById('tradeConfirmError').textContent = `❌ Du hast nur ${stT.tokens[myName] || 0} von ${wT} Kürbis-Talern.`;
     return;
@@ -5238,7 +5261,7 @@ function confirmTradeAccept() {
   }
 
   // Taler-Beilagen übertragen
-  if (halloweenActive()) {
+  if (oT > 0 || wT > 0) {
     if (oT > 0) {                                     // Anbieter legt Taler dazu
       stT.tokens[offer.from] = Math.max(0, (stT.tokens[offer.from] || 0) - oT);
       stT.tokens[myName] = (stT.tokens[myName] || 0) + oT;
@@ -5278,7 +5301,7 @@ function openCreateTradeModal(cardId) {
   closeCardDetail();
   const nurTaler = !cardId;                                   // Angebot ohne Karte (nur Kürbis-Taler)
   const card = cardId ? getCardById(cardId) : null;
-  if (nurTaler && !halloweenActive()) return;                 // nur während der Saison möglich
+  if (nurTaler && !halTalerNutzen()) return;                 // Taler-Angebote solange Taler da sind
   if (!nurTaler && !card) return;
   window._pendingTradeCardId = cardId || '';
   document.getElementById('tradeOfferCardName').textContent = card ? card.name : 'nur Kürbis-Taler 🎃';
@@ -5307,7 +5330,7 @@ function openCreateTradeModal(cardId) {
   // Taler-Zeile nur waehrend der Halloween-Saison
   const tokenRow = document.getElementById('tradeTokenRow');
   if (tokenRow) {
-    if (halloweenActive()) {
+    if (halTalerNutzen()) {
       tokenRow.style.display = 'block';
       document.getElementById('tradeOfferTokens').value = 0;
       document.getElementById('tradeWantTokens').value = 0;
@@ -5331,9 +5354,9 @@ function submitTradeOffer() {
   const wantCards = Array.from(checks).map(c => c.value);
   const wantMode = document.querySelector('input[name="tradeMode"]:checked').value;
   
-  // Taler-Beilagen (nur waehrend der Saison)
+  // Taler-Beilagen (solange Taler im Umlauf)
   let offerTokens = 0, wantTokens = 0;
-  if (halloweenActive()) {
+  if (halTalerNutzen()) {
     const meine = halTokens(currentProfile);
     offerTokens = Math.min(Math.max(parseInt(document.getElementById('tradeOfferTokens').value, 10) || 0, 0), meine);
     wantTokens = Math.max(parseInt(document.getElementById('tradeWantTokens').value, 10) || 0, 0);
@@ -5425,10 +5448,17 @@ function assignCard() {
     const found = Object.values(FUNNY_CARDS).find(c => c.id === cardId);
     if (found) card = found;
   }
+  if (!card && HALLOWEEN_CARDS[cardId]) card = HALLOWEEN_CARDS[cardId];
   if (!card) return;
   const prof = getProfile(name);
   if (!prof.cards) prof.cards = {};
   prof.cards[cardId] = (prof.cards[cardId] || 0) + 1;
+  // Halloween-Karte: auch als gekauft markieren (Shop-Anzeige + kein Doppelkauf)
+  if (HALLOWEEN_CARDS[cardId]) {
+    const st = halState();
+    const bought = st.bought[name] || (st.bought[name] = []);
+    if (!bought.includes(cardId)) bought.push(cardId);
+  }
   save();
   document.getElementById('assignCardMsg').textContent = `✅ ${card.name} an ${name} gegeben!`;
 }
@@ -5441,14 +5471,14 @@ function updateRemoveCardList() {
   const prof = getProfile(name);
   const owned = prof.cards || {};
   selCard.innerHTML = '';
-  // Build list of owned cards (base + funny)
-  const allCards = [...CARD_DB, ...Object.values(FUNNY_CARDS)];
+  // Build list of owned cards (base + funny + halloween)
+  const allCards = [...CARD_DB, ...Object.values(FUNNY_CARDS), ...Object.values(HALLOWEEN_CARDS)];
   allCards.forEach(c => {
     const count = owned[c.id] || 0;
     if (count > 0) {
       const opt = document.createElement('option');
       opt.value = c.id;
-      const prefix = c.id.startsWith('hp-fun-') ? '🏖️ ' : '';
+      const prefix = c.id.startsWith('hp-hal-') ? '🎃 ' : (c.id.startsWith('hp-fun-') ? '🏖️ ' : '');
       opt.textContent = `${prefix}${c.name} (${count}x)`;
       selCard.appendChild(opt);
     }
@@ -5465,10 +5495,37 @@ function removeCard() {
   if (!prof.cards || !prof.cards[cardId]) return;
   prof.cards[cardId]--;
   if (prof.cards[cardId] <= 0) delete prof.cards[cardId];
+  // Halloween-Karte: Shop-„gekauft"-Markierung mit entfernen (kein Rest-Doppelkauf-Schutz)
+  if (HALLOWEEN_CARDS[cardId] && (prof.cards[cardId] || 0) <= 0) {
+    const st = halState();
+    st.bought[name] = (st.bought[name] || []).filter(x => x !== cardId);
+  }
   save();
   const cardName = selCard.options[selCard.selectedIndex]?.text.split(' (')[0] || cardId;
   document.getElementById('removeCardMsg').textContent = `🗑️ 1x ${cardName} von ${name} entfernt`;
   updateRemoveCardList();
+}
+
+function assignTokens(sign) {
+  const sel = document.getElementById('assignTokenProfile');
+  const name = sel ? sel.value : '';
+  const n = parseInt(document.getElementById('assignTokenCount').value, 10) || 0;
+  const msgEl = document.getElementById('assignTokenMsg');
+  if (!name || !data.profiles[name] || n <= 0) return;
+  const st = halState();
+  const cur = st.tokens[name] || 0;
+  if (sign > 0) {
+    st.tokens[name] = cur + n;
+    if (msgEl) msgEl.textContent = `✅ ${n} Kürbis-Taler an ${name} gegeben (jetzt: ${cur + n}).`;
+  } else {
+    const abzug = Math.min(cur, n);
+    st.tokens[name] = cur - abzug;
+    if (msgEl) msgEl.textContent = abzug > 0
+      ? `🗑️ ${abzug} Kürbis-Taler von ${name} entfernt (jetzt: ${cur - abzug}).`
+      : `${name} hat keine Taler.`;
+  }
+  save();
+  renderHalloweenShop();
 }
 
 function setStreak() {
@@ -5486,7 +5543,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v39';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v40';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
