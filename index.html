@@ -2934,6 +2934,15 @@ function completedStoryBands(p) {
 }
 // Gesamtzahl der Strandparty-Karten (für den "alle Strandpartykarten"-Orden)
 function allFunnyCount() { return Object.keys(FUNNY_CARDS).length; }
+// Gesamtzahl ALLER einzigartigen Karten (Basis + Strandparty + Halloween + Belohnungen) – Startseiten-Ringe
+function allCardsCount() {
+  const ids = new Set();
+  CARD_DB.forEach(c => ids.add(c.id));
+  Object.values(FUNNY_CARDS).forEach(c => ids.add(c.id));
+  Object.values(HALLOWEEN_CARDS).forEach(c => ids.add(c.id));
+  Object.values(REWARD_CARDS).forEach(c => ids.add(c.id));
+  return ids.size;
+}
 function cardsFromBand(p, bandIdx) {
   const band = ALBUM_BANDS[bandIdx];
   if (!band) return 0;
@@ -3473,7 +3482,7 @@ function renderDashboard() {
   document.getElementById('dashPackCount').textContent = totalPacks;
   document.getElementById('statTasks').textContent = taskCount;
   document.getElementById('statCards').textContent = cardCount;
-  const totalAll = CARD_DB.length + Object.keys(FUNNY_CARDS).length;
+  const totalAll = allCardsCount();
   document.getElementById('statUnique').textContent = `${uniqueCount}/${totalAll}`;
 
   // Avatar-Initiale + Fortschritts-Ringe (Untertitel folgt nach der Streak-Berechnung)
@@ -5543,7 +5552,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v40';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v41';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
