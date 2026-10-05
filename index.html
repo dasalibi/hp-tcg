@@ -2868,7 +2868,7 @@ const ACHIEVEMENTS = [
   { id:'coll50', cat:'Sammlung', icon:'🃏', name:'Eifriger Sammler', desc:'Sammle 50 verschiedene Karten', goal:50, val: p => uniqueCards(p) },
   { id:'coll75', cat:'Sammlung', icon:'📚', name:'Halbe Sammlung', desc:'Sammle 75 verschiedene Karten', goal:75, val: p => uniqueCards(p) },
   { id:'coll125', cat:'Sammlung', icon:'💎', name:'Sammler-Legende', desc:'Sammle 125 verschiedene Karten', goal:125, val: p => uniqueCards(p) },
-  { id:'collAll', cat:'Sammlung', icon:'👑', name:'Der Zauberermeister', desc:'Sammle ALLE Karten', goal: () => totalCards(), val: p => uniqueCards(p) },
+  { id:'collAll', cat:'Sammlung', icon:'👑', name:'Der Zauberermeister', desc:'Sammle alle Karten der Editionen (ohne Belohnungen)', goal: () => totalCards(), val: p => uniqueCards(p) },
   { id:'dup5', cat:'Sammlung', icon:'🃏', name:'Doppelt hält besser', desc:'Besitze 5 Kopien derselben Karte', goal:5, val: p => maxCopies(p) },
   // ---- Fleiß ----
   { id:'task1', cat:'Fleiß', icon:'⚡', name:'Der erste Zauber', desc:'Erledige deine erste Aufgabe', goal:1, val: p => taskCount(p) },
@@ -2913,6 +2913,8 @@ const ACH_CATS = ['Sammlung', 'Fleiß', 'Ausdauer', 'Packs', 'Tauschen', 'Hallow
 
 // ---- Hilfszähler für die Orden ----
 function uniqueCards(p) { return Object.keys(p.cards || {}).length; }
+// Nur erwerbbare Editions-Karten (ohne Belohnungen) – bewusst anders als allCardsCount(),
+// damit der Orden auch bei künftigen Belohnungs-Karten erreichbar bleibt
 function totalCards() {
   return CARD_DB.length + Object.keys(FUNNY_CARDS).length + Object.keys(HALLOWEEN_CARDS).length;
 }
@@ -3867,7 +3869,7 @@ function renderCollection(filter) {
   const prof = getProfile(currentProfile);
   const owned = prof.cards || {};
   const totalUnique = Object.keys(owned).length;
-  const totalCards = CARD_DB.length + Object.keys(FUNNY_CARDS).length + Object.keys(HALLOWEEN_CARDS).length;
+  const totalCards = allCardsCount();
   
   document.getElementById('collectionCount').textContent = `${totalUnique}/${totalCards}`;
   document.getElementById('collectionProgress').style.width = `${(totalUnique / totalCards) * 100}%`;
@@ -5552,7 +5554,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v41';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v42';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
