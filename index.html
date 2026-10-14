@@ -784,6 +784,15 @@ html, body {
 .album-slot-reward.album-phoenix {
   grid-column: 1 / -1;
   grid-row: 1 / -1;
+  /* Rahmen genau um das Bild: Slot übernimmt dessen Seitenverhältnis (JS setzt die echte Ratio) */
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;          /* Fallback – wird per JS auf die echte Video-/Bildgröße gesetzt */
+  max-height: 100%;
+  align-self: center;
+  justify-self: center;
+  background: none;             /* kein durchscheinender Gradient mehr */
+  overflow: hidden;             /* Bild folgt den abgerundeten Rahmenecken */
 }
 .album-phoenix-hint {
   grid-column: 1 / -1;
@@ -4278,6 +4287,18 @@ function renderAlbumBand() {
             : `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
           panoSlot.onclick = () => showCardDetail(reward.id);
           grid.appendChild(panoSlot);
+          // Rahmen an die echte Größe des Videos/Bildes anpassen (keine leeren Streifen)
+          const panoMedia = panoSlot.querySelector('video, img');
+          if (panoMedia) {
+            const setRatio = () => {
+              const w = panoMedia.videoWidth || panoMedia.naturalWidth;
+              const h = panoMedia.videoHeight || panoMedia.naturalHeight;
+              if (w && h) panoSlot.style.aspectRatio = (w / h);
+            };
+            setRatio();
+            panoMedia.addEventListener('loadedmetadata', setRatio);
+            panoMedia.addEventListener('load', setRatio);
+          }
         } else {
           const noch = band.cards.filter(id => !(owned[id] > 0)).length;
           const hint = document.createElement('div');
@@ -5875,7 +5896,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v46';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v47';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
