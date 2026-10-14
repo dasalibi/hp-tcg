@@ -745,11 +745,15 @@ html, body {
 .album-slot.empty-rare { border: 2px dashed #2e7d32; background: rgba(20,50,20,0.35); }
 .album-slot.empty-legendary { border: 2px dashed #c5a55a; background: rgba(50,40,15,0.35); }
 .album-slot.empty-relikt { border: 2px dashed #9b59b6; background: rgba(50,20,60,0.35); }
-.album-slot img {
+.album-slot img,
+.album-slot video {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+/* Panorama-Medien (z.B. hp-138) nicht abschneiden */
+.album-slot.wide img, .album-slot.wide video,
+.album-slot-reward.wide img, .album-slot-reward.wide video { object-fit: contain; }
 .album-slot-reward {
   position: relative;
   border-radius: 8px;
@@ -760,7 +764,8 @@ html, body {
   transition: transform 0.2s;
 }
 .album-slot-reward:nth-child(even) { margin-top: 6px; }
-.album-slot-reward img {
+.album-slot-reward img,
+.album-slot-reward video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -878,7 +883,8 @@ html, body {
 .album-grid-founders .founders-slot:nth-child(even) {
   margin-top: 0;
 }
-.album-grid-founders .founders-slot img {
+.album-grid-founders .founders-slot img,
+.album-grid-founders .founders-slot video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -4064,8 +4070,11 @@ function renderAlbumBand() {
         if (!card) return;
         const slot = document.createElement('div');
         if (s.owned) {
-          slot.className = 'album-slot founders-slot';
-          slot.innerHTML = `<img src="${card.image}" alt="${card.name}" loading="lazy">`;
+          slot.className = 'album-slot founders-slot' + (WIDE_MEDIA[s.id] ? ' wide' : '');
+          const fvid = cardVideoSrc(s.id, prof);
+          slot.innerHTML = fvid
+            ? `<video src="${fvid}" autoplay loop muted playsinline></video>`
+            : `<img src="${card.image}" alt="${card.name}" loading="lazy">`;
           slot.onclick = () => showCardDetail(s.id);
         } else {
           slot.className = 'album-slot empty-common founders-slot';
@@ -4084,8 +4093,11 @@ function renderAlbumBand() {
       if (!card) return;
       const slot = document.createElement('div');
       if (s.owned) {
-        slot.className = 'album-slot';
-        slot.innerHTML = `<img src="${card.image}" alt="${card.name}" loading="lazy">`;
+        slot.className = 'album-slot' + (WIDE_MEDIA[s.id] ? ' wide' : '');
+        const vid = cardVideoSrc(s.id, prof);
+        slot.innerHTML = vid
+          ? `<video src="${vid}" autoplay loop muted playsinline></video>`
+          : `<img src="${card.image}" alt="${card.name}" loading="lazy">`;
         // Anzahl-Badge oben links, wenn mehrfach besessen und Toggle aktiv
         if (albumShowCounts && owned[s.id] > 1) {
           const badge = document.createElement('span');
@@ -4109,8 +4121,11 @@ function renderAlbumBand() {
       const rewardSlot = document.createElement('div');
       const rewardOwned = owned[reward.id] > 0;
       if (rewardOwned) {
-        rewardSlot.className = 'album-slot-reward';
-        rewardSlot.innerHTML = `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
+        rewardSlot.className = 'album-slot-reward' + (WIDE_MEDIA[reward.id] ? ' wide' : '');
+        const rvid = cardVideoSrc(reward.id, prof);
+        rewardSlot.innerHTML = rvid
+          ? `<video src="${rvid}" autoplay loop muted playsinline></video>`
+          : `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
         rewardSlot.onclick = () => showCardDetail(reward.id);
       } else {
         rewardSlot.className = 'album-slot-reward locked';
@@ -4121,6 +4136,11 @@ function renderAlbumBand() {
 
     page.appendChild(grid);
     container.appendChild(page);
+  });
+
+  // Nur die sichtbare Seite abspielen lassen (iPad-Performance)
+  container.querySelectorAll('.album-page').forEach((pg, i) => {
+    pg.querySelectorAll('video').forEach(v => { if (i === albumCurrentPage) v.play().catch(() => {}); else v.pause(); });
   });
 
   // Blätter-Navigation
@@ -4144,6 +4164,8 @@ function albumFlip(dir) {
     if (i === albumCurrentPage) p.classList.add('active');
     else if (i < albumCurrentPage) p.classList.add('left');
     else p.classList.add('right');
+    // Videos der sichtbaren Seite laufen, die anderen pausieren
+    p.querySelectorAll('video').forEach(v => { if (i === albumCurrentPage) v.play().catch(() => {}); else v.pause(); });
   });
   document.getElementById('albumIndicator').textContent = `${albumCurrentPage + 1} / ${albumPageCount}`;
   document.getElementById('albumPrev').classList.toggle('disabled', albumCurrentPage === 0);
@@ -4214,6 +4236,14 @@ const REWARD_VIDEOS = {
 // Medien im Breitformat (Panorama) – werden mit "contain" statt "cover" gezeigt,
 // damit nichts abgeschnitten wird.
 const WIDE_MEDIA = { 'hp-138': true };
+
+// Liefert den Videopfad, wenn eine Karte animiert gezeigt werden soll (sonst null).
+// Band-Belohnungen sind immer animiert; Relikt-Porträts erst nach dem Magischen Upgrade.
+function cardVideoSrc(cardId, prof) {
+  if (REWARD_VIDEOS[cardId]) return REWARD_VIDEOS[cardId];
+  if (prof && prof.animatedPortraits && prof.animatedPortraits[cardId] && ANIMATED_PORTRAITS[cardId]) return ANIMATED_PORTRAITS[cardId];
+  return null;
+}
 
 // ===================== HALLOWEEN: TALER-SYSTEM =====================
 
@@ -4521,9 +4551,7 @@ function showCardDetail(cardId) {
   overlay.dataset.cardId = cardId;
 
   // Belohnungskarten: immer Video; Relikte: Video nur nach Magischem Upgrade
-  let videoSrc = null;
-  if (REWARD_VIDEOS[cardId]) videoSrc = REWARD_VIDEOS[cardId];
-  else if (isAnimated && ANIMATED_PORTRAITS[cardId]) videoSrc = ANIMATED_PORTRAITS[cardId];
+  const videoSrc = cardVideoSrc(cardId, prof);
 
   document.getElementById('detailImg').className = 'detail-img' + (WIDE_MEDIA[cardId] ? ' detail-img-wide' : '');
   document.getElementById('detailImg').innerHTML = videoSrc
@@ -5554,7 +5582,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v42';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v43';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
