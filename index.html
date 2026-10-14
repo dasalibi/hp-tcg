@@ -538,7 +538,8 @@ html, body {
   color: var(--gold-dark);
   overflow: hidden;
 }
-.mini-card-img img {
+.mini-card-img img,
+.mini-card-img video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1582,7 +1583,7 @@ html, body {
 .trades-section h3 { font-size:14px;color:var(--dark-light);margin-bottom:8px; }
 .trade-card { display:flex;align-items:center;gap:10px;padding:10px;background:var(--parchment);border-radius:8px;margin-bottom:8px;border:1px solid var(--parchment-dark); }
 .trade-offer-img { width:40px;height:56px;border-radius:4px;overflow:hidden;flex-shrink:0;background:var(--parchment-dark);display:flex;align-items:center;justify-content:center;font-size:20px; }
-.trade-offer-img img { width:100%;height:100%;object-fit:cover; }
+.trade-offer-img img, .trade-offer-img video { width:100%;height:100%;object-fit:cover; }
 .trade-offer-info { flex:1;font-size:13px; }
 .trade-offer-name { font-weight:600;font-size:14px; }
 .trade-offer-from { font-size:11px;color:var(--dark-light); }
@@ -1781,7 +1782,7 @@ body{
 .hal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 .hal-item{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:9/16;
   border:1px solid var(--g-line-soft);background:rgba(243,234,217,.05);}
-.hal-item img{width:100%;height:100%;object-fit:cover;display:block;}
+.hal-item img,.hal-item video{width:100%;height:100%;object-fit:cover;display:block;}
 .hal-item.locked{opacity:.6;}
 .hal-item.affordable{border-color:rgba(255,140,0,.65);box-shadow:0 0 12px rgba(255,140,0,.28);cursor:pointer;}
 .hal-item.owned{cursor:pointer;}
@@ -3821,9 +3822,12 @@ function renderRevealedCards() {
   const container = document.getElementById('revealCards');
   container.innerHTML = '';
   
+  const revealProf = currentProfile ? getProfile(currentProfile) : null;
+
   currentPackCards.forEach(card => {
     const div = document.createElement('div');
     div.className = 'mini-card rarity-' + card.rarity + getEffectClass(card.rarity);
+    const rvid = cardVideoSrc(card.id, revealProf);
     div.onclick = () => showCardDetail(card.id);
     
     const rarityName = RARITY[card.rarity] || 'Gewöhnlich';
@@ -3832,7 +3836,8 @@ function renderRevealedCards() {
     const effectHTML = getEffectHTML(card.rarity);
     div.innerHTML = effectHTML +
       '<div class="mini-card-img">' +
-        (hasImage ? '<img src="' + card.image + '" alt="' + card.name + '" loading="lazy">' : getCardEmoji(card)) +
+        (rvid ? '<video src="' + rvid + '" autoplay loop muted playsinline></video>'
+              : (hasImage ? '<img src="' + card.image + '" alt="' + card.name + '" loading="lazy">' : getCardEmoji(card))) +
       '</div>' +
       '<div class="mini-card-info">' +
         '<div class="mini-name">' + card.name + (card.isNew ? '<span class="new-badge">NEU</span>' : '') + '</div>' +
@@ -4475,17 +4480,20 @@ function renderHalloweenShop() {
     ? `<span class="hal-days">noch ${tage} ${tage === 1 ? 'Tag' : 'Tage'}</span>`
     : `<span class="hal-days hal-over">Saison beendet · Taler bleiben gültig</span>`;
 
-  const profCards = (currentProfile ? (getProfile(currentProfile).cards || {}) : {});
+  const halProf = currentProfile ? getProfile(currentProfile) : null;
+  const profCards = (halProf ? (halProf.cards || {}) : {});
   const kacheln = ids.map(id => {
     const c = HALLOWEEN_CARDS[id];
     const hat = bought.includes(id);
+    const vid = hat ? cardVideoSrc(id, halProf) : null;
     const basisId = halBasisFuerZiel(id);
     const opfer = basisId ? halOpferKarte(basisId, profCards) : null;
     const einsatzOk = !basisId || !!opfer;
     const leistbar = tokens >= HALLOWEEN_SEASON.price && !hat && einsatzOk;
     return `<div class="hal-item ${hat ? 'owned' : 'locked'} ${leistbar ? 'affordable' : ''}"
                  ${hat ? `onclick="showCardDetail('${id}')"` : (einsatzOk ? `onclick="halBuy('${id}')"` : '')}>
-      ${hat ? `<img src="${c.image}" alt="${c.name}" loading="lazy">`
+      ${hat ? (vid ? `<video src="${vid}" autoplay loop muted playsinline></video>`
+                   : `<img src="${c.image}" alt="${c.name}" loading="lazy">`)
             : `<div class="hal-silhouette">🎃</div>`}
       <div class="hal-name">${c.name}</div>
       ${hat ? '<div class="hal-owned-tag">✓</div>'
@@ -4496,9 +4504,11 @@ function renderHalloweenShop() {
   }).join('');
 
   const baron = HALLOWEEN_CARDS[HALLOWEEN_SEASON.rewardId];
+  const baronVid = baronDa ? cardVideoSrc(HALLOWEEN_SEASON.rewardId, halProf) : null;
   const baronKachel = `<div class="hal-item hal-baron ${baronDa ? 'owned' : 'locked'}"
       ${baronDa ? `onclick="showCardDetail('${HALLOWEEN_SEASON.rewardId}')"` : ''}>
-    ${baronDa ? `<img src="${baron.image}" alt="${baron.name}" loading="lazy">`
+    ${baronDa ? (baronVid ? `<video src="${baronVid}" autoplay loop muted playsinline></video>`
+                          : `<img src="${baron.image}" alt="${baron.name}" loading="lazy">`)
               : `<div class="hal-silhouette">👻</div>`}
     <div class="hal-name">${baron.name}</div>
     ${baronDa ? '<div class="hal-owned-tag">✓</div>'
@@ -5191,8 +5201,10 @@ function renderTradeOffer(offer, container, mode) {
                     && (!wT || halTokens(myName) >= wT)
                     && (!oT || halTokens(offer.from) >= oT);
   
+  const angebotVid = offerCard ? cardVideoSrc(offerCard.id, (data.profiles && data.profiles[offer.from]) || null) : null;
   const angebotImg = offerCard
-    ? (offerCard.image ? '<img src="' + offerCard.image + '" alt="">' : '🃏')
+    ? (angebotVid ? '<video src="' + angebotVid + '" autoplay loop muted playsinline></video>'
+                  : (offerCard.image ? '<img src="' + offerCard.image + '" alt="">' : '🃏'))
     : '🎃';
   const angebotName = offerCard ? offerCard.name : (oT + ' Kürbis-Taler');
   div.innerHTML = `
@@ -5587,7 +5599,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v44';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v45';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
