@@ -780,6 +780,129 @@ html, body {
   inset: 0;
   background: rgba(0,0,0,0.45);
 }
+/* ===== Der Orden des Phönix: Einzelbilder verschmelzen zum bewegten Ordensfoto ===== */
+.album-slot-reward.album-phoenix {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+}
+.album-phoenix-hint {
+  grid-column: 1 / -1;
+  align-self: end;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--gold-light);
+  opacity: 0.9;
+  padding: 8px 12px;
+  border: 1px dashed rgba(224,200,120,0.45);
+  border-radius: 8px;
+  background: rgba(40,25,8,0.35);
+}
+/* Vollbild-Animation */
+#phoenixRitual {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 45%, rgba(38,22,6,0.96) 0%, rgba(8,4,2,0.99) 72%);
+  overflow: hidden;
+}
+#phoenixRitual.active { display: flex; }
+#phoenixRitual .phoenix-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(94vw, 760px);
+  height: min(84vh, 620px);
+}
+#phoenixRitual .phoenix-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: min(68vw, 420px);
+}
+#phoenixRitual .phoenix-tile {
+  position: relative;
+  aspect-ratio: 88 / 120;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid rgba(255,224,150,0.25);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.5);
+  opacity: 0;
+  animation: phoenixIn 0.45s ease-out forwards;
+  transition: filter 0.35s ease-out, border-color 0.35s ease-out;
+}
+#phoenixRitual .phoenix-tile img { width: 100%; height: 100%; object-fit: cover; }
+#phoenixRitual .phoenix-tile.glow {
+  filter: sepia(0.55) saturate(2.2) brightness(1.5) drop-shadow(0 0 16px rgba(255,214,110,0.95));
+  border-color: rgba(255,224,150,0.85);
+}
+#phoenixRitual .phoenix-tile.fly { animation: phoenixFly 0.5s ease-in forwards; }
+@keyframes phoenixIn {
+  from { opacity: 0; transform: scale(0.6) translateY(14px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes phoenixFly {
+  0%   { opacity: 1; }
+  100% { transform: translate(var(--fx, 0px), var(--fy, 0px)) scale(0.12) rotate(14deg); opacity: 0; }
+}
+#phoenixRitual .phoenix-flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(255,246,214,1) 0%, rgba(255,214,110,0.85) 35%, rgba(255,180,60,0) 70%);
+}
+#phoenixRitual .phoenix-flash.go { animation: phoenixFlash 0.9s ease-out forwards; }
+@keyframes phoenixFlash {
+  0%   { opacity: 0; transform: scale(0.3); }
+  22%  { opacity: 1; transform: scale(6); }
+  100% { opacity: 0; transform: scale(24); }
+}
+#phoenixRitual .phoenix-panorama {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  transform: scale(0.62);
+  pointer-events: none;
+}
+#phoenixRitual .phoenix-panorama.go { animation: phoenixRise 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+@keyframes phoenixRise { to { opacity: 1; transform: scale(1); } }
+#phoenixRitual .phoenix-panorama video,
+#phoenixRitual .phoenix-panorama img {
+  max-width: 100%;
+  max-height: 60vh;
+  border-radius: 10px;
+  border: 3px solid var(--gold-light);
+  box-shadow: 0 0 34px rgba(255,214,110,0.55), 0 6px 20px rgba(0,0,0,0.6);
+}
+#phoenixRitual .phoenix-pano-title {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  letter-spacing: 1px;
+  color: var(--gold-light);
+  text-shadow: 0 0 18px rgba(255,214,110,0.8);
+}
+#phoenixRitual .phoenix-skip {
+  position: absolute;
+  bottom: 20px;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: rgba(255,236,190,0.6);
+}
 .album-nav {
   position: absolute;
   bottom: 64px;
@@ -2444,6 +2567,14 @@ body{
     </div>
     <p id="parentConfirmError" style="color:#cc3333;font-size:13px;margin-top:8px;min-height:18px;"></p>
   </div>
+</div>
+
+<!-- ==================== OVERLAY: Phönix-Ritual ==================== -->
+<div id="phoenixRitual">
+  <div class="phoenix-stage" id="phoenixStage">
+    <div class="phoenix-flash" id="phoenixFlash"></div>
+  </div>
+  <div class="phoenix-skip">Tippen zum Überspringen</div>
 </div>
 
 <!-- ==================== MODAL: Card Detail ==================== -->
@@ -4128,20 +4259,48 @@ function renderAlbumBand() {
     // Belohnungsfeld auf der letzten Seite (nur wenn Band eine Belohnung hat)
     if (pi === pages.length - 1 && band.reward) {
       const reward = REWARD_CARDS[band.reward];
-      const rewardSlot = document.createElement('div');
-      const rewardOwned = owned[reward.id] > 0;
-      if (rewardOwned) {
-        rewardSlot.className = 'album-slot-reward' + (WIDE_MEDIA[reward.id] ? ' wide' : '');
-        const rvid = cardVideoSrc(reward.id, prof);
-        rewardSlot.innerHTML = rvid
-          ? `<video src="${rvid}" autoplay loop muted playsinline></video>`
-          : `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
-        rewardSlot.onclick = () => showCardDetail(reward.id);
+      if (isPhoenixBand(band)) {
+        // Panorama-Band (Der Orden des Phönix): KEIN Belohnungs-Slot.
+        // Sobald alle Einzelbilder vorhanden sind, verschmelzen sie zum bewegten Ordensfoto.
+        if (albumBandComplete(band, owned)) {
+          // Belohnungskarte automatisch vergeben (früher erst per Klick auf das Symbol)
+          if (!(owned[reward.id] > 0)) {
+            owned[reward.id] = 1;
+            checkAchievements(prof);
+            save();
+          }
+          grid.innerHTML = '';                       // die 12 Einzelkacheln weichen dem Foto
+          const panoSlot = document.createElement('div');
+          panoSlot.className = 'album-slot-reward wide album-phoenix';
+          const pvid = cardVideoSrc(reward.id, prof);
+          panoSlot.innerHTML = pvid
+            ? `<video src="${pvid}" autoplay loop muted playsinline></video>`
+            : `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
+          panoSlot.onclick = () => showCardDetail(reward.id);
+          grid.appendChild(panoSlot);
+        } else {
+          const noch = band.cards.filter(id => !(owned[id] > 0)).length;
+          const hint = document.createElement('div');
+          hint.className = 'album-phoenix-hint';
+          hint.textContent = `🔥 Noch ${noch} ${noch === 1 ? 'Karte' : 'Karten'} – dann verschmelzen alle Bilder zu einem lebendigen Ordensfoto.`;
+          grid.appendChild(hint);
+        }
       } else {
-        rewardSlot.className = 'album-slot-reward locked';
-        rewardSlot.onclick = () => claimBandReward(band);
+        const rewardSlot = document.createElement('div');
+        const rewardOwned = owned[reward.id] > 0;
+        if (rewardOwned) {
+          rewardSlot.className = 'album-slot-reward' + (WIDE_MEDIA[reward.id] ? ' wide' : '');
+          const rvid = cardVideoSrc(reward.id, prof);
+          rewardSlot.innerHTML = rvid
+            ? `<video src="${rvid}" autoplay loop muted playsinline></video>`
+            : `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
+          rewardSlot.onclick = () => showCardDetail(reward.id);
+        } else {
+          rewardSlot.className = 'album-slot-reward locked';
+          rewardSlot.onclick = () => claimBandReward(band);
+        }
+        grid.appendChild(rewardSlot);
       }
-      grid.appendChild(rewardSlot);
     }
 
     page.appendChild(grid);
@@ -4162,6 +4321,123 @@ function renderAlbumBand() {
     document.getElementById('albumNext').classList.toggle('disabled', albumCurrentPage === albumPageCount - 1);
   } else {
     nav.style.display = 'none';
+  }
+
+  // Einmalige Verschmelzungs-Animation (nur Panorama-Bänder, einmal pro Profil)
+  maybePhoenixRitual();
+}
+
+// ===== Der Orden des Phönix: Einzelbilder verschmelzen zum bewegten Ordensfoto =====
+// Bänder, deren Belohnung den GANZEN Band als Bild zeigt (Panorama, WIDE_MEDIA).
+function isPhoenixBand(band) {
+  if (!band || !band.reward) return false;
+  const r = REWARD_CARDS[band.reward];
+  return !!(r && WIDE_MEDIA[r.id]);
+}
+function albumBandComplete(band, owned) {
+  return band.cards.every(id => (owned[id] || 0) > 0);
+}
+
+let phoenixRunning = false;
+let phoenixEndTimeout = null;
+
+function maybePhoenixRitual() {
+  if (phoenixRunning || !currentProfile) return;
+  const band = ALBUM_BANDS[albumCurrentBand];
+  if (!isPhoenixBand(band)) return;
+  const prof = getProfile(currentProfile);
+  const owned = prof.cards || {};
+  if (!albumBandComplete(band, owned)) return;
+  if (prof.phoenixRitualSeen) return;                    // pro Profil nur EINMAL
+  const screen = document.getElementById('screen-album');
+  if (!screen || !screen.classList.contains('active')) return;
+  prof.phoenixRitualSeen = true;
+  save();
+  setTimeout(() => startPhoenixRitual(band), 650);
+}
+
+function startPhoenixRitual(band) {
+  const ov = document.getElementById('phoenixRitual');
+  const stage = document.getElementById('phoenixStage');
+  const flash = document.getElementById('phoenixFlash');
+  const reward = REWARD_CARDS[band.reward];
+  if (!ov || !stage || !flash || !reward) return;
+  phoenixRunning = true;
+
+  // 12 Kacheln + das bewegte Ordensfoto aufbauen
+  const grid = document.createElement('div');
+  grid.className = 'phoenix-grid';
+  band.cards.forEach(id => {
+    const card = getCardById(id);
+    if (!card) return;
+    const t = document.createElement('div');
+    t.className = 'phoenix-tile';
+    t.innerHTML = `<img src="${card.image}" alt="" loading="eager">`;
+    grid.appendChild(t);
+  });
+  const pano = document.createElement('div');
+  pano.className = 'phoenix-panorama';
+  const vid = cardVideoSrc(reward.id, getProfile(currentProfile));
+  pano.innerHTML = (vid
+      ? `<video src="${vid}" autoplay loop muted playsinline></video>`
+      : `<img src="${reward.image}" alt="${reward.name}">`)
+    + `<div class="phoenix-pano-title">✦ ${reward.name} ✦</div>`;
+  stage.querySelectorAll('.phoenix-grid, .phoenix-panorama').forEach(el => el.remove());
+  stage.appendChild(grid);
+  stage.appendChild(pano);
+  flash.classList.remove('go');
+  ov.classList.add('active');
+
+  requestAnimationFrame(() => {
+    // Flugrichtung jeder Kachel zur Mitte
+    const gr = grid.getBoundingClientRect();
+    const cx = gr.left + gr.width / 2, cy = gr.top + gr.height / 2;
+    const tiles = [...grid.querySelectorAll('.phoenix-tile')];
+    tiles.forEach(t => {
+      const r = t.getBoundingClientRect();
+      t.style.setProperty('--fx', Math.round(cx - (r.left + r.width / 2)) + 'px');
+      t.style.setProperty('--fy', Math.round(cy - (r.top + r.height / 2)) + 'px');
+    });
+    // 1) nacheinander golden aufleuchten ...
+    tiles.forEach((t, i) => {
+      setTimeout(() => t.classList.add('glow'), 260 + i * 70);
+      // ... und verschmelzen
+      setTimeout(() => { t.classList.add('fly'); t.classList.remove('glow'); }, 960 + i * 55);
+    });
+    // 2) Lichtblitz
+    const tFlash = 1820;
+    setTimeout(() => flash.classList.add('go'), tFlash);
+    // 3) das bewegte Ordensfoto fährt auf
+    setTimeout(() => {
+      pano.classList.add('go');
+      const v = pano.querySelector('video');
+      if (v) { v.muted = true; v.play().catch(() => {}); }
+    }, tFlash + 280);
+  });
+
+  // Tippen überspringt
+  ov.onclick = () => {
+    pano.classList.add('go');
+    endPhoenixRitual();
+  };
+  phoenixEndTimeout = setTimeout(endPhoenixRitual, 4300);
+}
+
+function endPhoenixRitual() {
+  const ov = document.getElementById('phoenixRitual');
+  const stage = document.getElementById('phoenixStage');
+  if (!ov) return;
+  if (phoenixEndTimeout) { clearTimeout(phoenixEndTimeout); phoenixEndTimeout = null; }
+  ov.classList.remove('active');
+  ov.onclick = null;
+  if (stage) {
+    stage.querySelectorAll('video').forEach(v => v.pause());
+    setTimeout(() => {
+      stage.querySelectorAll('.phoenix-grid, .phoenix-panorama').forEach(el => el.remove());
+      phoenixRunning = false;
+    }, 500);
+  } else {
+    phoenixRunning = false;
   }
 }
 
@@ -5599,7 +5875,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v45';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v46';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
