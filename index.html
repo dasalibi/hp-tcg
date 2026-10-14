@@ -1289,8 +1289,10 @@ html, body {
   position: absolute;
   top: 6px;
   right: 6px;
-  background: var(--burgundy);
-  color: var(--white);
+  /* Gleicher Farbstil wie die Kartenzahl im Album (.album-count): dunkel mit weißer Zahl */
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
   font-size: 11px;
   font-weight: 700;
   min-width: 22px;
@@ -1979,9 +1981,6 @@ body{
 
 /* ---- Sammlung ---- */
 .collection-header h2{font-family:var(--font-serif);color:var(--g-hi);}
-/* Kartenzahl der Sammlung im selben Stil wie der Album-Zähler (besser lesbar) */
-.collection-header #collectionCount{color:#c9b37a;background:rgba(0,0,0,0.5);border:1px solid #a08040;
-  border-radius:12px;padding:3px 10px;font-size:14px;font-variant-numeric:tabular-nums;}
 .collection-count{color:var(--g-dim);}
 .collection-progress{background:rgba(243,234,217,.12);}
 .collection-progress-fill{background:linear-gradient(90deg,#a8842c,#e8cd8a);box-shadow:0 0 10px rgba(201,169,97,.45);}
@@ -3019,7 +3018,7 @@ const ACHIEVEMENTS = [
   { id:'coll50', cat:'Sammlung', icon:'🃏', name:'Eifriger Sammler', desc:'Sammle 50 verschiedene Karten', goal:50, val: p => uniqueCards(p) },
   { id:'coll75', cat:'Sammlung', icon:'📚', name:'Halbe Sammlung', desc:'Sammle 75 verschiedene Karten', goal:75, val: p => uniqueCards(p) },
   { id:'coll125', cat:'Sammlung', icon:'💎', name:'Sammler-Legende', desc:'Sammle 125 verschiedene Karten', goal:125, val: p => uniqueCards(p) },
-  { id:'collAll', cat:'Sammlung', icon:'👑', name:'Der Zauberermeister', desc:'Sammle alle Karten der Editionen (ohne Belohnungen)', goal: () => totalCards(), val: p => uniqueCards(p) },
+  { id:'collAll', cat:'Sammlung', icon:'👑', name:'Der Zauberermeister', desc:'Sammle alle Karten der Editionen (ohne Belohnungen)', goal: 175, val: p => uniqueCards(p) },
   { id:'dup5', cat:'Sammlung', icon:'🃏', name:'Doppelt hält besser', desc:'Besitze 5 Kopien derselben Karte', goal:5, val: p => maxCopies(p) },
   // ---- Fleiß ----
   { id:'task1', cat:'Fleiß', icon:'⚡', name:'Der erste Zauber', desc:'Erledige deine erste Aufgabe', goal:1, val: p => taskCount(p) },
@@ -3064,13 +3063,8 @@ const ACH_CATS = ['Sammlung', 'Fleiß', 'Ausdauer', 'Packs', 'Tauschen', 'Hallow
 
 // ---- Hilfszähler für die Orden ----
 function uniqueCards(p) { return Object.keys(p.cards || {}).length; }
-// Ziel des Ordens „Der Zauberermeister": alle Karten, die in den Album-Bändern liegen
-// (ohne Belohnungen, ohne Saison-Extras wie den Blutigen Baron). Wächst AUTOMATISCH mit
-// neuen Bändern/Karten – deshalb nicht hart kodiert, sonst müsste der Orden bei jedem
-// Content-Update angepasst werden.
-function totalCards() {
-  return ALBUM_BANDS.reduce((n, b) => n + b.cards.length, 0);
-}
+// Der Orden „Der Zauberermeister" hat ein FESTES Ziel von 175 Karten (Stand der Editionen).
+// Kommen später Karten dazu, bleibt dieser Orden bewusst stehen – dafür gibt es dann einen neuen Orden.
 function taskCount(p) { return (p.tasks || []).length; }
 function countByRarity(p, rarity) {
   return Object.keys(p.cards || {}).filter(id => {
@@ -5930,7 +5924,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v48';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v49';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
