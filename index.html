@@ -1136,7 +1136,8 @@ html, body {
   color: var(--gold-dark);
   overflow: hidden;
 }
-.collection-card-img img {
+.collection-card-img img,
+.collection-card-img video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -3937,15 +3938,19 @@ function renderCollection(filter) {
     
     // Magical effects
     const effectHTML = getEffectHTML(card.rarity);
+    // Bewegte Bilder: animierte Karten (Relikte nach Upgrade, Belohnungen) als Video
+    const vid = card.count > 0 ? cardVideoSrc(card.id, prof) : null;
     div.innerHTML = effectHTML + `
       <div class="collection-card-img">
         ${card.count > 0
-          ? (hasImage ? `<img src="${card.image}" alt="${card.name}" loading="lazy">` : getCardEmoji(card))
+          ? (vid
+              ? `<video src="${vid}" autoplay loop muted playsinline></video>`
+              : (hasImage ? `<img src="${card.image}" alt="${card.name}" loading="lazy">` : getCardEmoji(card)))
           : '❓'}
       </div>
       <div class="collection-card-name">${card.name}</div>
       ${card.count > 0 ? `<div class="count-badge">${card.count}</div>` : ''}
-      ${(prof.animatedPortraits && prof.animatedPortraits[card.id]) ? '<div class="anim-badge">🎬</div>' : ''}
+      ${(card.count > 0 && !vid && prof.animatedPortraits && prof.animatedPortraits[card.id]) ? '<div class="anim-badge">🎬</div>' : ''}
     `;
     grid.appendChild(div);
   });
@@ -5582,7 +5587,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v43';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v44';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
