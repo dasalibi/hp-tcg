@@ -690,6 +690,7 @@ html, body {
 }
 .album-pages.shifted { --bandy: -101%; }
 .album-pages.band-fade { opacity: 0.12; }
+.album-pages.band-nudge { transition: transform 0.12s cubic-bezier(.2,.7,.2,1), opacity 0.2s ease; }
 .album-subpage {
   position: absolute;
   inset: 0;
@@ -4265,8 +4266,18 @@ function renderAlbum() {
 // dir: +1 = naechstes Band (nach links gewischt), -1 = vorheriges
 function albumBandSwipe(dir) {
   const nb = albumCurrentBand + dir;
-  if (nb < 0 || nb >= ALBUM_BANDS.length) return;      // am Rand: kein Wechsel
   const el = document.getElementById('albumPages');
+  if (nb < 0 || nb >= ALBUM_BANDS.length) {            // am Rand: kurz anschlagen (Gummiband)
+    if (el) {
+      el.classList.add('band-nudge');
+      el.style.setProperty('--bandx', (dir > 0 ? -2.5 : 2.5) + '%');
+      setTimeout(() => {
+        el.style.removeProperty('--bandx');
+        setTimeout(() => el.classList.remove('band-nudge'), 200);
+      }, 90);
+    }
+    return;
+  }
   if (el) {                                            // aktuelle Seite leicht rausziehen
     el.style.setProperty('--bandx', (dir > 0 ? -7 : 7) + '%');
     el.classList.add('band-fade');
@@ -6150,7 +6161,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v56';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v57';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
