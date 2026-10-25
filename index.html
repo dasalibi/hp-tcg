@@ -2300,7 +2300,10 @@ body{
 <div class="screen" id="screen-collection">
   <div class="collection-header">
     <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:22px;height:22px;vertical-align:-4px;margin-right:7px"><rect x="3" y="5" width="13" height="16" rx="2"/><path d="M8 2h11a2 2 0 0 1 2 2v14"/></svg>Meine Sammlung</h2>
-    <span id="collectionCount">0/0</span>
+    <div class="album-header-right">
+      <span id="collectionCount">0/0</span>
+      <button class="album-count-toggle anim-toggle-btn" id="collectionAnimToggle" title="Bewegte Bilder an/aus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:17px;height:17px;display:inline-block;vertical-align:-3px;"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+    </div>
   </div>
   <div class="collection-progress"><div class="collection-progress-fill" id="collectionProgress" style="width:0%"></div></div>
   <div class="collection-filter">
@@ -2324,7 +2327,7 @@ body{
     <div class="album-header-right">
       <span id="albumCount" style="font-size:14px;color:var(--dark-light);">0/0</span>
       <button class="album-count-toggle" id="albumCountToggle" title="Anzahl anzeigen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:17px;height:17px;display:block;margin:auto"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg></button>
-      <button class="album-count-toggle" id="albumAnimToggle" title="Bewegte Bilder an/aus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:17px;height:17px;display:inline-block;vertical-align:-3px;"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+      <button class="album-count-toggle anim-toggle-btn" id="albumAnimToggle" title="Bewegte Bilder an/aus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:17px;height:17px;display:inline-block;vertical-align:-3px;"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
     </div>
   </div>
   <div class="album-tabs" id="albumTabs"></div>
@@ -4030,6 +4033,13 @@ function renderCollection(filter) {
   document.getElementById('collectionCount').textContent = `${totalUnique}/${totalCards}`;
   document.getElementById('collectionProgress').style.width = `${(totalUnique / totalCards) * 100}%`;
 
+  // Bewegt-Schalter (gleicher Zustand wie im Album)
+  const animBtnColl = document.getElementById('collectionAnimToggle');
+  if (animBtnColl) {
+    animBtnColl.classList.toggle('active', bewegteBilder);
+    animBtnColl.onclick = toggleBewegteBilder;
+  }
+
   let cards;
   if (currentFilter === 'funny') {
     // Only show funny/strandparty cards
@@ -4088,7 +4098,7 @@ function renderCollection(filter) {
     // Magical effects
     const effectHTML = getEffectHTML(card.rarity);
     // Bewegte Bilder: animierte Karten (Relikte nach Upgrade, Belohnungen) als Video
-    const vid = card.count > 0 ? cardVideoSrc(card.id, prof) : null;
+    const vid = card.count > 0 ? animatedVideoSrc(card.id, prof) : null;
     div.innerHTML = effectHTML + `
       <div class="collection-card-img">
         ${card.count > 0
@@ -4124,8 +4134,8 @@ let albumShowCounts = false;
 try { albumShowCounts = localStorage.getItem('hpAlbumShowCounts') === '1'; } catch(e) {}
 // Bewegte Bilder im Album (Videos). Standard: an. Aus = Standbilder; im Orden-Band zeigen
 // dann die Einzelkarten statt des bewegten Ordensfotos.
-let albumAnimated = true;
-try { albumAnimated = localStorage.getItem('hpAlbumAnimated') !== '0'; } catch(e) {}
+let bewegteBilder = true;
+try { bewegteBilder = localStorage.getItem('hpAlbumAnimated') !== '0'; } catch(e) {}
 
 function toggleAlbumCounts() {
   albumShowCounts = !albumShowCounts;
@@ -4135,17 +4145,17 @@ function toggleAlbumCounts() {
   renderAlbumBand();
 }
 
-function toggleAlbumAnimated() {
-  albumAnimated = !albumAnimated;
-  try { localStorage.setItem('hpAlbumAnimated', albumAnimated ? '1' : '0'); } catch(e) {}
-  const btn = document.getElementById('albumAnimToggle');
-  if (btn) btn.classList.toggle('active', albumAnimated);
+function toggleBewegteBilder() {
+  bewegteBilder = !bewegteBilder;
+  try { localStorage.setItem('hpAlbumAnimated', bewegteBilder ? '1' : '0'); } catch(e) {}
+  document.querySelectorAll('.anim-toggle-btn').forEach(b => b.classList.toggle('active', bewegteBilder));
   renderAlbumBand();
+  renderCollection();
 }
 
-// Videos im ALBUM nur, wenn der Bewegt-Schalter an ist (andere Ansichten unberührt)
-function albumVideoSrc(cardId, prof) {
-  return albumAnimated ? cardVideoSrc(cardId, prof) : null;
+// Videos in Album UND Sammlung nur, wenn der Bewegt-Schalter an ist (Detail/Shop/Tausch unberührt)
+function animatedVideoSrc(cardId, prof) {
+  return bewegteBilder ? cardVideoSrc(cardId, prof) : null;
 }
 
 function renderAlbum() {
@@ -4168,8 +4178,8 @@ function renderAlbum() {
   }
   const animBtn = document.getElementById('albumAnimToggle');
   if (animBtn) {
-    animBtn.classList.toggle('active', albumAnimated);
-    animBtn.onclick = toggleAlbumAnimated;
+    animBtn.classList.toggle('active', bewegteBilder);
+    animBtn.onclick = toggleBewegteBilder;
   }
 
   // Tabs bauen
@@ -4247,7 +4257,7 @@ function renderAlbumBand() {
         const slot = document.createElement('div');
         if (s.owned) {
           slot.className = 'album-slot founders-slot' + (WIDE_MEDIA[s.id] ? ' wide' : '');
-          const fvid = albumVideoSrc(s.id, prof);
+          const fvid = animatedVideoSrc(s.id, prof);
           slot.innerHTML = fvid
             ? `<video src="${fvid}" autoplay loop muted playsinline></video>`
             : `<img src="${card.image}" alt="${card.name}" loading="lazy">`;
@@ -4270,7 +4280,7 @@ function renderAlbumBand() {
       const slot = document.createElement('div');
       if (s.owned) {
         slot.className = 'album-slot' + (WIDE_MEDIA[s.id] ? ' wide' : '');
-        const vid = albumVideoSrc(s.id, prof);
+        const vid = animatedVideoSrc(s.id, prof);
         slot.innerHTML = vid
           ? `<video src="${vid}" autoplay loop muted playsinline></video>`
           : `<img src="${card.image}" alt="${card.name}" loading="lazy">`;
@@ -4304,11 +4314,11 @@ function renderAlbumBand() {
             checkAchievements(prof);
             save();
           }
-          if (albumAnimated) {
+          if (bewegteBilder) {
             grid.innerHTML = '';                     // die 12 Einzelkacheln weichen dem Foto
             const panoSlot = document.createElement('div');
             panoSlot.className = 'album-slot-reward wide album-phoenix';
-            const pvid = albumVideoSrc(reward.id, prof);
+            const pvid = animatedVideoSrc(reward.id, prof);
             panoSlot.innerHTML = pvid
               ? `<video src="${pvid}" autoplay loop muted playsinline></video>`
               : `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
@@ -4345,7 +4355,7 @@ function renderAlbumBand() {
         const rewardOwned = owned[reward.id] > 0;
         if (rewardOwned) {
           rewardSlot.className = 'album-slot-reward' + (WIDE_MEDIA[reward.id] ? ' wide' : '');
-          const rvid = albumVideoSrc(reward.id, prof);
+          const rvid = animatedVideoSrc(reward.id, prof);
           rewardSlot.innerHTML = rvid
             ? `<video src="${rvid}" autoplay loop muted playsinline></video>`
             : `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
@@ -4404,7 +4414,7 @@ function maybePhoenixRitual() {
   const owned = prof.cards || {};
   if (!albumBandComplete(band, owned)) return;
   if (prof.phoenixRitualSeen) return;                    // pro Profil nur EINMAL
-  if (!albumAnimated) return;                            // nur bei eingeschalteten bewegten Bildern
+  if (!bewegteBilder) return;                            // nur bei eingeschalteten bewegten Bildern
   const screen = document.getElementById('screen-album');
   if (!screen || !screen.classList.contains('active')) return;
   prof.phoenixRitualSeen = true;
@@ -5960,7 +5970,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v52';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v53';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
