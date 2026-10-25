@@ -685,9 +685,11 @@ html, body {
   position: absolute;
   inset: 0;
   z-index: 2;
-  transition: transform 0.45s cubic-bezier(.2,.7,.2,1);
+  transform: translateX(var(--bandx, 0)) translateY(var(--bandy, 0));
+  transition: transform 0.45s cubic-bezier(.2,.7,.2,1), opacity 0.2s ease;
 }
-.album-pages.shifted { transform: translateY(-101%); }
+.album-pages.shifted { --bandy: -101%; }
+.album-pages.band-fade { opacity: 0.12; }
 .album-subpage {
   position: absolute;
   inset: 0;
@@ -4259,6 +4261,30 @@ function renderAlbum() {
   renderAlbumBand();
 }
 
+// Wischen nach links/rechts blaettert durch die ALBEN (Baender).
+// dir: +1 = naechstes Band (nach links gewischt), -1 = vorheriges
+function albumBandSwipe(dir) {
+  const nb = albumCurrentBand + dir;
+  if (nb < 0 || nb >= ALBUM_BANDS.length) return;      // am Rand: kein Wechsel
+  const el = document.getElementById('albumPages');
+  if (el) {                                            // aktuelle Seite leicht rausziehen
+    el.style.setProperty('--bandx', (dir > 0 ? -7 : 7) + '%');
+    el.classList.add('band-fade');
+  }
+  setTimeout(() => {
+    selectAlbumBand(nb);                               // rendert neu + setzt die Tab-Markierung
+    const el2 = document.getElementById('albumPages');
+    if (el2) {                                         // neue Seite von der Gegenseite hereinfahren
+      el2.style.setProperty('--bandx', (dir > 0 ? 7 : -7) + '%');
+      el2.classList.add('band-fade');
+      setTimeout(() => {                               // naechster Frame: einblenden
+        el2.style.removeProperty('--bandx');
+        el2.classList.remove('band-fade');
+      }, 40);
+    }
+  }, 150);
+}
+
 function selectAlbumBand(i) {
   albumCurrentBand = i;
   albumCurrentPage = 0;
@@ -4737,7 +4763,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (!waagerecht) return;
       if (swHorizontal) e.preventDefault();       // kein versehentlicher Karten-Tipp nach dem Wischen
-      albumFlip(dx < 0 ? 1 : -1);                 // nach links wischen -> nächste Seite
+      if (albumSubOpen) return;                   // in Teil 2 kein Band-Wechsel per Seitenwisch
+      // Mehrseitige Baender erst durchblaettern, am Rand weiter zum naechsten Album
+      if (dx < 0 && albumCurrentPage < albumPageCount - 1) { albumFlip(1); return; }
+      if (dx > 0 && albumCurrentPage > 0) { albumFlip(-1); return; }
+      albumBandSwipe(dx < 0 ? 1 : -1);            // nach links wischen -> naechstes Album
     }, { passive: false });
   }
 });
@@ -6120,7 +6150,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v55';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v56';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
