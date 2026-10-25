@@ -247,6 +247,75 @@ html, body {
   gap: 10px;
 }
 
+/* Trankregal (Familien-Tagesbonus) */
+.trank-row {
+  display: none;
+  gap: 10px;
+  padding: 2px 0 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.trank-flask {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  border: 1px solid rgba(201,169,97,.45);
+  background: radial-gradient(circle at 30% 25%, rgba(120,90,200,.35), rgba(10,6,2,.78));
+  color: #f0d890;
+  font-size: 25px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(0,0,0,.45), inset 0 1px 6px rgba(255,255,255,.08);
+  transition: transform .15s;
+}
+.trank-flask:active { transform: scale(.93); }
+.trank-flask.scharf { border-color: #8ce0a0; box-shadow: 0 0 13px rgba(120,230,150,.45); }
+.trank-flask[disabled] { opacity: .98; cursor: default; }
+.trank-count, .trank-scharf {
+  position: absolute;
+  right: -5px;
+  top: -5px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.trank-count { background: rgba(0,0,0,.82); border: 1px solid rgba(255,255,255,.35); color: #fff; }
+.trank-scharf { background: rgba(30,90,45,.92); border: 1px solid rgba(160,255,190,.5); color: #b8f5c8; font-size: 12px; }
+.trank-hint { width: 100%; font-size: 11px; color: #d8c89a; margin-top: 2px; }
+/* Feier-Overlay */
+.trank-feier {
+  position: fixed; inset: 0; z-index: 1200;
+  background: rgba(6,3,1,.82);
+  display: none; align-items: center; justify-content: center; padding: 22px;
+}
+.trank-feier.active { display: flex; }
+.trank-feier-in {
+  max-width: 420px; width: 100%;
+  background: linear-gradient(160deg, #2a1c3a, #150e1e);
+  border: 1px solid rgba(201,169,97,.5);
+  border-radius: 18px;
+  padding: 26px 22px;
+  text-align: center;
+  box-shadow: 0 18px 50px rgba(0,0,0,.7);
+  animation: feierIn .45s cubic-bezier(.2,.9,.3,1);
+}
+@keyframes feierIn { from { transform: scale(.86) translateY(18px); opacity: 0 } to { transform: none; opacity: 1 } }
+.trank-feier-icon { font-size: 54px; margin-bottom: 6px; animation: feierPulse 1.6s ease-in-out infinite; }
+@keyframes feierPulse { 0%,100% { transform: scale(1) } 50% { transform: scale(1.12) } }
+.trank-feier-in h2 { font-family: var(--font-serif); color: #f0d890; font-size: 21px; margin: 0 0 10px; }
+.trank-feier-in p { color: #ded0b4; font-size: 14px; line-height: 1.5; margin: 0 0 16px; }
+.trank-feier-flasks { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; font-size: 32px; }
+.trank-feier-flask { animation: feierPulse 2s ease-in-out infinite; }
+
 /* Familien-Wochenchallenge */
 .week-challenge {
   margin: 14px 0 4px;
@@ -2233,6 +2302,9 @@ body{
     </div>
   </div>
 
+  <!-- Trankregal (Familien-Tagesbonus) -->
+  <div class="trank-row" id="trankRow"></div>
+
   <!-- Fortschritts-Ringe -->
   <div class="ring-row">
     <div class="ring-card">
@@ -3282,6 +3354,71 @@ let pinBuffer = '';
 let pendingTask = null;
 let pendingSonstigesText = '';
 let familyPackAwarded = false;
+// ===================== FAMILIEN-TRANK (Tagesbonus) =====================
+// Haben an einem Tag ALLE Profile mindestens eine Aufgabe geschafft, bekommt am
+// naechsten Tag jedes Profil einen zufaelligen Zaubertrank ins Regal.
+const TRAENKE = [
+  { id:'felix',       icon:'🎲', name:'Felix Felicis', kurz:'Glückstrank',
+    desc:'Dein nächster Pack zieht mit erhöhten Chancen (selten 34 %, legendär 6 %, Relikt 2 %).' },
+  { id:'fuelle',      icon:'⚗️', name:'Trank der Fülle', kurz:'Mehr Karten',
+    desc:'Dein nächster Pack enthält mit 50 % Chance eine zusätzliche Karte (4 statt 3).' },
+  { id:'sucher',      icon:'🔮', name:'Trank des Suchers', kurz:'Gezielte Karte',
+    desc:'Du wählst ein Album – dein nächster Pack enthält garantiert 1 Karte daraus.' },
+  { id:'erleuchtung', icon:'✨', name:'Trank der Erleuchtung', kurz:'Sichere Seltene',
+    desc:'Sofort: 1 garantierte seltene Karte + 2 normale Karten.' },
+  { id:'verwandlung', icon:'🔄', name:'Trank der Verwandlung', kurz:'Tausch-Upgrade',
+    desc:'Dein nächster 2:1-Tausch liefert garantiert die nächsthöhere Seltenheit.' }
+];
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function traenkeVon(prof) { if (!prof.traenke) prof.traenke = {}; return prof.traenke; }
+function aktivVon(prof)   { if (!prof.aktiv)   prof.aktiv   = {}; return prof.aktiv; }
+function hatAktivenTrank(prof, id) { const a = prof.aktiv || {}; return id ? !!a[id] : Object.keys(a).some(k => a[k]); }
+let pendingTrankMeldungen = [];   // Tage mit Familien-Bonus, fuer das Feier-Popup
+let pendingAchPopups = [];        // Orden, die erst nach der Feier gezeigt werden
+
+// Auslosung: vier Traenke je 22 %, Erleuchtung halb so oft (12 %)
+function ziehTrank() {
+  const r = Math.random() * 100;
+  if (r < 22) return 'felix';
+  if (r < 44) return 'fuelle';
+  if (r < 66) return 'sucher';
+  if (r < 88) return 'verwandlung';
+  return 'erleuchtung';
+}
+
+// Tagespruefung: fuer jeden noch nicht geprueften Tag (max 7 nachholen) pruefen,
+// ob ALLE damals vorhandenen Profile mindestens eine Aufgabe hatten.
+function checkFamilyBonus() {
+  const today = todayStr();
+  if (!data.familyBonus) { data.familyBonus = { lastCheck: today }; save(); return; }
+  if (data.familyBonus.lastCheck === today) return;
+  // Zu bewerten: jeder Tag ab dem letzten Ausfuehrungstag bis gestern
+  // (der heutige Tag ist noch nicht entschieden).
+  const tage = [];
+  let d = new Date(data.familyBonus.lastCheck + 'T12:00:00Z');
+  const grenze = new Date(today + 'T12:00:00Z');
+  while (d < grenze) {
+    tage.push(d.toISOString().slice(0,10));
+    d = new Date(d.getTime() + 86400000);
+  }
+  const namen = Object.keys(data.profiles || {});
+  tage.slice(-7).forEach(day => {
+    const tagEnde = new Date(day + 'T23:59:59').getTime();
+    const dabei = namen.filter(n => (data.profiles[n].created || 0) <= tagEnde);
+    if (dabei.length === 0) return;
+    const alle = dabei.every(n => (data.profiles[n].tasks || []).some(t => t.date === day));
+    if (!alle) return;
+    dabei.forEach(n => {
+      const p = data.profiles[n], id = ziehTrank();
+      const tr = traenkeVon(p);
+      tr[id] = (tr[id] || 0) + 1;
+    });
+    pendingTrankMeldungen.push(day);
+  });
+  data.familyBonus.lastCheck = today;
+  save();
+}
+
 let currentPackCards = [];
 let currentFilter = 'all';
 
@@ -3298,6 +3435,7 @@ function initData() {
   data = loadData();
   if (!data) data = { pin: DEFAULT_PIN, profiles: {} };
   if (!data.tradeOffers) data.tradeOffers = [];
+  checkFamilyBonus();          // Familien-Trank fuer gestern pruefen/vergeben
   // Try loading server backup in background (for newer version)
   setTimeout(loadServerBackup, 500);
 }
@@ -3684,14 +3822,115 @@ function setRing(ringId, pctId, pct) {
 }
 
 // ===================== DASHBOARD =====================
+
+// ===================== Trankregal (Startseite) =====================
+function renderTraenke() {
+  const row = document.getElementById('trankRow');
+  if (!row) return;
+  const prof = currentProfile ? getProfile(currentProfile) : null;
+  if (!prof) { row.style.display = 'none'; return; }
+  const bestand = traenkeVon(prof), aktiv = aktivVon(prof);
+  const sichtbar = TRAENKE.filter(t => (bestand[t.id] || 0) > 0 || aktiv[t.id]);
+  if (!sichtbar.length) { row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  row.innerHTML = sichtbar.map(t => {
+    const n = bestand[t.id] || 0, scharf = !!aktiv[t.id];
+    return `<button class="trank-flask${scharf ? ' scharf' : ''}" data-trank="${t.id}"` +
+      ` title="${t.name} – ${t.desc}"${n === 0 ? ' disabled' : ''}>${t.icon}` +
+      (n > 0 ? `<span class="trank-count">${n}</span>` : `<span class="trank-scharf">✓</span>`) + '</button>';
+  }).join('') + '<div class="trank-hint">🧪 Tränke aus dem Familien-Bonus – antippen, um sie zu trinken</div>';
+  row.querySelectorAll('[data-trank]').forEach(b => { b.onclick = () => trinkTrank(b.dataset.trank); });
+}
+
+function trinkTrank(id) {
+  const prof = getProfile(currentProfile);
+  const t = TRAENKE.find(x => x.id === id);
+  const bestand = traenkeVon(prof);
+  if (!t || !(bestand[id] > 0)) return;
+
+  // Erleuchtung wirkt sofort: 1 garantierte seltene Karte + 2 normale
+  if (id === 'erleuchtung') {
+    if (!confirm('✨ ' + t.name + ' sofort trinken?\n' + t.desc)) return;
+    bestand[id]--; if (bestand[id] <= 0) delete bestand[id];
+    const owned = prof.cards || (prof.cards = {});
+    const gezogen = [];
+    const gib = (card) => {
+      if (!card) return;
+      const isNew = !owned[card.id];
+      owned[card.id] = (owned[card.id] || 0) + 1;
+      gezogen.push({ ...card, isNew });
+    };
+    const rares = CARD_DB.filter(c => c.rarity === 'rare' && cardErhaeltlich(c, prof));
+    if (rares.length) gib(rares[Math.floor(Math.random() * rares.length)]);
+    for (let i = 0; i < 2; i++) {
+      const rar = rollRarity(false);
+      const pool = CARD_DB.filter(c => c.rarity === rar && cardErhaeltlich(c, prof));
+      if (pool.length) gib(pool[Math.floor(Math.random() * pool.length)]);
+    }
+    prof.packsOpened = (prof.packsOpened || 0) + 1;
+    checkAchievements(prof); save(); renderDashboard();
+    if (gezogen.length) showCardReveal(gezogen, renderDashboard);
+    return;
+  }
+
+  // Sucher: Album waehlen, dann liefert der naechste Pack gezielt
+  if (id === 'sucher') {
+    const liste = ALBUM_BANDS.map((b, i) => (i + 1) + ': ' + b.title).join('\n');
+    const wahl = prompt('🔮 Aus welchem Album soll die garantierte Karte kommen?\n\n' + liste, '1');
+    if (wahl === null) return;
+    const idx = Math.max(1, Math.min(ALBUM_BANDS.length, parseInt(wahl, 10) || 1)) - 1;
+    bestand[id]--; if (bestand[id] <= 0) delete bestand[id];
+    aktivVon(prof)[id] = ALBUM_BANDS[idx].id;
+    save(); renderDashboard();
+    alert('🔮 ' + ALBUM_BANDS[idx].title + ' gewählt!\nDein nächster Pack enthält garantiert 1 Karte daraus.');
+    return;
+  }
+
+  // Felix / Fülle / Verwandlung: einmalig scharf stellen
+  if (!confirm('🧪 ' + t.name + ' trinken?\n' + t.desc)) return;
+  bestand[id]--; if (bestand[id] <= 0) delete bestand[id];
+  aktivVon(prof)[id] = true;
+  save(); renderDashboard();
+}
+
+// ---- Feier-Meldung nach dem Login ----
+function zeigeTrankFeier() {
+  if (!pendingTrankMeldungen.length || !currentProfile) return;
+  const anz = pendingTrankMeldungen.length;
+  pendingTrankMeldungen = [];
+  const prof = getProfile(currentProfile);
+  const bestand = traenkeVon(prof);
+  document.getElementById('trankFeierText').textContent = anz === 1
+    ? 'Gestern hat jeder mindestens eine Aufgabe geschafft. Zur Belohnung wartet ein Zaubertrank auf dich – schau ins Regal!'
+    : 'An ' + anz + ' Tagen hat jeder mindestens eine Aufgabe geschafft. Zur Belohnung warten ' + anz + ' Zaubertränke auf dich!';
+  document.getElementById('trankFeierFlasks').innerHTML = TRAENKE
+    .filter(t => (bestand[t.id] || 0) > 0)
+    .map(t => `<span class="trank-feier-flask" title="${t.name}">${t.icon}</span>`).join('');
+  document.getElementById('trankFeier').classList.add('active');
+}
+function schliesseTrankFeier() {
+  document.getElementById('trankFeier').classList.remove('active');
+  if (pendingAchPopups.length) {                 // jetzt die zurueckgestellten Orden feiern
+    const p = pendingAchPopups; pendingAchPopups = [];
+    setTimeout(() => queueAchievementPopups(p), 300);
+  }
+}
+
 function renderDashboard() {
   if (!currentProfile) return;
   const prof = getProfile(currentProfile);
   document.getElementById('dashName').textContent = currentProfile;
+  renderTraenke();
+  if (pendingTrankMeldungen.length) setTimeout(zeigeTrankFeier, 500);
 
   // Orden rückwirkend prüfen (z.B. nach App-Updates) – neue Orden werden gefeiert
   const freshAch = checkAchievements(prof);
-  if (freshAch.length) { save(); queueAchievementPopups(freshAch); }
+  const feierFaellig = pendingTrankMeldungen.length > 0;
+  if (freshAch.length) {
+    save();
+    if (feierFaellig) pendingAchPopups = freshAch;   // erst nach der Trank-Feier zeigen
+    else queueAchievementPopups(freshAch);
+  }
 
   const taskCount = prof.tasks ? prof.tasks.length : 0;
   const cardCount = Object.values(prof.cards || {}).reduce((a,b) => a + b, 0);
@@ -3990,8 +4229,15 @@ function openPack() {
   currentPackCards = [];
   if (!prof.cards) prof.cards = {};
   
-  for (let i = 0; i < CARDS_PER_PACK; i++) {
-    const rarity = rollRarity(isBonus);
+  // Familien-Traenke: Felix (bessere Chancen), Fülle (Extra-Karte), Sucher (gezielte Karte)
+  const aktiv = aktivVon(prof);
+  const felixAktiv    = !!aktiv.felix;
+  const fuelleAktiv   = !!aktiv.fuelle;
+  const sucherBandId  = aktiv.sucher || null;
+  const anzahlKarten  = CARDS_PER_PACK + ((fuelleAktiv && Math.random() < 0.5) ? 1 : 0);
+
+  for (let i = 0; i < anzahlKarten; i++) {
+    const rarity = rollRarity(isBonus || felixAktiv);
     const pool = CARD_DB.filter(c => c.rarity === rarity && cardErhaeltlich(c, prof));
     if (pool.length === 0) continue;
     const card = pool[Math.floor(Math.random() * pool.length)];
@@ -3999,6 +4245,24 @@ function openPack() {
     currentPackCards.push({ ...card, isNew });
     prof.cards[card.id] = (prof.cards[card.id] || 0) + 1;
   }
+
+  // Trank des Suchers: zusaetzlich 1 garantierte Karte aus dem gewaehlten Album
+  if (sucherBandId) {
+    const band = ALBUM_BANDS.find(b => b.id === sucherBandId);
+    if (band) {
+      const poolB = bandCardsAll(band).map(id => getCardById(id)).filter(c => c && cardErhaeltlich(c, prof));
+      if (poolB.length > 0) {
+        const card = poolB[Math.floor(Math.random() * poolB.length)];
+        const isNew = !prof.cards[card.id];
+        currentPackCards.push({ ...card, isNew });
+        prof.cards[card.id] = (prof.cards[card.id] || 0) + 1;
+      }
+    }
+  }
+  // Verbrauchte Traenke entfernen (einmalig scharf)
+  if (felixAktiv)  delete aktiv.felix;
+  if (fuelleAktiv) delete aktiv.fuelle;
+  if (sucherBandId) delete aktiv.sucher;
   // Sonder-Packs: 3 verschiedene Seltenheiten oder 3 seltene Karten
   const gezogeneRaritaeten = currentPackCards.map(c => c.rarity);
   if (new Set(gezogeneRaritaeten).size >= 3) prof.packTriRarities = 1;
@@ -5361,7 +5625,13 @@ function executeTrade2zu1() {
   const rarityPool = CARD_DB.filter(c => c.id !== cardId && cardErhaeltlich(c, prof));
   if (rarityPool.length === 0) { alert('Keine Karten zum Tauschen verfügbar!'); return; }
   let rarityTable;
-  if (card.rarity === 'legendary') {
+  const mitVerwandlung = !!aktivVon(prof).verwandlung;
+  const naechsteStufe = { common:'rare', rare:'legendary', legendary:'relikt', relikt:'relikt' };
+  if (mitVerwandlung) {
+    // Trank der Verwandlung: garantiert die naechsthoehere Seltenheit
+    rarityTable = [{ rarity: naechsteStufe[card.rarity] || 'rare', prob: 100 }];
+    delete aktivVon(prof).verwandlung;
+  } else if (card.rarity === 'legendary') {
     rarityTable = [
       { rarity:'legendary', prob:98 },
       { rarity:'relikt', prob:2 }
@@ -6161,7 +6431,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v57';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v58';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
@@ -6229,5 +6499,15 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<!-- ==================== TRANK-FEIER (Familienbonus) ==================== -->
+<div class="trank-feier" id="trankFeier">
+  <div class="trank-feier-in">
+    <div class="trank-feier-icon">🧪</div>
+    <h2>Die ganze Familie war fleißig!</h2>
+    <p id="trankFeierText"></p>
+    <div class="trank-feier-flasks" id="trankFeierFlasks"></div>
+    <button class="btn-primary" onclick="schliesseTrankFeier()">Zum Trankregal</button>
+  </div>
+</div>
 </body>
 </html>
