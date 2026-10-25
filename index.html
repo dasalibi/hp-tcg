@@ -292,6 +292,27 @@ html, body {
 .trank-scharf { background: rgba(30,90,45,.92); border: 1px solid rgba(160,255,190,.5); color: #b8f5c8; font-size: 12px; }
 .trank-hint { width: 100%; font-size: 11px; color: #d8c89a; margin-top: 2px; }
 /* Feier-Overlay */
+.album-wahl { position: fixed; inset: 0; z-index: 1300; background: rgba(6,3,1,.85);
+  display: none; align-items: center; justify-content: center; padding: 16px; }
+.album-wahl.active { display: flex; }
+.album-wahl-box { background: linear-gradient(180deg, #241a12, #150d07);
+  border: 1px solid rgba(201,169,97,.45); border-radius: 18px; padding: 20px 18px;
+  max-width: 430px; width: 100%; max-height: 82vh; overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0,0,0,.7); }
+.album-wahl-icon { font-size: 32px; text-align: center; }
+.album-wahl-box h2 { font-family: var(--font-title, serif); color: var(--gold, #c9a961);
+  text-align: center; font-size: 20px; margin: 6px 0 4px; }
+.album-wahl-box > p { font-size: 13px; color: #d8c89a; text-align: center; margin-bottom: 14px; }
+.album-wahl-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.album-wahl-item { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px;
+  border: 1px solid rgba(201,169,97,.35); background: rgba(255,255,255,.04);
+  color: #e8d9b0; font-size: 12.5px; text-align: left; cursor: pointer;
+  font-family: inherit; transition: transform .12s; }
+.album-wahl-item:active { transform: scale(.96); }
+.album-wahl-item .aw-icon { font-size: 20px; flex: 0 0 auto; }
+.album-wahl-item .aw-sub { display: block; font-size: 11px; color: #a99b78; margin-top: 2px; }
+.album-wahl-item.fertig { opacity: .45; }
+
 .trank-feier {
   position: fixed; inset: 0; z-index: 1200;
   background: rgba(6,3,1,.82);
@@ -2567,6 +2588,23 @@ body{
     </div>
 
     <div class="parent-section">
+      <h3>🧪 Zaubertränke verwalten</h3>
+      <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Wähle Kind und Trank – ins Regal legen oder entnehmen:</p>
+      <div class="assign-row">
+        <select id="assignTrankProfile" onchange="updateTrankStatus()"></select>
+        <select id="assignTrankSelect"></select>
+        <button class="btn-primary btn-small" onclick="assignTrank(1)">Geben</button>
+        <button class="btn-danger btn-small" onclick="assignTrank(-1)">Entnehmen</button>
+      </div>
+      <p class="assign-msg" id="assignTrankMsg"></p>
+      <p style="font-size:12px;color:var(--dark-light);margin-top:8px;">Im Regal: <span id="assignTrankAktiv">–</span></p>
+      <div class="assign-row" style="margin-top:6px;">
+        <button class="btn-danger btn-small" onclick="clearAktivTraenke()">Aktive (scharfe) Tränke löschen</button>
+      </div>
+      <p class="assign-msg" id="assignTrankClearMsg"></p>
+    </div>
+
+    <div class="parent-section">
       <h3>🔥 Streak setzen</h3>
       <p style="font-size:13px;color:var(--dark-light);margin-bottom:8px;">Wähle Kind und setze den Übe-Streak (Tage):</p>
       <div class="assign-row">
@@ -3873,24 +3911,47 @@ function trinkTrank(id) {
     return;
   }
 
-  // Sucher: Album waehlen, dann liefert der naechste Pack gezielt
-  if (id === 'sucher') {
-    const liste = ALBUM_BANDS.map((b, i) => (i + 1) + ': ' + b.title).join('\n');
-    const wahl = prompt('🔮 Aus welchem Album soll die garantierte Karte kommen?\n\n' + liste, '1');
-    if (wahl === null) return;
-    const idx = Math.max(1, Math.min(ALBUM_BANDS.length, parseInt(wahl, 10) || 1)) - 1;
-    bestand[id]--; if (bestand[id] <= 0) delete bestand[id];
-    aktivVon(prof)[id] = ALBUM_BANDS[idx].id;
-    save(); renderDashboard();
-    alert('🔮 ' + ALBUM_BANDS[idx].title + ' gewählt!\nDein nächster Pack enthält garantiert 1 Karte daraus.');
-    return;
-  }
+  // Sucher: Album bequem auswaehlen, dann liefert der naechste Pack gezielt
+  if (id === 'sucher') { oeffneAlbumWahl(); return; }
 
   // Felix / Fülle / Verwandlung: einmalig scharf stellen
   if (!confirm('🧪 ' + t.name + ' trinken?\n' + t.desc)) return;
   bestand[id]--; if (bestand[id] <= 0) delete bestand[id];
   aktivVon(prof)[id] = true;
   save(); renderDashboard();
+}
+
+// ---- Album-Auswahl fuer den Trank des Suchers ----
+function oeffneAlbumWahl() {
+  const box = document.getElementById('albumWahlList');
+  const prof = getProfile(currentProfile);
+  if (!box || !prof) return;
+  box.innerHTML = ALBUM_BANDS.map(b => {
+    const ids = bandCardsAll(b);
+    const haben = ids.filter(id => prof.cards && prof.cards[id]).length;
+    return '<button class="album-wahl-item' + (haben >= ids.length ? ' fertig' : '') + '" data-band="' + b.id + '">' +
+      '<span class="aw-icon">' + b.icon + '</span><span><strong>' + b.title + '</strong>' +
+      '<span class="aw-sub">' + haben + ' von ' + ids.length + ' Karten</span></span></button>';
+  }).join('');
+  box.querySelectorAll('[data-band]').forEach(el => {
+    el.onclick = () => waehleSucherBand(parseInt(el.dataset.band, 10));
+  });
+  document.getElementById('albumWahl').classList.add('active');
+}
+function schliesseAlbumWahl() {
+  document.getElementById('albumWahl').classList.remove('active');
+}
+function waehleSucherBand(bandId) {
+  const prof = getProfile(currentProfile);
+  if (!prof) return;
+  const bestand = traenkeVon(prof);
+  const band = ALBUM_BANDS.find(b => b.id === bandId);
+  if (!band || !(bestand.sucher > 0)) { schliesseAlbumWahl(); return; }
+  bestand.sucher--; if (bestand.sucher <= 0) delete bestand.sucher;
+  aktivVon(prof).sucher = bandId;      // Band-ID merken
+  save();
+  schliesseAlbumWahl();
+  renderDashboard();
 }
 
 // ---- Feier-Meldung nach dem Login ----
@@ -5764,7 +5825,7 @@ function renderParentArea() {
   selectDiv.innerHTML = '';
 
   // Populate assign dropdowns
-  ['assignPackProfile','assignCardProfile','removeCardProfile','assignTokenProfile','streakProfileSelect'].forEach(id => {
+  ['assignPackProfile','assignCardProfile','removeCardProfile','assignTokenProfile','assignTrankProfile','streakProfileSelect'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     sel.innerHTML = '';
@@ -5802,6 +5863,18 @@ function renderParentArea() {
       cardSel.appendChild(opt);
     });
   }
+  // Traenke-Dropdown
+  const trankSel = document.getElementById('assignTrankSelect');
+  if (trankSel) {
+    trankSel.innerHTML = '';
+    TRAENKE.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.icon + ' ' + t.name;
+      trankSel.appendChild(opt);
+    });
+  }
+
   updateRemoveCardList();
   
   profiles.forEach(name => {
@@ -5835,6 +5908,19 @@ function renderParentProfile(name) {
     </p>
   `;
 
+  // Traenke-Status
+  const trEl = document.getElementById('assignTrankAktiv');
+  if (trEl) {
+    const b = traenkeVon(prof), a = aktivVon(prof);
+    const imRegal = [], scharf = [];
+    TRAENKE.forEach(t => {
+      if ((b[t.id] || 0) > 0) imRegal.push(t.icon + ' ' + t.name + ' ×' + b[t.id]);
+      if (a[t.id]) scharf.push(t.icon + ' ' + t.name + (t.id === 'sucher' ? ' (Band ' + a[t.id] + ')' : ''));
+    });
+    trEl.innerHTML = (imRegal.length ? imRegal.join(', ') : 'nichts') +
+      (scharf.length ? '&nbsp;·&nbsp;<em>scharf: ' + scharf.join(', ') + '</em>' : '');
+  }
+
   // Activity log
   const logDiv = document.getElementById('parentActivityLog');
   if (tasks.length === 0) {
@@ -5854,6 +5940,54 @@ function renderParentProfile(name) {
     `;
     logDiv.appendChild(entry);
   });
+}
+
+function assignTrank(delta) {
+  const name = document.getElementById('assignTrankProfile').value;
+  const id = document.getElementById('assignTrankSelect').value;
+  const msg = document.getElementById('assignTrankMsg');
+  const prof = getProfile(name);
+  const t = TRAENKE.find(x => x.id === id);
+  if (!prof || !t) return;
+  const bestand = traenkeVon(prof);
+  const vorher = bestand[id] || 0;
+  if (delta > 0) {
+    bestand[id] = vorher + 1;
+    if (msg) { msg.textContent = '✅ 1× ' + t.name + ' an ' + name + ' gegeben (jetzt: ' + bestand[id] + ').'; msg.style.color = '#2e7d32'; }
+  } else {
+    if (vorher <= 0) {
+      if (msg) { msg.textContent = '⚠️ ' + name + ' hat keinen ' + t.name + ' im Regal.'; msg.style.color = '#c0392b'; }
+      return;
+    }
+    bestand[id] = vorher - 1;
+    if (bestand[id] <= 0) delete bestand[id];
+    if (msg) { msg.textContent = '🗑️ 1× ' + t.name + ' von ' + name + ' entnommen (jetzt: ' + (bestand[id] || 0) + ').'; msg.style.color = '#c0392b'; }
+  }
+  save();
+  updateTrankStatus();
+}
+
+function clearAktivTraenke() {
+  const name = document.getElementById('assignTrankProfile').value;
+  const msg = document.getElementById('assignTrankClearMsg');
+  const prof = getProfile(name);
+  if (!prof) return;
+  const a = aktivVon(prof);
+  const offen = TRAENKE.filter(t => a[t.id]).map(t => t.icon + ' ' + t.name);
+  if (!offen.length) {
+    if (msg) { msg.textContent = '⚠️ ' + name + ' hat keine scharfen Tränke.'; msg.style.color = '#c0392b'; }
+    return;
+  }
+  if (!confirm('Bei ' + name + ' ' + offen.join(', ') + ' wieder ins Regal legen (scharf aufheben)?')) return;
+  TRAENKE.forEach(t => { if (a[t.id]) { traenkeVon(prof)[t.id] = (traenkeVon(prof)[t.id] || 0) + 1; delete a[t.id]; } });
+  save();
+  updateTrankStatus();
+  if (msg) { msg.textContent = '↩️ Scharfe Tränke zurück ins Regal gelegt: ' + offen.join(', ') + '.'; msg.style.color = '#2e7d32'; }
+}
+
+function updateTrankStatus() {
+  const name = document.getElementById('assignTrankProfile').value;
+  if (name) renderParentProfile(name);
 }
 
 function changePin() {
@@ -6431,7 +6565,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v58';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v59';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
@@ -6500,6 +6634,16 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <!-- ==================== TRANK-FEIER (Familienbonus) ==================== -->
+<div class="album-wahl" id="albumWahl">
+  <div class="album-wahl-box">
+    <div class="album-wahl-icon">🔮</div>
+    <h2>Trank des Suchers</h2>
+    <p>Aus welchem Album soll die garantierte Karte kommen?</p>
+    <div class="album-wahl-list" id="albumWahlList"></div>
+    <button class="btn-secondary" style="width:100%;" onclick="schliesseAlbumWahl()">Abbrechen</button>
+  </div>
+</div>
+
 <div class="trank-feier" id="trankFeier">
   <div class="trank-feier-in">
     <div class="trank-feier-icon">🧪</div>
