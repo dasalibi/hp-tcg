@@ -685,7 +685,42 @@ html, body {
   position: absolute;
   inset: 0;
   z-index: 2;
+  transition: transform 0.45s cubic-bezier(.2,.7,.2,1);
 }
+.album-pages.shifted { transform: translateY(-101%); }
+.album-subpage {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 12px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(101%);
+  transition: transform 0.45s cubic-bezier(.2,.7,.2,1);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: rgba(8,6,4,0.4);
+}
+.album-subpage.open { transform: translateY(0); }
+.album-sub-hint {
+  font-size: 11px;
+  color: #e8d8a8;
+  margin-top: 4px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.95);
+}
+.album-sub-hint-up {
+  position: absolute;
+  bottom: 74px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+  color: #f0d890;
+  margin: 0;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.95);
+  animation: subHintPulse 2.2s ease-in-out infinite;
+}
+@keyframes subHintPulse { 0%,100% { opacity: .5 } 50% { opacity: 1 } }
 .album-page {
   position: absolute;
   inset: 0;
@@ -2333,6 +2368,7 @@ body{
   <div class="album-tabs" id="albumTabs"></div>
   <div class="album-area" id="albumArea">
     <div class="album-pages" id="albumPages"></div>
+    <div class="album-subpage" id="albumSubPage"></div>
     <div class="album-nav" id="albumNav" style="display:none;">
       <button class="album-nav-btn" id="albumPrev">◀</button>
       <span class="album-indicator" id="albumIndicator">1 / 1</span>
@@ -2878,6 +2914,16 @@ const CARD_DB = [
   { id:'hp-135', name:'Remus Lupin', rarity:'common', type:'Charakter', subtype:'Der schüchterne Werwolf', house:'Gryffindor', desc:'„Ich bin es nicht wert.“ Remus sitzt auf dem Foto etwas zusammengesunken, den Kopf schief gelegt, eine frische Wunde an der Wange – und trägt das schüchterne Lächeln eines Menschen, der nie ganz sicher ist, ob er willkommen ist. Er hatte guten Grund dafür: Als Kind von einem Werwolf gebissen, durfte er selbst nie in Hogwarts zur Schule gehen – bis Dumbledore ihn trotzdem aufnahm. Er wurde der Ruhigste der Rumtreiber und der Einzige, den die Lehrer zum Vertrauensschüler machten. Später war er <strong>Harrys bester Lehrer</strong> für Verteidigung: der Mann, der ihm beibrachte, Dementoren zu vertreiben.', image:'cards/hp-135.jpg' },
   { id:'hp-136', name:'Frank Longbottom', rarity:'common', type:'Charakter', subtype:'Auror des Ordens', house:'Gryffindor', desc:'„Wir verraten niemanden – nicht einen Einzigen.“ Frank strahlt auf diesem Bild: blondes Haar, sonnengebräunte Haut, hochgekrempelte Ärmel an kräftigen Armen und das Lachen eines Mannes, der mit sich im Reinen ist. Er war Auror, einer der besten – und <strong>Nevilles Vater</strong>, des schüchternen Jungen, der später mit Harry nach Hogwarts ging. Als Lord Voldemort gefallen war, suchten dessen Anhänger Frank und Alice, um zu erfahren, was sie wussten. Sie erfuhren nichts. Bis heute nicht. Ihr Sohn Neville besucht sie jeden Sonntag im St.-Mungo-Hospital.', image:'cards/hp-136.jpg' },
   { id:'hp-137', name:'Alice Longbottom', rarity:'common', type:'Charakter', subtype:'Hexe des Ordens', house:'Gryffindor', desc:'„Du bist stark, Neville. Genau wie wir.“ Alice lehnt sich auf dem Foto an Frank – dunkles, weiches Haar, ein rundes Medaillon am Hals, ein warmes Lächeln, dem nichts etwas anhaben kann. Sie war Aurorin, klug und mutig, und konnte jeden Fluch parieren, den man ihr entgegenwarf. Was Frank und Alice nach dem Krieg widerfuhr, gehört zu den traurigsten Kapiteln der Zaubererwelt: Ihre Erinnerungen wurden ihnen genommen. Doch ihr Mut lebt weiter – <strong>in ihrem Sohn Neville</strong>, der mit Harry Potter gegen den Dunklen Lord kämpfte.', image:'cards/hp-137.jpg' },
+  { id:'hp-139', name:'Professor Quirrell', rarity:'rare', type:'Charakter', subtype:'Verteidigung gegen die dunklen Kuenste', house:'Ravenclaw', desc:'Professor Quirrell lehrt Verteidigung gegen die dunklen Kuenste - und traegt einen Turban, den niemand zu fragen wagt.', image:'cards/hp-139.jpg' },
+  { id:'hp-140', name:'Nicolas Flamel', rarity:'rare', type:'Charakter', subtype:'Der Alchemist', house:'—', desc:'Der einzige bekannte Hersteller des Steins der Weisen - ein Alchemist von ueber sechshundert Jahren.', image:'cards/hp-140.jpg' },
+  { id:'hp-141', name:'Der Spiegel Nerhegeb', rarity:'legendary', type:'Gegenstand', subtype:'Spiegel des Verlangens', house:'—', desc:'Er zeigt nicht das Gesicht, sondern die tiefste Sehnsucht des Betrachters.', image:'cards/hp-141.jpg' },
+  { id:'hp-142', name:'Der Bergtroll', rarity:'rare', type:'Tier', subtype:'In den Kerkern', house:'—', desc:'Ein riesiger Bergtroll, hereingelassen in der Halloween-Nacht - und ein huebscher Schrecken fuer drei Erstklaessler.', image:'cards/hp-142.jpg' },
+  { id:'hp-143', name:'Ligusterweg 4', rarity:'common', type:'Ort', subtype:'Das Haus der Dursleys', house:'—', desc:'Ein ganz normales Haus in einer ganz normalen Strasse - Harrys erstes Zuhause.', image:'cards/hp-143.jpg' },
+  { id:'hp-144', name:'Mrs. Norris', rarity:'common', type:'Tier', subtype:'Filchs Aufpasserin', house:'—', desc:'Die Katze des Hausmeisters mit den gelben Lampenaugen - sie sieht alles, und sie verraet alles.', image:'cards/hp-144.jpg' },
+  { id:'hp-145', name:'Professor Flitwick', rarity:'common', type:'Charakter', subtype:'Professor fuer Zauberkunst', house:'Ravenclaw', desc:'Der kleine, freundliche Zauberkunstlehrer steht auf einem Stapel Buecher, um ueber sein Pult zu blicken.', image:'cards/hp-145.jpg' },
+  { id:'hp-146', name:'Der Hogwarts-Express', rarity:'rare', type:'Gegenstand', subtype:'Die rote Dampflok', house:'—', desc:'Die scharlachrote Dampflok, die jedes Jahr am 1. September von Gleis 9 3/4 nach Hogwarts faehrt.', image:'cards/hp-146.jpg' },
+  { id:'hp-147', name:'Der schwarze See', rarity:'common', type:'Ort', subtype:'Die Ueberfahrt nach Hogwarts', house:'—', desc:'Im ersten Jahr fahren die Erstklaessler im Boot ueber den See - und sehen Hogwarts zum ersten Mal.', image:'cards/hp-147.jpg' },
+  { id:'hp-148', name:'Bane', rarity:'common', type:'Charakter', subtype:'Der Zentaur', house:'—', desc:'Ein Zentaur aus dem Verbotenen Wald, misstrauisch gegenueber Menschen und ihren Absichten.', image:'cards/hp-148.jpg' },
 ];
 
 // ===================== HALLOWEEN-EDITION (Saison 2026) =====================
@@ -2944,6 +2990,8 @@ const REWARD_CARDS = {
 const ALBUM_BANDS = [
   { id: 1, title: 'Der Stein der Weisen', short: 'Band 1', icon: '📕', bg: 'album/bg-band1.jpg',
     cards: ['hp-002','hp-006','hp-005','hp-007','hp-001','hp-010','hp-025','hp-029','hp-042','hp-055','hp-045','hp-057','hp-024','hp-020'],
+    title2: 'Der Stein der Weisen · Teil 2',
+    cards2: ['hp-139','hp-140','hp-141','hp-142','hp-143','hp-144','hp-145','hp-146','hp-147','hp-148'],
     reward: 1 },
   { id: 2, title: 'Die Kammer des Schreckens', short: 'Band 2', icon: '📗', bg: 'album/bg-band2.jpg',
     cards: ['hp-017','hp-013','hp-085','hp-040','hp-047','hp-058','hp-053','hp-070','hp-048','hp-067','hp-087','hp-034','hp-033'],
@@ -3100,6 +3148,20 @@ function allCardsCount() {
   Object.values(REWARD_CARDS).forEach(c => ids.add(c.id));
   return ids.size;
 }
+// ---- Teil-2-Reihen (untere Albumseiten): Freischaltung ueber die Band-Belohnung ----
+function bandRewardOwned(band, prof) {
+  if (!band || !band.reward) return true;
+  const r = REWARD_CARDS[band.reward];
+  return !!(r && ((prof.cards || {})[r.id] > 0));
+}
+function bandCardsAll(band) { return band.cards.concat(band.cards2 || []); }
+function cardErhaeltlich(card, prof) {
+  if (!card) return true;
+  const band = ALBUM_BANDS.find(b => (b.cards2 || []).indexOf(card.id) >= 0);
+  if (!band) return true;
+  return bandRewardOwned(band, prof);
+}
+
 function cardsFromBand(p, bandIdx) {
   const band = ALBUM_BANDS[bandIdx];
   if (!band) return 0;
@@ -3803,7 +3865,7 @@ function completeTask(label) {
       if (prof.instrumentStreak % 3 === 0 && prof.instrumentStreak > 0) {
         halStreakBonus = true;
         const rarity = rollRarity(false);
-        const pool = CARD_DB.filter(c => c.rarity === rarity);
+        const pool = CARD_DB.filter(c => c.rarity === rarity && cardErhaeltlich(c, prof));
         if (pool.length > 0) {
           streakCard = pool[Math.floor(Math.random() * pool.length)];
           if (!prof.cards) prof.cards = {};
@@ -3826,7 +3888,7 @@ function completeTask(label) {
   let bonusCard = null;
   if (Math.random() < 0.1) {
     const rarity = rollRarity(false);
-    const pool = CARD_DB.filter(c => c.rarity === rarity);
+    const pool = CARD_DB.filter(c => c.rarity === rarity && cardErhaeltlich(c, prof));
     if (pool.length > 0) {
       bonusCard = pool[Math.floor(Math.random() * pool.length)];
       if (!prof.cards) prof.cards = {};
@@ -3927,7 +3989,7 @@ function openPack() {
   
   for (let i = 0; i < CARDS_PER_PACK; i++) {
     const rarity = rollRarity(isBonus);
-    const pool = CARD_DB.filter(c => c.rarity === rarity);
+    const pool = CARD_DB.filter(c => c.rarity === rarity && cardErhaeltlich(c, prof));
     if (pool.length === 0) continue;
     const card = pool[Math.floor(Math.random() * pool.length)];
     const isNew = !prof.cards[card.id];
@@ -4166,7 +4228,7 @@ function renderAlbum() {
   // Gesamtfortschritt: wie viele Album-Karten (ohne Belohnungen) besessen
   let ownedTotal = 0, cardsTotal = 0;
   ALBUM_BANDS.forEach(b => {
-    b.cards.forEach(id => { cardsTotal++; if (owned[id] > 0) ownedTotal++; });
+    bandCardsAll(b).forEach(id => { cardsTotal++; if (owned[id] > 0) ownedTotal++; });
   });
   document.getElementById('albumCount').textContent = `${ownedTotal}/${cardsTotal}`;
 
@@ -4205,6 +4267,76 @@ function selectAlbumBand(i) {
     t.classList.toggle('active', idx === i);
   });
   renderAlbumBand();
+}
+
+// ===== Band 1 Teil 2: untere Albumseite (nur nach Freischaltung sichtbar) =====
+let albumSubOpen = false;
+
+function buildAlbumSubPage(band, prof) {
+  const el = document.getElementById('albumSubPage');
+  if (!el) return;
+  el.innerHTML = '';
+  el.classList.remove('open');
+  el.scrollTop = 0;
+  albumSubOpen = false;
+  const pagesEl = document.getElementById('albumPages');
+  if (pagesEl) pagesEl.classList.remove('shifted');
+  const subIds = (band.cards2 && band.cards2.length && bandRewardOwned(band, prof)) ? band.cards2 : null;
+  if (!subIds) return;
+
+  const owned = prof.cards || {};
+  const ownedIn = subIds.filter(id => owned[id] > 0).length;
+  const head = document.createElement('div');
+  head.className = 'album-band-head';
+  head.innerHTML = `
+    <div class="album-band-title">${band.title2 || (band.title + ' · Teil 2')}</div>
+    <div class="album-band-sub">${band.short} · Teil 2 · ${ownedIn} von ${subIds.length} Karten</div>
+    <div class="album-sub-hint">⬇ Nach unten wischen, um zu Teil 1 zurückzukehren</div>
+  `;
+  el.appendChild(head);
+
+  const grid = document.createElement('div');
+  grid.className = 'album-grid';
+  // Teil-2-Gruppen sind klein (max. 10 Karten) -> 3 Reihen reichen
+  grid.style.gridTemplateRows = 'repeat(3, 1fr)';
+  subIds.forEach(id => {
+    const card = getCardById(id);
+    if (!card) return;
+    const slot = document.createElement('div');
+    if (owned[id] > 0) {
+      slot.className = 'album-slot' + (WIDE_MEDIA[id] ? ' wide' : '');
+      const vid = animatedVideoSrc(id, prof);
+      slot.innerHTML = vid
+        ? `<video src="${vid}" autoplay loop muted playsinline></video>`
+        : `<img src="${card.image}" alt="${card.name}" loading="lazy">`;
+      if (albumShowCounts && owned[id] > 1) {
+        const badge = document.createElement('span');
+        badge.className = 'album-count';
+        badge.textContent = owned[id];
+        slot.appendChild(badge);
+      }
+      slot.onclick = () => showCardDetail(id);
+    } else {
+      slot.className = 'album-slot empty-' + (card.rarity || 'common');
+    }
+    grid.appendChild(slot);
+  });
+  el.appendChild(grid);
+}
+
+// Vertikales Wischen im Album: Finger nach oben oeffnet Teil 2, nach unten schliesst es
+function albumSubToggle(dir) {
+  const band = ALBUM_BANDS[albumCurrentBand];
+  const prof = getProfile(currentProfile);
+  if (!band || !band.cards2 || !band.cards2.length || !bandRewardOwned(band, prof)) return;
+  const el = document.getElementById('albumSubPage');
+  if (!el) return;
+  albumSubOpen = dir > 0;
+  el.classList.toggle('open', albumSubOpen);
+  const pagesEl = document.getElementById('albumPages');
+  if (pagesEl) pagesEl.classList.toggle('shifted', albumSubOpen);
+  const nav = document.getElementById('albumNav');
+  if (nav) nav.style.display = (albumSubOpen || albumPageCount <= 1) ? 'none' : 'flex';
 }
 
 function renderAlbumBand() {
@@ -4376,6 +4508,18 @@ function renderAlbumBand() {
   container.querySelectorAll('.album-page').forEach((pg, i) => {
     pg.querySelectorAll('video').forEach(v => { if (i === albumCurrentPage) v.play().catch(() => {}); else v.pause(); });
   });
+
+  // ---- Teil 2: untere Albumseite (nur nach Freischaltung der Band-Belohnung) ----
+  buildAlbumSubPage(band, prof);
+  if (band.cards2 && band.cards2.length && bandRewardOwned(band, prof)) {
+    const lastPage = container.children[albumPageCount - 1];
+    if (lastPage) {
+      const up = document.createElement('div');
+      up.className = 'album-sub-hint album-sub-hint-up';
+      up.textContent = '⬆ Nach oben wischen: Teil 2';
+      lastPage.appendChild(up);
+    }
+  }
 
   // Blätter-Navigation
   const nav = document.getElementById('albumNav');
@@ -4585,6 +4729,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const dy = t.clientY - swStartY;
       swStartX = null;
       const waagerecht = Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3;
+      const senkrecht = Math.abs(dy) > 50 && Math.abs(dy) > Math.abs(dx) * 1.3;
+      if (senkrecht) {                              // Finger nach oben -> Teil 2
+        e.preventDefault();
+        albumSubToggle(dy < 0 ? 1 : -1);
+        return;
+      }
       if (!waagerecht) return;
       if (swHorizontal) e.preventDefault();       // kein versehentlicher Karten-Tipp nach dem Wischen
       albumFlip(dx < 0 ? 1 : -1);                 // nach links wischen -> nächste Seite
@@ -5167,7 +5317,7 @@ function executeTrade2zu1() {
   owned[cardId] = owned[cardId] - 2;
   if (owned[cardId] <= 0) delete owned[cardId];
   // Zufaellige Karte mit Pack-Raritaetsverteilung
-  const rarityPool = CARD_DB.filter(c => c.id !== cardId);
+  const rarityPool = CARD_DB.filter(c => c.id !== cardId && cardErhaeltlich(c, prof));
   if (rarityPool.length === 0) { alert('Keine Karten zum Tauschen verfügbar!'); return; }
   let rarityTable;
   if (card.rarity === 'legendary') {
@@ -5970,7 +6120,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v53';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v55';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
