@@ -2320,6 +2320,7 @@ body{
     <div class="album-header-right">
       <span id="albumCount" style="font-size:14px;color:var(--dark-light);">0/0</span>
       <button class="album-count-toggle" id="albumCountToggle" title="Anzahl anzeigen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:17px;height:17px;display:block;margin:auto"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg></button>
+      <button class="album-count-toggle" id="albumAnimToggle" title="Bewegte Bilder an/aus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:17px;height:17px;display:inline-block;vertical-align:-3px;"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
     </div>
   </div>
   <div class="album-tabs" id="albumTabs"></div>
@@ -4117,6 +4118,10 @@ let albumPageCount = 1;
 // Anzahl-Badge: Präferenz NUR im Browser (kein Server-Sync)
 let albumShowCounts = false;
 try { albumShowCounts = localStorage.getItem('hpAlbumShowCounts') === '1'; } catch(e) {}
+// Bewegte Bilder im Album (Videos). Standard: an. Aus = Standbilder; im Orden-Band zeigen
+// dann die Einzelkarten statt des bewegten Ordensfotos.
+let albumAnimated = true;
+try { albumAnimated = localStorage.getItem('hpAlbumAnimated') !== '0'; } catch(e) {}
 
 function toggleAlbumCounts() {
   albumShowCounts = !albumShowCounts;
@@ -4124,6 +4129,19 @@ function toggleAlbumCounts() {
   const btn = document.getElementById('albumCountToggle');
   if (btn) btn.classList.toggle('active', albumShowCounts);
   renderAlbumBand();
+}
+
+function toggleAlbumAnimated() {
+  albumAnimated = !albumAnimated;
+  try { localStorage.setItem('hpAlbumAnimated', albumAnimated ? '1' : '0'); } catch(e) {}
+  const btn = document.getElementById('albumAnimToggle');
+  if (btn) btn.classList.toggle('active', albumAnimated);
+  renderAlbumBand();
+}
+
+// Videos im ALBUM nur, wenn der Bewegt-Schalter an ist (andere Ansichten unberührt)
+function albumVideoSrc(cardId, prof) {
+  return albumAnimated ? cardVideoSrc(cardId, prof) : null;
 }
 
 function renderAlbum() {
@@ -4138,11 +4156,16 @@ function renderAlbum() {
   });
   document.getElementById('albumCount').textContent = `${ownedTotal}/${cardsTotal}`;
 
-  // Toggle-Zustand setzen
+  // Toggle-Zustände setzen
   const toggleBtn = document.getElementById('albumCountToggle');
   if (toggleBtn) {
     toggleBtn.classList.toggle('active', albumShowCounts);
     toggleBtn.onclick = toggleAlbumCounts;
+  }
+  const animBtn = document.getElementById('albumAnimToggle');
+  if (animBtn) {
+    animBtn.classList.toggle('active', albumAnimated);
+    animBtn.onclick = toggleAlbumAnimated;
   }
 
   // Tabs bauen
@@ -4220,7 +4243,7 @@ function renderAlbumBand() {
         const slot = document.createElement('div');
         if (s.owned) {
           slot.className = 'album-slot founders-slot' + (WIDE_MEDIA[s.id] ? ' wide' : '');
-          const fvid = cardVideoSrc(s.id, prof);
+          const fvid = albumVideoSrc(s.id, prof);
           slot.innerHTML = fvid
             ? `<video src="${fvid}" autoplay loop muted playsinline></video>`
             : `<img src="${card.image}" alt="${card.name}" loading="lazy">`;
@@ -4243,7 +4266,7 @@ function renderAlbumBand() {
       const slot = document.createElement('div');
       if (s.owned) {
         slot.className = 'album-slot' + (WIDE_MEDIA[s.id] ? ' wide' : '');
-        const vid = cardVideoSrc(s.id, prof);
+        const vid = albumVideoSrc(s.id, prof);
         slot.innerHTML = vid
           ? `<video src="${vid}" autoplay loop muted playsinline></video>`
           : `<img src="${card.image}" alt="${card.name}" loading="lazy">`;
@@ -4277,26 +4300,34 @@ function renderAlbumBand() {
             checkAchievements(prof);
             save();
           }
-          grid.innerHTML = '';                       // die 12 Einzelkacheln weichen dem Foto
-          const panoSlot = document.createElement('div');
-          panoSlot.className = 'album-slot-reward wide album-phoenix';
-          const pvid = cardVideoSrc(reward.id, prof);
-          panoSlot.innerHTML = pvid
-            ? `<video src="${pvid}" autoplay loop muted playsinline></video>`
-            : `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
-          panoSlot.onclick = () => showCardDetail(reward.id);
-          grid.appendChild(panoSlot);
-          // Rahmen an die echte Größe des Videos/Bildes anpassen (keine leeren Streifen)
-          const panoMedia = panoSlot.querySelector('video, img');
-          if (panoMedia) {
-            const setRatio = () => {
-              const w = panoMedia.videoWidth || panoMedia.naturalWidth;
-              const h = panoMedia.videoHeight || panoMedia.naturalHeight;
-              if (w && h) panoSlot.style.aspectRatio = (w / h);
-            };
-            setRatio();
-            panoMedia.addEventListener('loadedmetadata', setRatio);
-            panoMedia.addEventListener('load', setRatio);
+          if (albumAnimated) {
+            grid.innerHTML = '';                     // die 12 Einzelkacheln weichen dem Foto
+            const panoSlot = document.createElement('div');
+            panoSlot.className = 'album-slot-reward wide album-phoenix';
+            const pvid = albumVideoSrc(reward.id, prof);
+            panoSlot.innerHTML = pvid
+              ? `<video src="${pvid}" autoplay loop muted playsinline></video>`
+              : `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
+            panoSlot.onclick = () => showCardDetail(reward.id);
+            grid.appendChild(panoSlot);
+            // Rahmen an die echte Größe des Videos/Bildes anpassen (keine leeren Streifen)
+            const panoMedia = panoSlot.querySelector('video, img');
+            if (panoMedia) {
+              const setRatio = () => {
+                const w = panoMedia.videoWidth || panoMedia.naturalWidth;
+                const h = panoMedia.videoHeight || panoMedia.naturalHeight;
+                if (w && h) panoSlot.style.aspectRatio = (w / h);
+              };
+              setRatio();
+              panoMedia.addEventListener('loadedmetadata', setRatio);
+              panoMedia.addEventListener('load', setRatio);
+            }
+          } else {
+            // Bewegte Bilder aus: die 12 Einzelkarten bleiben sichtbar
+            const hint = document.createElement('div');
+            hint.className = 'album-phoenix-hint';
+            hint.textContent = '🎬 Bewegte Bilder sind aus – schalte sie oben ein, um das lebendige Ordensfoto zu sehen.';
+            grid.appendChild(hint);
           }
         } else {
           const noch = band.cards.filter(id => !(owned[id] > 0)).length;
@@ -4310,7 +4341,7 @@ function renderAlbumBand() {
         const rewardOwned = owned[reward.id] > 0;
         if (rewardOwned) {
           rewardSlot.className = 'album-slot-reward' + (WIDE_MEDIA[reward.id] ? ' wide' : '');
-          const rvid = cardVideoSrc(reward.id, prof);
+          const rvid = albumVideoSrc(reward.id, prof);
           rewardSlot.innerHTML = rvid
             ? `<video src="${rvid}" autoplay loop muted playsinline></video>`
             : `<img src="${reward.image}" alt="${reward.name}" loading="lazy">`;
@@ -4369,6 +4400,7 @@ function maybePhoenixRitual() {
   const owned = prof.cards || {};
   if (!albumBandComplete(band, owned)) return;
   if (prof.phoenixRitualSeen) return;                    // pro Profil nur EINMAL
+  if (!albumAnimated) return;                            // nur bei eingeschalteten bewegten Bildern
   const screen = document.getElementById('screen-album');
   if (!screen || !screen.classList.contains('active')) return;
   prof.phoenixRitualSeen = true;
@@ -5924,7 +5956,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v49';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v50';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
