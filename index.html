@@ -4563,10 +4563,18 @@ function completeTask(label) {
 function renderPackScreen() {
   if (!currentProfile) return;
   const prof = getProfile(currentProfile);
+  // Reparatur: frueher konnte der Pack-Zaehler durch den Doppel-Abzug ins Minus rutschen
+  if ((prof.packs || 0) < 0 || (prof.bonusPacks || 0) < 0) {
+    prof.packs = Math.max(0, prof.packs || 0);
+    prof.bonusPacks = Math.max(0, prof.bonusPacks || 0);
+    save();                                  // einmalig korrigierten Stand festschreiben
+  }
+
   const packs = prof.packs || 0;
   const bonusPacks = prof.bonusPacks || 0;
-  
-  document.getElementById('packCountBig').textContent = `Du hast ${packs} Pack${packs === 1 ? '' : 's'}`;
+  const allePacks = packs + bonusPacks;      // Bonus-Packs sind eigene Packs (Dashboard zaehlt sie ebenfalls mit)
+
+  document.getElementById('packCountBig').textContent = `Du hast ${allePacks} Pack${allePacks === 1 ? '' : 's'}`;
   
   const bonusIndicator = document.getElementById('bonusPackIndicator');
   if (bonusPacks > 0) {
@@ -4600,16 +4608,12 @@ function renderPackScreen() {
 
 function openPack() {
   const prof = getProfile(currentProfile);
-  if (!prof.packs || prof.packs < 1) {
-    if (!prof.bonusPacks || prof.bonusPacks < 1) return;
-  }
-  
+  // Genau EIN Pack verbrauchen. Bonus-Packs zuerst (die wertvolleren), aber ein
+  // Bonus-Pack kostet NICHT zusaetzlich ein normales Pack – sie sind getrennte Packs.
   let isBonus = false;
-  if (prof.bonusPacks && prof.bonusPacks > 0) {
-    prof.bonusPacks--;
-    isBonus = true;
-  }
-  prof.packs--;
+  if ((prof.bonusPacks || 0) > 0) { prof.bonusPacks--; isBonus = true; }
+  else if ((prof.packs || 0) > 0) { prof.packs--; }
+  else return;
   prof.packsOpened = (prof.packsOpened || 0) + 1;
 
   currentPackCards = [];
@@ -7058,7 +7062,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v71';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v72';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
