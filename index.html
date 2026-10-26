@@ -3199,7 +3199,7 @@ const ALBUM_BANDS = [
   { id: 8, sonder: true, title: 'Strandparty', short: 'Strandparty', icon: '🏖️', bg: 'album/bg-beach.jpg',
     cards: ['hp-fun-001','hp-fun-002','hp-fun-003','hp-fun-004','hp-fun-005','hp-fun-006','hp-fun-007','hp-fun-008','hp-fun-009','hp-fun-010','hp-fun-011','hp-fun-012','hp-fun-013','hp-fun-014','hp-fun-015','hp-fun-016','hp-fun-017','hp-fun-018','hp-fun-019','hp-fun-020','hp-fun-021','hp-fun-022','hp-fun-023','hp-fun-024','hp-fun-025','hp-fun-026','hp-fun-027','hp-fun-028','hp-fun-029','hp-fun-030','hp-fun-031','hp-fun-032','hp-fun-033','hp-fun-034'],
     reward: null },
-  { id: 9, title: 'Die Hogwarts-Gründer', short: 'Gründer', icon: '🦡', bg: 'album/bg-founders.jpg',
+  { id: 9, sonder: true, title: 'Die Hogwarts-Gründer', short: 'Gründer', icon: '🦡', bg: 'album/bg-founders.jpg',
     cards: ['hp-081','hp-082','hp-084','hp-083'],
     reward: null },
   { id: 10, title: 'Die Magische Welt', short: 'Magische Welt', icon: '🌍', bg: 'album/bg-magicalworld.jpg',
@@ -4123,8 +4123,9 @@ function oeffneAlbumWahl() {
   const box = document.getElementById('albumWahlList');
   const prof = getProfile(currentProfile);
   if (!box || !prof) return;
-  // Sonderbaende (Strandparty, Halloween) sind NICHT waehlbar –
-  // ihre Karten gibt es ausschliesslich ueber Tauschmechanismen.
+  // Sonderbaende sind NICHT waehlbar: Strandparty, Halloween-Edition und die
+  // Hogwarts-Gruender (nur Relikt-Karten). Deren Karten gibt es ausschliesslich
+  // ueber Tauschmechanismen bzw. die Band-Belohnung.
   box.innerHTML = ALBUM_BANDS.filter(b => !b.sonder).map(b => {
     const ids = bandCardsAll(b);
     const haben = ids.filter(id => prof.cards && prof.cards[id]).length;
@@ -6764,7 +6765,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v66';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v67';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
