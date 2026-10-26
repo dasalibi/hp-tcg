@@ -296,7 +296,9 @@ html, body {
   font-size: 15px; margin: 0 0 8px; letter-spacing: .3px; }
 .pot-hint { font-size: 12px; color: var(--dark-light, #a99b78); margin: -4px 0 10px; line-height: 1.45; }
 .pot-shelf { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; min-height: 56px; }
-.pot-shelf .trank-flask { width: 62px; height: 62px; border-radius: 16px; font-size: 30px; }
+.pot-shelf .trank-flask { width: 62px; height: 62px; border-radius: 16px; font-size: 30px; padding: 0; overflow: hidden; }
+.trank-flask img { width: 100%; height: 100%; object-fit: cover; border-radius: 15px; display: block; }
+.pot-recipe .pr-icon img { width: 36px; height: 36px; border-radius: 10px; display: block; object-fit: cover; }
 .pot-empty { font-size: 13px; color: var(--dark-light, #a99b78); font-style: italic; }
 .pot-ingredients { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .pot-zut { position: relative; border-radius: 12px; overflow: hidden;
@@ -332,6 +334,7 @@ html, body {
   border: 1px solid rgba(201,169,97,.45); border-radius: 18px; padding: 22px 20px;
   max-width: 380px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.7); }
 .pot-detail-icon { font-size: 40px; }
+.pot-detail-icon img { width: 118px; height: 118px; border-radius: 18px; display: block; margin: 0 auto; object-fit: cover; }
 .pot-detail-box h2 { font-family: var(--font-title, serif); color: var(--gold, #c9a961);
   font-size: 20px; margin: 6px 0 8px; }
 .pot-detail-box > p { font-size: 13px; color: #d8c89a; line-height: 1.5; margin-bottom: 16px; }
@@ -382,6 +385,7 @@ html, body {
 .trank-feier-in p { color: #ded0b4; font-size: 14px; line-height: 1.5; margin: 0 0 16px; }
 .trank-feier-flasks { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; font-size: 32px; }
 .trank-feier-flask { animation: feierPulse 2s ease-in-out infinite; }
+.trank-feier-flask img { width: 46px; height: 46px; border-radius: 11px; display: block; object-fit: cover; }
 
 /* Familien-Wochenchallenge */
 .week-challenge {
@@ -3468,15 +3472,15 @@ let familyPackAwarded = false;
 // Haben an einem Tag ALLE Profile mindestens eine Aufgabe geschafft, bekommt am
 // naechsten Tag jedes Profil einen zufaelligen Zaubertrank ins Regal.
 const TRAENKE = [
-  { id:'felix',       icon:'🎲', name:'Felix Felicis', kurz:'Glückstrank',
+  { id:'felix',       icon:'🎲', img:'cards/pot-felix.jpg', name:'Felix Felicis', kurz:'Glückstrank',
     desc:'Dein nächster Pack zieht mit erhöhten Chancen (selten 34 %, legendär 6 %, Relikt 2 %).' },
-  { id:'fuelle',      icon:'⚗️', name:'Trank der Fülle', kurz:'Mehr Karten',
+  { id:'fuelle',      icon:'⚗️', img:'cards/pot-fuelle.jpg', name:'Trank der Fülle', kurz:'Mehr Karten',
     desc:'Dein nächster Pack enthält 1 zusätzliche Karte.' },
-  { id:'sucher',      icon:'🔮', name:'Trank des Suchers', kurz:'Gezielte Karte',
+  { id:'sucher',      icon:'🔮', img:'cards/pot-sucher.jpg', name:'Trank des Suchers', kurz:'Gezielte Karte',
     desc:'Dein nächster Pack enthält garantiert 1 Karte aus dem gewählten Album (eine der Karten kommt daraus).' },
-  { id:'erleuchtung', icon:'✨', name:'Trank der Erleuchtung', kurz:'Sichere Seltene',
+  { id:'erleuchtung', icon:'✨', img:'cards/pot-erleuchtung.jpg', name:'Trank der Erleuchtung', kurz:'Sichere Seltene',
     desc:'Sofort: 1 garantierte seltene Karte + 2 normale Karten.' },
-  { id:'verwandlung', icon:'🔄', name:'Trank der Verwandlung', kurz:'Tausch-Upgrade',
+  { id:'verwandlung', icon:'🔄', img:'cards/pot-verwandlung.jpg', name:'Trank der Verwandlung', kurz:'Tausch-Upgrade',
     desc:'Dein nächster 2:1-Tausch liefert garantiert die nächsthöhere Seltenheit.' }
 ];
 // Rezepte: jeder Trank braucht eine eigene Mischung aus Zutaten-Karten
@@ -3973,7 +3977,8 @@ function renderPotions() {
       const el = document.createElement('button');
       el.className = 'trank-flask' + (scharf ? ' scharf' : '');
       el.title = t.name + ' – ' + t.desc;
-      el.innerHTML = t.icon + (n > 0 ? '<span class="trank-count">' + n + '</span>' : '') +
+      el.innerHTML = '<img src="' + t.img + '" alt="' + t.name + '">' +
+        (n > 0 ? '<span class="trank-count">' + n + '</span>' : '') +
         (scharf ? '<span class="trank-scharf">✓</span>' : '');
       el.onclick = () => oeffnePotDetail(t.id);
       shelf.appendChild(el);
@@ -4006,7 +4011,7 @@ function renderPotions() {
     const el = document.createElement('div');
     el.className = 'pot-recipe' + (genug ? '' : ' locked');
     el.innerHTML =
-      '<span class="pr-icon">' + t.icon + '</span>' +
+      '<span class="pr-icon"><img src="' + t.img + '" alt="' + t.name + '"></span>' +
       '<span class="pr-text"><span class="pr-name">' + t.name + '</span>' +
       '<span class="pr-desc">' + t.desc + '</span>' +
       '<span class="pr-ing-line">' + zutTeile + '</span></span>';
@@ -4062,7 +4067,7 @@ function oeffnePotDetail(id) {
   if (!prof || !t) return;
   const anzahl = traenkeVon(prof)[id] || 0;
   if (anzahl <= 0) return;
-  document.getElementById('potDetailIcon').textContent = t.icon;
+  document.getElementById('potDetailIcon').innerHTML = '<img src="' + t.img + '" alt="' + t.name + '">';
   document.getElementById('potDetailName').textContent = t.name;
   document.getElementById('potDetailDesc').innerHTML = t.desc +
     '<br><br><span style="color:#b8a883;font-size:12px;">Im Regal: ' + anzahl + '×</span>' +
@@ -4166,7 +4171,7 @@ function zeigeTrankFeier() {
     : 'An ' + anz + ' Tagen hat jeder mindestens eine Aufgabe geschafft. Zur Belohnung warten ' + anz + ' Zaubertränke im Alchimielabor auf dich!';
   document.getElementById('trankFeierFlasks').innerHTML = TRAENKE
     .filter(t => (bestand[t.id] || 0) > 0)
-    .map(t => `<span class="trank-feier-flask" title="${t.name}">${t.icon}</span>`).join('');
+    .map(t => `<span class="trank-feier-flask" title="${t.name}"><img src="${t.img}" alt="${t.name}"></span>`).join('');
   document.getElementById('trankFeier').classList.add('active');
 }
 function schliesseTrankFeier() {
@@ -6067,7 +6072,7 @@ function renderParentArea() {
     TRAENKE.forEach(t => {
       const opt = document.createElement('option');
       opt.value = t.id;
-      opt.textContent = t.icon + ' ' + t.name;
+      opt.textContent = t.name;
       trankSel.appendChild(opt);
     });
   }
@@ -6114,8 +6119,8 @@ function renderParentProfile(name) {
     const b = traenkeVon(prof), a = aktivVon(prof);
     const imRegal = [], scharf = [];
     TRAENKE.forEach(t => {
-      if ((b[t.id] || 0) > 0) imRegal.push(t.icon + ' ' + t.name + ' ×' + b[t.id]);
-      if (a[t.id]) scharf.push(t.icon + ' ' + t.name + (t.id === 'sucher' ? ' (Band ' + a[t.id] + ')' : ''));
+      if ((b[t.id] || 0) > 0) imRegal.push(t.name + ' ×' + b[t.id]);
+      if (a[t.id]) scharf.push(t.name + (t.id === 'sucher' ? ' (Band ' + a[t.id] + ')' : ''));
     });
     trEl.innerHTML = (imRegal.length ? imRegal.join(', ') : 'nichts') +
       (scharf.length ? '&nbsp;·&nbsp;<em>scharf: ' + scharf.join(', ') + '</em>' : '');
@@ -6765,7 +6770,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v67';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v68';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
