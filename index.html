@@ -629,6 +629,25 @@ html, body {
   .pk-sub{position:absolute;left:0;right:0;bottom:10px;text-align:center;z-index:3;font-size:9px;
     letter-spacing:2px;color:rgba(242,226,184,.6)}
   .pk-fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
+  /* ===== Bonus-Pack: goldene Folie (nur Flaechen filtern, nie .pk-float/.pk-body – das zerstoert preserve-3d) ===== */
+  .pk-bonus .pk-front{filter:sepia(.78) saturate(2.2) contrast(1.16) brightness(1.0) hue-rotate(-5deg);
+    box-shadow:inset 0 0 60px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.55),0 0 26px rgba(240,205,110,.45)}
+  .pk-bonus .pk-back,.pk-bonus .pk-left,.pk-bonus .pk-right,
+  .pk-bonus .pk-topf,.pk-bonus .pk-botf{filter:sepia(.85) saturate(2.1) contrast(1.1) brightness(1.0) hue-rotate(-7deg)}
+  .pk-bonus .pk-goldo{position:absolute;inset:0;pointer-events:none;mix-blend-mode:soft-light;
+    background:radial-gradient(ellipse at 50% 40%,rgba(255,232,150,.7),rgba(168,116,26,.5) 66%,rgba(74,48,6,.8))}
+  .pk-bonus .pk-goldo::after{content:'';position:absolute;inset:0;mix-blend-mode:overlay;opacity:.5;
+    background:linear-gradient(160deg,rgba(255,246,210,.55),rgba(255,214,120,0) 45%,rgba(120,80,10,.65))}
+  .pk-bonus .pk-sub{color:#ffe9a8;letter-spacing:3px}
+  .pk-bonus .pk-left{box-shadow:inset 14px 0 18px rgba(0,0,0,.55)}
+  .pk-bonus .pk-right{box-shadow:inset -14px 0 18px rgba(0,0,0,.45)}
+  .pk-bonus .pk-band{background:linear-gradient(180deg,#f5e3ac,#d0a848 52%,#8f6c22);
+    border-bottom-color:rgba(120,90,20,.55)}
+  .pk-bonus .pk-band::after{background:repeating-linear-gradient(90deg,rgba(90,64,12,.18) 0 3px,transparent 3px 9px)}
+  .pk-bonus .pk-tab{background:linear-gradient(180deg,#fff4d2,#f0d894 60%,#c8a24a);color:#6a4a10}
+  .pk-bonus .pk-title{color:#fff3cf;text-shadow:0 0 14px rgba(255,220,140,.6),0 2px 8px rgba(0,0,0,.85)}
+  .pk-bonus .pk-shadow{background:radial-gradient(ellipse at 50% 50%,rgba(120,90,20,.55),rgba(0,0,0,0) 70%)}
+  .pk-bonus .pk-sheen{background:linear-gradient(105deg,transparent 34%,rgba(255,240,190,.30) 45%,rgba(255,255,255,.5) 50%,rgba(255,240,190,.30) 55%,transparent 66%)}
 
 .pack-screen {
   text-align: center;
@@ -2491,6 +2510,7 @@ body{
       <div class="pk-float">
         <div class="pk-body" id="pkBody">
           <div class="pk-face pk-front">
+            <div class="pk-goldo"></div>
             <div class="pk-sheen"></div>
             <div class="pk-glow" id="pkGlow"></div>
             <div class="pk-cavity" id="pkCavity"></div>
@@ -4568,6 +4588,13 @@ function renderPackScreen() {
     document.getElementById('packEmpty').style.display = 'none';
     pkInit();                       // Ziehen/Reissen verdrahten
     pkReset();                      // Pack wieder versiegelt zeigen
+    const pkSt = document.getElementById('pkStage');
+    if (pkSt) {
+      const istBonus = bonusPacks > 0;              // Bonus-Packs werden zuerst verbraucht
+      pkSt.classList.toggle('pk-bonus', istBonus);
+      const pkSub = pkSt.querySelector('.pk-sub');
+      if (pkSub) pkSub.textContent = istBonus ? '★ BONUS-PACK ★' : 'SAMMELKARTEN';
+    }
   }
 }
 
@@ -7031,7 +7058,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v70';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v71';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
