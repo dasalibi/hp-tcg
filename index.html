@@ -248,13 +248,6 @@ html, body {
 }
 
 /* Trankregal (Familien-Tagesbonus) */
-.trank-row {
-  display: none;
-  gap: 10px;
-  padding: 2px 0 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
 .trank-flask {
   position: relative;
   width: 54px;
@@ -292,6 +285,50 @@ html, body {
 .trank-scharf { background: rgba(30,90,45,.92); border: 1px solid rgba(160,255,190,.5); color: #b8f5c8; font-size: 12px; }
 .trank-hint { width: 100%; font-size: 11px; color: #d8c89a; margin-top: 2px; }
 /* Feier-Overlay */
+/* ---- Alchimielabor ---- */
+.pot-header { display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 4px 6px; }
+.pot-header h2 { font-family: var(--font-title, serif); color: var(--gold, #c9a961);
+  font-size: 21px; margin: 0; display: flex; align-items: center; }
+.pot-count { font-size: 13px; color: #d8c89a; }
+.pot-section { margin: 0 0 20px; }
+.pot-section h3 { font-family: var(--font-title, serif); color: var(--gold, #c9a961);
+  font-size: 15px; margin: 0 0 8px; letter-spacing: .3px; }
+.pot-hint { font-size: 12px; color: var(--dark-light, #a99b78); margin: -4px 0 10px; line-height: 1.45; }
+.pot-shelf { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; min-height: 56px; }
+.pot-shelf .trank-flask { width: 62px; height: 62px; border-radius: 16px; font-size: 30px; }
+.pot-empty { font-size: 13px; color: var(--dark-light, #a99b78); font-style: italic; }
+.pot-ingredients { display: flex; flex-wrap: wrap; gap: 6px; }
+.pot-ing { display: flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 9px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(201,169,97,.25);
+  font-size: 12px; color: #e8d9b0; }
+.pot-ing b { color: #fff; }
+.pot-ing .pot-ing-plus { color: #8ce0a0; font-size: 11px; }
+.pot-recipes { display: flex; flex-direction: column; gap: 8px; }
+.pot-recipe { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(201,169,97,.3); }
+.pot-recipe .pr-icon { font-size: 24px; }
+.pot-recipe .pr-text { flex: 1; min-width: 0; }
+.pot-recipe .pr-name { font-size: 13.5px; color: #f0d890; font-weight: 600; }
+.pot-recipe .pr-desc { font-size: 11.5px; color: #b8a883; margin-top: 2px; line-height: 1.35; }
+.pot-recipe .pr-cost { font-size: 12px; color: #e8d9b0; white-space: nowrap; }
+.pot-recipe .pr-cost.ok { color: #8ce0a0; }
+.pot-recipe .pr-cost.no { color: #e08a8a; }
+.pot-recipe button { white-space: nowrap; }
+.pot-recipe.locked { opacity: .5; }
+.pot-detail { position: fixed; inset: 0; z-index: 1400; background: rgba(6,3,1,.85);
+  display: none; align-items: center; justify-content: center; padding: 16px; }
+.pot-detail.active { display: flex; }
+.pot-detail-box { background: linear-gradient(180deg, #241a12, #150d07);
+  border: 1px solid rgba(201,169,97,.45); border-radius: 18px; padding: 22px 20px;
+  max-width: 380px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.7); }
+.pot-detail-icon { font-size: 40px; }
+.pot-detail-box h2 { font-family: var(--font-title, serif); color: var(--gold, #c9a961);
+  font-size: 20px; margin: 6px 0 8px; }
+.pot-detail-box > p { font-size: 13px; color: #d8c89a; line-height: 1.5; margin-bottom: 16px; }
+.pot-detail-actions { display: flex; gap: 8px; }
+.pot-detail-actions button { flex: 1; }
+
 .album-wahl { position: fixed; inset: 0; z-index: 1300; background: rgba(6,3,1,.85);
   display: none; align-items: center; justify-content: center; padding: 16px; }
 .album-wahl.active { display: flex; }
@@ -2305,7 +2342,7 @@ body{
   </div>
 
   <!-- Trankregal (Familien-Tagesbonus) -->
-  <div class="trank-row" id="trankRow"></div>
+
 
   <!-- Fortschritts-Ringe -->
   <div class="ring-row">
@@ -2451,6 +2488,32 @@ body{
       <span class="album-indicator" id="albumIndicator">1 / 1</span>
       <button class="album-nav-btn" id="albumNext">▶</button>
     </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: TRÄNKE / ALCHIMIELABOR ==================== -->
+<div class="screen" id="screen-potions">
+  <div class="pot-header">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:22px;height:22px;vertical-align:-4px;margin-right:7px"><path d="M9 3h6M10 3v5.5L5.5 16a3 3 0 0 0 2.6 4.5h7.8A3 3 0 0 0 18.5 16L14 8.5V3M7.5 14h9"/></svg>Alchimielabor</h2>
+    <span class="pot-count" id="potHeaderCount">0 Tränke</span>
+  </div>
+
+  <div class="pot-section">
+    <h3>Dein Tränkeregal</h3>
+    <div class="pot-shelf" id="potShelf"></div>
+  </div>
+
+  <div class="pot-section">
+    <h3>Zutaten</h3>
+    <p class="pot-hint" id="potZutatenHint"></p>
+    <div class="pot-ingredients" id="potIngredients"></div>
+  </div>
+
+  <div class="pot-section">
+    <h3>Brauen</h3>
+    <p class="pot-hint">Jeder Trank wird aus <b>gewöhnlichen Karten</b> gebraut. Es werden zuerst die Doppelten verwendet – die letzte Kopie einer Karte bleibt immer geschützt.</p>
+    <div class="pot-recipes" id="potRecipes"></div>
+    <p class="assign-msg" id="potMsg"></p>
   </div>
 </div>
 
@@ -2836,6 +2899,10 @@ body{
   <button class="nav-item" data-screen="trades" onclick="navigateTo('trades')">
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 16H3l4-4-4-4h4M17 8h4l-4 4 4 4h-4M14 4l-4 16"/></svg></span>
     <span>Tauschen</span>
+  </button>
+  <button class="nav-item" data-screen="potions" onclick="navigateTo('potions')">
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 3h6M10 3v5.5L5.5 16a3 3 0 0 0 2.6 4.5h7.8A3 3 0 0 0 18.5 16L14 8.5V3M7.5 14h9"/></svg></span>
+    <span>Tränke</span>
   </button>
   <button class="nav-item" data-screen="achievements" onclick="navigateTo('achievements')">
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 21h8M12 17v4M17 4H7v6a5 5 0 0 0 10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/></svg></span>
@@ -3388,6 +3455,9 @@ const TRAENKE = [
   { id:'verwandlung', icon:'🔄', name:'Trank der Verwandlung', kurz:'Tausch-Upgrade',
     desc:'Dein nächster 2:1-Tausch liefert garantiert die nächsthöhere Seltenheit.' }
 ];
+// Kosten je Trank in gewoehnlichen Karten (Zutaten)
+const TRANK_REZEPT = { felix: 2, sucher: 2, fuelle: 3, verwandlung: 3, erleuchtung: 5 };
+
 function todayStr() { return new Date().toISOString().slice(0,10); }
 function traenkeVon(prof) { if (!prof.traenke) prof.traenke = {}; return prof.traenke; }
 function aktivVon(prof)   { if (!prof.aktiv)   prof.aktiv   = {}; return prof.aktiv; }
@@ -3752,6 +3822,9 @@ function navigateTo(screen) {
   } else if (screen === 'trades') {
     document.getElementById('screen-trades').classList.add('active');
     renderTrades();
+  } else if (screen === 'potions') {
+    document.getElementById('screen-potions').classList.add('active');
+    renderPotions();
   } else if (screen === 'welcome') {
     document.getElementById('screen-welcome').classList.add('active');
   }
@@ -3841,24 +3914,146 @@ function setRing(ringId, pctId, pct) {
 
 // ===================== DASHBOARD =====================
 
-// ===================== Trankregal (Startseite) =====================
-function renderTraenke() {
-  const row = document.getElementById('trankRow');
-  if (!row) return;
-  const prof = currentProfile ? getProfile(currentProfile) : null;
-  if (!prof) { row.style.display = 'none'; return; }
-  const bestand = traenkeVon(prof), aktiv = aktivVon(prof);
-  const sichtbar = TRAENKE.filter(t => (bestand[t.id] || 0) > 0 || aktiv[t.id]);
-  if (!sichtbar.length) { row.style.display = 'none'; return; }
-  row.style.display = 'flex';
-  row.innerHTML = sichtbar.map(t => {
-    const n = bestand[t.id] || 0, scharf = !!aktiv[t.id];
-    return `<button class="trank-flask${scharf ? ' scharf' : ''}" data-trank="${t.id}"` +
-      ` title="${t.name} – ${t.desc}"${n === 0 ? ' disabled' : ''}>${t.icon}` +
-      (n > 0 ? `<span class="trank-count">${n}</span>` : `<span class="trank-scharf">✓</span>`) + '</button>';
-  }).join('') + '<div class="trank-hint">🧪 Tränke aus dem Familien-Bonus – antippen, um sie zu trinken</div>';
-  row.querySelectorAll('[data-trank]').forEach(b => { b.onclick = () => trinkTrank(b.dataset.trank); });
+// ===================== Alchimielabor (Regal, Zutaten, Brauen) =====================
+function istZutat(card) { return !!card && card.rarity === 'common'; }
+
+// Verfuegbare Zutaten: nur DOPPELTE gewoehnliche Karten (letzte Kopie geschuetzt)
+function zutatenListe(prof) {
+  const cards = prof.cards || {};
+  return Object.keys(cards)
+    .map(id => ({ id: id, card: getCardById(id), anzahl: cards[id] }))
+    .filter(x => istZutat(x.card) && x.anzahl > 1)
+    .map(x => ({ id: x.id, name: x.card.name, extra: x.anzahl - 1 }))
+    .sort((a, b) => b.extra - a.extra);
 }
+function zutatenVerfuegbar(prof) {
+  return zutatenListe(prof).reduce((sum, x) => sum + x.extra, 0);
+}
+
+// Zutaten einsetzen: zuerst die haeufigsten Doppelten
+function zutatenEinsetzen(prof, n) {
+  const cards = prof.cards || {};
+  const liste = zutatenListe(prof);
+  const verbraucht = [];
+  let rest = n;
+  for (let i = 0; i < liste.length && rest > 0; i++) {
+    const x = liste[i];
+    const nimm = Math.min(x.extra, rest);
+    cards[x.id] -= nimm;
+    rest -= nimm;
+    verbraucht.push({ name: x.name, anzahl: nimm });
+  }
+  return verbraucht;
+}
+
+function renderPotions() {
+  const prof = currentProfile ? getProfile(currentProfile) : null;
+  if (!prof || !document.getElementById('potShelf')) return;
+  const bestand = traenkeVon(prof), aktiv = aktivVon(prof);
+
+  const gesamt = TRAENKE.reduce((s, t) => s + (bestand[t.id] || 0), 0);
+  document.getElementById('potHeaderCount').textContent =
+    gesamt === 1 ? '1 Trank im Regal' : gesamt + ' Tränke im Regal';
+
+  // ---- Regal ----
+  const shelf = document.getElementById('potShelf');
+  shelf.innerHTML = '';
+  const vorhanden = TRAENKE.filter(t => (bestand[t.id] || 0) > 0);
+  if (!vorhanden.length) {
+    shelf.innerHTML = '<span class="pot-empty">Noch keine Tränke – braue unten deinen ersten oder warte auf den Familien-Bonus.</span>';
+  } else {
+    vorhanden.forEach(t => {
+      const n = bestand[t.id] || 0, scharf = !!aktiv[t.id];
+      const el = document.createElement('button');
+      el.className = 'trank-flask' + (scharf ? ' scharf' : '');
+      el.title = t.name + ' – ' + t.desc;
+      el.innerHTML = t.icon + '<span class="trank-count">' + n + '</span>' +
+        (scharf ? '<span class="trank-scharf">✓</span>' : '');
+      el.onclick = () => oeffnePotDetail(t.id);
+      shelf.appendChild(el);
+    });
+  }
+
+  // ---- Zutaten ----
+  const liste = zutatenListe(prof);
+  const verfuegbar = liste.reduce((s, x) => s + x.extra, 0);
+  document.getElementById('potZutatenHint').innerHTML = verfuegbar > 0
+    ? 'Du hast <b>' + verfuegbar + '</b> gewöhnliche Karte' + (verfuegbar === 1 ? '' : 'n') +
+      ' als Doppelte zum Einsatz bereit.'
+    : 'Noch keine Doppelten. Öffne Packs – gewöhnliche Karten sind häufig dabei.';
+  document.getElementById('potIngredients').innerHTML = liste.length
+    ? liste.slice(0, 24).map(x => '<span class="pot-ing">' + x.name +
+        ' <b>×' + x.extra + '</b> <span class="pot-ing-plus">einsetzbar</span></span>').join('')
+    : '<span class="pot-empty">–</span>';
+
+  // ---- Rezepte (guenstig zuerst) ----
+  const rec = document.getElementById('potRecipes');
+  rec.innerHTML = '';
+  TRAENKE.slice().sort((a, b) => (TRANK_REZEPT[a.id] || 0) - (TRANK_REZEPT[b.id] || 0)).forEach(t => {
+    const kosten = TRANK_REZEPT[t.id] || 0;
+    const genug = verfuegbar >= kosten;
+    const el = document.createElement('div');
+    el.className = 'pot-recipe' + (genug ? '' : ' locked');
+    el.innerHTML =
+      '<span class="pr-icon">' + t.icon + '</span>' +
+      '<span class="pr-text"><span class="pr-name">' + t.name + '</span>' +
+      '<span class="pr-desc">' + t.desc + '</span></span>' +
+      '<span class="pr-cost ' + (genug ? 'ok' : 'no') + '">' + kosten + ' Karten<br>' +
+      (genug ? '✔ bereit' : 'noch ' + (kosten - verfuegbar)) + '</span>';
+    const btn = document.createElement('button');
+    btn.className = 'btn-primary btn-small';
+    btn.textContent = 'Brauen';
+    btn.disabled = !genug;
+    if (!genug) btn.style.opacity = '.5';
+    btn.onclick = () => braueTrank(t.id);
+    el.appendChild(btn);
+    rec.appendChild(el);
+  });
+}
+
+function braueTrank(id) {
+  const prof = getProfile(currentProfile);
+  const t = TRAENKE.find(x => x.id === id);
+  const msg = document.getElementById('potMsg');
+  if (!prof || !t) return;
+  const kosten = TRANK_REZEPT[id] || 0;
+  const verfuegbar = zutatenVerfuegbar(prof);
+  if (verfuegbar < kosten) {
+    if (msg) { msg.textContent = '⚠️ Nicht genug Zutaten für ' + t.name + ' (braucht ' + kosten + ' Karten).'; msg.style.color = '#c0392b'; }
+    return;
+  }
+  if (!confirm('🧪 ' + t.name + ' brauen?\n\nEs werden ' + kosten + ' gewöhnliche Karten eingesetzt (zuerst die Doppelten).')) return;
+  const verbrauch = zutatenEinsetzen(prof, kosten);
+  traenkeVon(prof)[id] = (traenkeVon(prof)[id] || 0) + 1;
+  save();
+  renderPotions();
+  if (msg) {
+    msg.textContent = '✅ ' + t.name + ' gebraut! Eingesetzt: ' + verbrauch.map(v => v.anzahl + '× ' + v.name).join(', ') + '.';
+    msg.style.color = '#2e7d32';
+  }
+}
+
+// ---- Trank-Details ----
+function oeffnePotDetail(id) {
+  const prof = getProfile(currentProfile);
+  const t = TRAENKE.find(x => x.id === id);
+  if (!prof || !t) return;
+  const anzahl = traenkeVon(prof)[id] || 0;
+  if (anzahl <= 0) return;
+  document.getElementById('potDetailIcon').textContent = t.icon;
+  document.getElementById('potDetailName').textContent = t.name;
+  document.getElementById('potDetailDesc').innerHTML = t.desc +
+    '<br><br><span style="color:#b8a883;font-size:12px;">Im Regal: ' + anzahl + '×</span>' +
+    (aktivVon(prof)[id] ? '<br><span style="color:#8ce0a0;font-size:12px;">✓ Bereits scharf gestellt</span>' : '');
+  const btn = document.getElementById('potDetailTrink');
+  const schonScharf = !!aktivVon(prof)[id];
+  btn.disabled = schonScharf && id !== 'erleuchtung' && id !== 'sucher';
+  btn.style.opacity = btn.disabled ? '.5' : '1';
+  btn.textContent = id === 'sucher' ? 'Album wählen' : (id === 'erleuchtung' ? 'Sofort trinken' : 'Trinken');
+  btn.onclick = () => trinkTrank(id);
+  document.getElementById('potDetail').classList.add('active');
+}
+function schliessePotDetail() { document.getElementById('potDetail').classList.remove('active'); }
 
 function trinkTrank(id) {
   const prof = getProfile(currentProfile);
@@ -3868,7 +4063,6 @@ function trinkTrank(id) {
 
   // Erleuchtung wirkt sofort: 1 garantierte seltene Karte + 2 normale
   if (id === 'erleuchtung') {
-    if (!confirm('✨ ' + t.name + ' sofort trinken?\n' + t.desc)) return;
     bestand[id]--; if (bestand[id] <= 0) delete bestand[id];
     const owned = prof.cards || (prof.cards = {});
     const gezogen = [];
@@ -3886,19 +4080,20 @@ function trinkTrank(id) {
       if (pool.length) gib(pool[Math.floor(Math.random() * pool.length)]);
     }
     prof.packsOpened = (prof.packsOpened || 0) + 1;
-    checkAchievements(prof); save(); renderDashboard();
-    if (gezogen.length) showCardReveal(gezogen, renderDashboard);
+    checkAchievements(prof); save();
+    schliessePotDetail(); renderPotions();
+    if (gezogen.length) showCardReveal(gezogen, renderPotions);
     return;
   }
 
   // Sucher: Album bequem auswaehlen, dann liefert der naechste Pack gezielt
-  if (id === 'sucher') { oeffneAlbumWahl(); return; }
+  if (id === 'sucher') { schliessePotDetail(); oeffneAlbumWahl(); return; }
 
   // Felix / Fülle / Verwandlung: einmalig scharf stellen
-  if (!confirm('🧪 ' + t.name + ' trinken?\n' + t.desc)) return;
   bestand[id]--; if (bestand[id] <= 0) delete bestand[id];
   aktivVon(prof)[id] = true;
-  save(); renderDashboard();
+  save();
+  schliessePotDetail(); renderPotions();
 }
 
 // ---- Album-Auswahl fuer den Trank des Suchers ----
@@ -3944,8 +4139,8 @@ function zeigeTrankFeier() {
   const prof = getProfile(currentProfile);
   const bestand = traenkeVon(prof);
   document.getElementById('trankFeierText').textContent = anz === 1
-    ? 'Gestern hat jeder mindestens eine Aufgabe geschafft. Zur Belohnung wartet ein Zaubertrank auf dich – schau ins Regal!'
-    : 'An ' + anz + ' Tagen hat jeder mindestens eine Aufgabe geschafft. Zur Belohnung warten ' + anz + ' Zaubertränke auf dich!';
+    ? 'Gestern hat jeder mindestens eine Aufgabe geschafft. Zur Belohnung wartet ein Zaubertrank auf dich – schau ins Alchimielabor!'
+    : 'An ' + anz + ' Tagen hat jeder mindestens eine Aufgabe geschafft. Zur Belohnung warten ' + anz + ' Zaubertränke im Alchimielabor auf dich!';
   document.getElementById('trankFeierFlasks').innerHTML = TRAENKE
     .filter(t => (bestand[t.id] || 0) > 0)
     .map(t => `<span class="trank-feier-flask" title="${t.name}">${t.icon}</span>`).join('');
@@ -3963,7 +4158,6 @@ function renderDashboard() {
   if (!currentProfile) return;
   const prof = getProfile(currentProfile);
   document.getElementById('dashName').textContent = currentProfile;
-  renderTraenke();
   if (pendingTrankMeldungen.length) setTimeout(zeigeTrankFeier, 500);
 
   // Orden rückwirkend prüfen (z.B. nach App-Updates) – neue Orden werden gefeiert
@@ -6545,7 +6739,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v62';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v63';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
@@ -6614,6 +6808,18 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <!-- ==================== TRANK-FEIER (Familienbonus) ==================== -->
+<div class="pot-detail" id="potDetail">
+  <div class="pot-detail-box">
+    <div class="pot-detail-icon" id="potDetailIcon">🧪</div>
+    <h2 id="potDetailName">Trank</h2>
+    <p id="potDetailDesc"></p>
+    <div class="pot-detail-actions">
+      <button class="btn-primary" id="potDetailTrink">Trinken</button>
+      <button class="btn-secondary" onclick="schliessePotDetail()">Schließen</button>
+    </div>
+  </div>
+</div>
+
 <div class="album-wahl" id="albumWahl">
   <div class="album-wahl-box">
     <div class="album-wahl-icon">🔮</div>
@@ -6630,7 +6836,7 @@ if ('serviceWorker' in navigator) {
     <h2>Die ganze Familie war fleißig!</h2>
     <p id="trankFeierText"></p>
     <div class="trank-feier-flasks" id="trankFeierFlasks"></div>
-    <button class="btn-primary" onclick="schliesseTrankFeier()">Zum Trankregal</button>
+    <button class="btn-primary" onclick="schliesseTrankFeier(); navigateTo('potions');">Ins Labor</button>
   </div>
 </div>
 </body>
