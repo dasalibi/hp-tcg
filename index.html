@@ -3302,12 +3302,21 @@ const ACHIEVEMENTS = [
   { id:'funnyAll', cat:'Album', icon:'🌴', name:'Strandparty-König', desc:'Sammle ALLE Strandpartykarten', goal: () => allFunnyCount(), val: p => funnyOwned(p) },
   { id:'animated', cat:'Album', icon:'🎬', name:'Lebendiges Porträt', desc:'Erwecke ein Gründer-Porträt zum Leben', goal:1, val: p => Object.keys(p.animatedPortraits || {}).length },
   { id:'family5', cat:'Album', icon:'👨‍👩‍👧', name:'Familien-Champion', desc:'Schaffe 5× die Familien-Challenge', goal:5, val: p => p.weekWins || 0 },
+  // ---- Tränke (Alchimielabor) ----
+  { id:'brew1', cat:'Tränke', icon:'🧪', name:'Der erste Sud', desc:'Braue deinen ersten Trank', goal:1, val: p => brewsTotal(p) },
+  { id:'brew5', cat:'Tränke', icon:'⚗️', name:'Alchimist', desc:'Braue 5 Tränke', goal:5, val: p => brewsTotal(p) },
+  { id:'brew15', cat:'Tränke', icon:'🔮', name:'Meister des Kessels', desc:'Braue 15 Tränke', goal:15, val: p => brewsTotal(p) },
+  { id:'brewRecipes', cat:'Tränke', icon:'📜', name:'Fünf Rezepte gemeistert', desc:'Braue jeden der fünf Tränke mindestens einmal', goal:5, val: p => brewsDistinct(p) },
+  { id:'zutAll', cat:'Tränke', icon:'🌿', name:'Zutatenkenner', desc:'Besitze alle 6 Zutatenarten gleichzeitig', goal:6, val: p => zutatenArten(p) },
+  { id:'famBonus5', cat:'Tränke', icon:'🎁', name:'Familien-Belohnung', desc:'Erhalte 5 Tränke aus dem Familien-Bonus', goal:5, val: p => p.familienTraenke || 0 },
 ];
 
-const ACH_CATS = ['Sammlung', 'Fleiß', 'Ausdauer', 'Packs', 'Tauschen', 'Halloween', 'Album'];
+const ACH_CATS = ['Sammlung', 'Fleiß', 'Ausdauer', 'Packs', 'Tauschen', 'Tränke', 'Halloween', 'Album'];
 
 // ---- Hilfszähler für die Orden ----
-function uniqueCards(p) { return Object.keys(p.cards || {}).length; }
+// Zutaten-Karten (hp-zut-*) sind KEINE Sammelkarten – sie zaehlen nicht in Sammlung/Zaehlern
+function istZutatId(id) { const c = getCardById(id); return !!(c && c.zutat); }
+function uniqueCards(p) { return Object.keys(p.cards || {}).filter(id => !istZutatId(id)).length; }
 // Der Orden „Der Zauberermeister" hat ein FESTES Ziel von 175 Karten (Stand der Editionen).
 // Kommen später Karten dazu, bleibt dieser Orden bewusst stehen – dafür gibt es dann einen neuen Orden.
 function taskCount(p) { return (p.tasks || []).length; }
@@ -3361,8 +3370,15 @@ function funnyOwned(p) {
 }
 // Höchste Anzahl identischer Karten im Besitz (für „Doppelt hält besser")
 function maxCopies(p) {
-  return Object.values(p.cards || {}).reduce((m, c) => Math.max(m, c || 0), 0);
+  return Object.keys(p.cards || {}).filter(id => !istZutatId(id))
+    .reduce((m, id) => Math.max(m, p.cards[id] || 0), 0);
 }
+// ---- Zähler für die Tränke-Orden (Alchimielabor) ----
+// Nur SELBST gebraute Tränke zählen hier – Familien-Bonus-Tränke haben einen eigenen Zähler.
+function brewsTotal(p)    { return Object.values(p.brews || {}).reduce((a, b) => a + b, 0); }
+function brewsDistinct(p) { return Object.keys(p.brews || {}).filter(id => (p.brews[id] || 0) > 0).length; }
+function zutatenArten(p)  { return zutatenKarten().filter(z => ((p.cards || {})[z.id] || 0) > 0).length; }
+
 // Meiste Aufgaben an einem einzigen Tag (für die Tages-Rekorde)
 function bestDayTasks(p) {
   const perDay = {};
@@ -3539,6 +3555,7 @@ function checkFamilyBonus() {
       const p = data.profiles[n], id = ziehTrank();
       const tr = traenkeVon(p);
       tr[id] = (tr[id] || 0) + 1;
+      p.familienTraenke = (p.familienTraenke || 0) + 1;   // Zähler für den 🎁-Orden
     });
     pendingTrankMeldungen.push(day);
   });
@@ -4045,8 +4062,12 @@ function braueTrank(id) {
     if (prof.cards[zid] <= 0) delete prof.cards[zid];
   });
   traenkeVon(prof)[id] = (traenkeVon(prof)[id] || 0) + 1;
+  prof.brews = prof.brews || {};                 // Zähler für die Tränke-Orden
+  prof.brews[id] = (prof.brews[id] || 0) + 1;
   save();
   renderPotions();
+  const freshAch = checkAchievements(prof);      // neue Orden sofort freischalten + feiern
+  if (freshAch.length) queueAchievementPopups(freshAch);
   if (msg) {
     msg.textContent = '✅ ' + t.name + ' gebraut! Verbraucht: ' + rezeptText(rezept) + '.';
     msg.style.color = '#2e7d32';
@@ -4198,8 +4219,10 @@ function renderDashboard() {
   }
 
   const taskCount = prof.tasks ? prof.tasks.length : 0;
-  const cardCount = Object.values(prof.cards || {}).reduce((a,b) => a + b, 0);
-  const uniqueCount = Object.keys(prof.cards || {}).length;
+  const zutSet = Object.keys(prof.cards || {}).filter(istZutatId);
+  const cardCount = Object.keys(prof.cards || {}).filter(id => zutSet.indexOf(id) < 0)
+    .reduce((a, id) => a + prof.cards[id], 0);
+  const uniqueCount = Object.keys(prof.cards || {}).filter(id => zutSet.indexOf(id) < 0).length;
   const packCount = prof.packs || 0;
   const bonusCount = prof.bonusPacks || 0;
   const totalPacks = packCount + bonusCount;
@@ -6770,7 +6793,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v68';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v69';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
