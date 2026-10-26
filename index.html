@@ -795,25 +795,6 @@ html, body {
   background: rgba(8,6,4,0.4);
 }
 .album-subpage.open { transform: translateY(0); }
-.album-sub-hint {
-  font-size: 11px;
-  color: #e8d8a8;
-  margin-top: 4px;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.95);
-}
-.album-sub-hint-up {
-  position: absolute;
-  bottom: 74px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 12px;
-  color: #f0d890;
-  margin: 0;
-  text-shadow: 0 1px 6px rgba(0,0,0,0.95);
-  animation: subHintPulse 2.2s ease-in-out infinite;
-}
-@keyframes subHintPulse { 0%,100% { opacity: .5 } 50% { opacity: 1 } }
 .album-page {
   position: absolute;
   inset: 0;
@@ -4653,7 +4634,6 @@ function buildAlbumSubPage(band, prof) {
   head.innerHTML = `
     <div class="album-band-title">${band.title2 || (band.title + ' · Teil 2')}</div>
     <div class="album-band-sub">${band.short} · Teil 2 · ${ownedIn} von ${subIds.length} Karten</div>
-    <div class="album-sub-hint">⬇ Nach unten wischen, um zu Teil 1 zurückzukehren</div>
   `;
   el.appendChild(head);
 
@@ -4873,15 +4853,6 @@ function renderAlbumBand() {
 
   // ---- Teil 2: untere Albumseite (nur nach Freischaltung der Band-Belohnung) ----
   buildAlbumSubPage(band, prof);
-  if (band.cards2 && band.cards2.length && bandRewardOwned(band, prof)) {
-    const lastPage = container.children[albumPageCount - 1];
-    if (lastPage) {
-      const up = document.createElement('div');
-      up.className = 'album-sub-hint album-sub-hint-up';
-      up.textContent = '⬆ Nach oben wischen: Teil 2';
-      lastPage.appendChild(up);
-    }
-  }
 
   // Blätter-Navigation
   const nav = document.getElementById('albumNav');
@@ -5069,7 +5040,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (nextBtn) nextBtn.onclick = () => albumFlip(1);
 
   // --- Albumseiten wischbar (iPad/Touch) ---
-  const pagesEl = document.getElementById('albumPages');
+  // Wichtig: auf dem gemeinsamen Container (#albumArea), denn in Teil 2 ist
+  // #albumPages weggeschoben und bekaeme die Beruehrungen sonst nicht mehr ab.
+  const pagesEl = document.getElementById('albumArea') || document.getElementById('albumPages');
   if (pagesEl) {
     let swStartX = null, swStartY = 0, swHorizontal = false;
     pagesEl.addEventListener('touchstart', (e) => {
@@ -5092,6 +5065,11 @@ document.addEventListener('DOMContentLoaded', () => {
       swStartX = null;
       const waagerecht = Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3;
       const senkrecht = Math.abs(dy) > 50 && Math.abs(dy) > Math.abs(dx) * 1.3;
+      if (albumSubOpen) {
+        // In Teil 2: nur das Wischen nach unten fuehrt zurueck zu Teil 1
+        if (senkrecht && dy > 0) { e.preventDefault(); albumSubToggle(-1); }
+        return;                                   // kein Band-Wechsel aus Teil 2 heraus
+      }
       if (senkrecht) {                              // Finger nach oben -> Teil 2
         e.preventDefault();
         albumSubToggle(dy < 0 ? 1 : -1);
@@ -5099,7 +5077,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (!waagerecht) return;
       if (swHorizontal) e.preventDefault();       // kein versehentlicher Karten-Tipp nach dem Wischen
-      if (albumSubOpen) return;                   // in Teil 2 kein Band-Wechsel per Seitenwisch
       // Mehrseitige Baender erst durchblaettern, am Rand weiter zum naechsten Album
       if (dx < 0 && albumCurrentPage < albumPageCount - 1) { albumFlip(1); return; }
       if (dx > 0 && albumCurrentPage > 0) { albumFlip(-1); return; }
@@ -6565,7 +6542,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v59';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v60';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
