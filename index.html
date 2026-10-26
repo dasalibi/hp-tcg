@@ -3105,7 +3105,7 @@ const ALBUM_BANDS = [
   { id: 7, title: 'Die Heiligtümer des Todes', short: 'Band 7', icon: '📘', bg: 'album/bg-band7.jpg',
     cards: ['hp-015','hp-016','hp-018','hp-019','hp-023','hp-026','hp-027','hp-032','hp-050','hp-060','hp-073','hp-075','hp-077','hp-100','hp-101'],
     reward: 7 },
-  { id: 8, title: 'Strandparty', short: 'Strandparty', icon: '🏖️', bg: 'album/bg-beach.jpg',
+  { id: 8, sonder: true, title: 'Strandparty', short: 'Strandparty', icon: '🏖️', bg: 'album/bg-beach.jpg',
     cards: ['hp-fun-001','hp-fun-002','hp-fun-003','hp-fun-004','hp-fun-005','hp-fun-006','hp-fun-007','hp-fun-008','hp-fun-009','hp-fun-010','hp-fun-011','hp-fun-012','hp-fun-013','hp-fun-014','hp-fun-015','hp-fun-016','hp-fun-017','hp-fun-018','hp-fun-019','hp-fun-020','hp-fun-021','hp-fun-022','hp-fun-023','hp-fun-024','hp-fun-025','hp-fun-026','hp-fun-027','hp-fun-028','hp-fun-029','hp-fun-030','hp-fun-031','hp-fun-032','hp-fun-033','hp-fun-034'],
     reward: null },
   { id: 9, title: 'Die Hogwarts-Gründer', short: 'Gründer', icon: '🦡', bg: 'album/bg-founders.jpg',
@@ -3117,7 +3117,7 @@ const ALBUM_BANDS = [
   { id: 11, title: 'Der Orden des Phönix', short: 'Orden', icon: '🔥', bg: 'album/bg-order.jpg',
     cards: ['hp-126','hp-127','hp-128','hp-129','hp-130','hp-131','hp-132','hp-133','hp-134','hp-135','hp-136','hp-137'],
     reward: 9 },
-  { id: 12, title: 'Halloween-Edition', short: 'Halloween', icon: '🎃', bg: 'album/bg-halloween.jpg',
+  { id: 12, sonder: true, title: 'Halloween-Edition', short: 'Halloween', icon: '🎃', bg: 'album/bg-halloween.jpg',
     cards: ['hp-hal-001','hp-hal-002','hp-hal-003','hp-hal-004','hp-hal-005','hp-hal-006','hp-hal-007','hp-hal-008','hp-hal-009','hp-hal-010','hp-hal-011','hp-hal-012'],
     reward: 10 }
 ];
@@ -3380,9 +3380,9 @@ const TRAENKE = [
   { id:'felix',       icon:'🎲', name:'Felix Felicis', kurz:'Glückstrank',
     desc:'Dein nächster Pack zieht mit erhöhten Chancen (selten 34 %, legendär 6 %, Relikt 2 %).' },
   { id:'fuelle',      icon:'⚗️', name:'Trank der Fülle', kurz:'Mehr Karten',
-    desc:'Dein nächster Pack enthält mit 50 % Chance eine zusätzliche Karte (4 statt 3).' },
+    desc:'Dein nächster Pack enthält 1 zusätzliche Karte.' },
   { id:'sucher',      icon:'🔮', name:'Trank des Suchers', kurz:'Gezielte Karte',
-    desc:'Du wählst ein Album – dein nächster Pack enthält garantiert 1 Karte daraus.' },
+    desc:'Dein nächster Pack enthält garantiert 1 Karte aus dem gewählten Album (eine der Karten kommt daraus).' },
   { id:'erleuchtung', icon:'✨', name:'Trank der Erleuchtung', kurz:'Sichere Seltene',
     desc:'Sofort: 1 garantierte seltene Karte + 2 normale Karten.' },
   { id:'verwandlung', icon:'🔄', name:'Trank der Verwandlung', kurz:'Tausch-Upgrade',
@@ -3907,7 +3907,9 @@ function oeffneAlbumWahl() {
   const box = document.getElementById('albumWahlList');
   const prof = getProfile(currentProfile);
   if (!box || !prof) return;
-  box.innerHTML = ALBUM_BANDS.map(b => {
+  // Sonderbaende (Strandparty, Halloween) sind NICHT waehlbar –
+  // ihre Karten gibt es ausschliesslich ueber Tauschmechanismen.
+  box.innerHTML = ALBUM_BANDS.filter(b => !b.sonder).map(b => {
     const ids = bandCardsAll(b);
     const haben = ids.filter(id => prof.cards && prof.cards[id]).length;
     return '<button class="album-wahl-item' + (haben >= ids.length ? ' fertig' : '') + '" data-band="' + b.id + '">' +
@@ -4276,7 +4278,9 @@ function openPack() {
   const felixAktiv    = !!aktiv.felix;
   const fuelleAktiv   = !!aktiv.fuelle;
   const sucherBandId  = aktiv.sucher || null;
-  const anzahlKarten  = CARDS_PER_PACK + ((fuelleAktiv && Math.random() < 0.5) ? 1 : 0);
+  // Fülle: garantiert 1 Zusatzkarte. Sucher: eine Basiskarte wird durch die
+  // garantierte Band-Karte ERSETZT (keine vierte Karte). Beides zusammen: 3 + 1.
+  const anzahlKarten  = CARDS_PER_PACK + (fuelleAktiv ? 1 : 0) - (sucherBandId ? 1 : 0);
 
   for (let i = 0; i < anzahlKarten; i++) {
     const rarity = rollRarity(isBonus || felixAktiv);
@@ -6542,7 +6546,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v60';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v61';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
