@@ -298,12 +298,21 @@ html, body {
 .pot-shelf { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; min-height: 56px; }
 .pot-shelf .trank-flask { width: 62px; height: 62px; border-radius: 16px; font-size: 30px; }
 .pot-empty { font-size: 13px; color: var(--dark-light, #a99b78); font-style: italic; }
-.pot-ingredients { display: flex; flex-wrap: wrap; gap: 6px; }
-.pot-ing { display: flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 9px;
-  background: rgba(255,255,255,.05); border: 1px solid rgba(201,169,97,.25);
-  font-size: 12px; color: #e8d9b0; }
-.pot-ing b { color: #fff; }
-.pot-ing .pot-ing-plus { color: #8ce0a0; font-size: 11px; }
+.pot-ingredients { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pot-zut { position: relative; border-radius: 12px; overflow: hidden;
+  border: 1px solid rgba(201,169,97,.3); background: rgba(255,255,255,.04); }
+.pot-zut img { width: 100%; display: block; aspect-ratio: 3 / 4; object-fit: cover; object-position: center; }
+.pot-zut .pz-count { position: absolute; top: 5px; right: 5px; min-width: 22px; height: 22px;
+  padding: 0 4px; border-radius: 11px; background: rgba(0,0,0,.82);
+  border: 1px solid rgba(255,255,255,.35); color: #fff; font-size: 11.5px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; }
+.pot-zut .pz-name { display: block; font-size: 10.5px; color: #e8d9b0; padding: 5px 6px 6px; line-height: 1.25; }
+.pot-zut.leer { opacity: .4; }
+.pot-zut.leer .pz-name { color: #8f8368; }
+.pr-ing-line { display: block; margin-top: 4px; }
+.pr-ing { display: inline-block; font-size: 11px; margin: 0 6px 2px 0; white-space: nowrap; }
+.pr-ing.ok { color: #8ce0a0; }
+.pr-ing.no { color: #e08a8a; }
 .pot-recipes { display: flex; flex-direction: column; gap: 8px; }
 .pot-recipe { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
   background: rgba(255,255,255,.04); border: 1px solid rgba(201,169,97,.3); }
@@ -3085,6 +3094,21 @@ const CARD_DB = [
   { id:'hp-146', name:'Der Hogwarts-Express', rarity:'rare', type:'Gegenstand', subtype:'Die rote Dampflok', house:'—', desc:'Die scharlachrote Dampflok, die jedes Jahr am 1. September von Gleis 9 3/4 nach Hogwarts faehrt.', image:'cards/hp-146.jpg' },
   { id:'hp-147', name:'Der schwarze See', rarity:'common', type:'Ort', subtype:'Die Ueberfahrt nach Hogwarts', house:'—', desc:'Im ersten Jahr fahren die Erstklaessler im Boot ueber den See - und sehen Hogwarts zum ersten Mal.', image:'cards/hp-147.jpg' },
   { id:'hp-148', name:'Bane', rarity:'common', type:'Charakter', subtype:'Der Zentaur', house:'—', desc:'Ein Zentaur aus dem Verbotenen Wald, misstrauisch gegenueber Menschen und ihren Absichten.', image:'cards/hp-148.jpg' },
+  // ---- Zutaten fuer das Alchimielabor ------------------------------------------
+  // Gewöhnliche Seltenheit: sie laufen genau wie andere Commons in die Packs.
+  // Über die Markierung zutat:true bleiben sie aus Sammlung, Album und Zählern raus.
+  { id:'hp-zut-001', zutat:true, icon:'🌙', name:'Mondstein', rarity:'common', type:'Zutat', subtype:'Zutat für Zaubertränke', house:'—',
+    desc:'Ein matt schimmernder Stein, der das Licht des Mondes einfängt – die Grundlage fast jedes Zaubertranks.', image:'cards/hp-zut-001.jpg' },
+  { id:'hp-zut-002', zutat:true, icon:'🌿', name:'Kiemenkraut', rarity:'common', type:'Zutat', subtype:'Zutat für Zaubertränke', house:'—',
+    desc:'Zähe, glitschige Ranken aus dem Schwarzen See. Sie machen jeden Trank geschmeidiger und beweglicher.', image:'cards/hp-zut-002.jpg' },
+  { id:'hp-zut-003', zutat:true, icon:'🪨', name:'Bezoar', rarity:'common', type:'Zutat', subtype:'Zutat für Zaubertränke', house:'—',
+    desc:'Ein glatt polierter Stein aus dem Magen einer Ziege – der stärkste Gegengift-Baustein, den die Zauberwelt kennt.', image:'cards/hp-zut-003.jpg' },
+  { id:'hp-zut-004', zutat:true, icon:'🐉', name:'Drachenblut', rarity:'common', type:'Zutat', subtype:'Zutat für Zaubertränke', house:'—',
+    desc:'Zwölf Verwendungen hat Drachenblut. Als Trankzutat schenkt es Feuer – und puren Wandel.', image:'cards/hp-zut-004.jpg' },
+  { id:'hp-zut-005', zutat:true, icon:'🪶', name:'Einhornhaar', rarity:'common', type:'Zutat', subtype:'Zutat für Zaubertränke', house:'—',
+    desc:'Ein einzelnes silbernes Haar, so fein wie Mondlicht. Nur mit allergrößtem Respekt zu entnehmen.', image:'cards/hp-zut-005.jpg' },
+  { id:'hp-zut-006', zutat:true, icon:'🌱', name:'Alraunewurzel', rarity:'common', type:'Zutat', subtype:'Zutat für Zaubertränke', house:'—',
+    desc:'Die Wurzel, die schreit. Wer sie richtig erntet, versteht plötzlich die Sprache der Träume.', image:'cards/hp-zut-006.jpg' },
 ];
 
 // ===================== HALLOWEEN-EDITION (Saison 2026) =====================
@@ -3303,7 +3327,7 @@ function allFunnyCount() { return Object.keys(FUNNY_CARDS).length; }
 // Gesamtzahl ALLER einzigartigen Karten (Basis + Strandparty + Halloween + Belohnungen) – Startseiten-Ringe
 function allCardsCount() {
   const ids = new Set();
-  CARD_DB.forEach(c => ids.add(c.id));
+  CARD_DB.forEach(c => { if (!c.zutat) ids.add(c.id); });   // Zutaten sind keine Sammelkarten
   Object.values(FUNNY_CARDS).forEach(c => ids.add(c.id));
   Object.values(HALLOWEEN_CARDS).forEach(c => ids.add(c.id));
   Object.values(REWARD_CARDS).forEach(c => ids.add(c.id));
@@ -3455,8 +3479,19 @@ const TRAENKE = [
   { id:'verwandlung', icon:'🔄', name:'Trank der Verwandlung', kurz:'Tausch-Upgrade',
     desc:'Dein nächster 2:1-Tausch liefert garantiert die nächsthöhere Seltenheit.' }
 ];
-// Kosten je Trank in gewoehnlichen Karten (Zutaten)
-const TRANK_REZEPT = { felix: 2, sucher: 2, fuelle: 3, verwandlung: 3, erleuchtung: 5 };
+// Rezepte: jeder Trank braucht eine eigene Mischung aus Zutaten-Karten
+const TRANK_REZEPT = {
+  felix:       { 'hp-zut-001': 1, 'hp-zut-006': 1 },                       // Mondstein + Alraunewurzel
+  sucher:      { 'hp-zut-002': 1, 'hp-zut-001': 1 },                       // Kiemenkraut + Mondstein
+  fuelle:      { 'hp-zut-005': 2, 'hp-zut-002': 1 },                       // 2x Einhornhaar + Kiemenkraut
+  verwandlung: { 'hp-zut-004': 2, 'hp-zut-003': 1 },                       // 2x Drachenblut + Bezoar
+  erleuchtung: { 'hp-zut-006': 2, 'hp-zut-003': 2, 'hp-zut-005': 1 }       // 2x Alraune + 2x Bezoar + Einhornhaar
+};
+function rezeptKosten(rezept)   { return Object.values(rezept || {}).reduce((a, b) => a + b, 0); }
+function rezeptErfuellt(prof, rezept) {
+  const cards = prof.cards || {};
+  return Object.keys(rezept || {}).every(id => (cards[id] || 0) >= rezept[id]);
+}
 
 function todayStr() { return new Date().toISOString().slice(0,10); }
 function traenkeVon(prof) { if (!prof.traenke) prof.traenke = {}; return prof.traenke; }
@@ -3915,41 +3950,12 @@ function setRing(ringId, pctId, pct) {
 // ===================== DASHBOARD =====================
 
 // ===================== Alchimielabor (Regal, Zutaten, Brauen) =====================
-function istZutat(card) { return !!card && card.rarity === 'common'; }
-
-// Verfuegbare Zutaten: nur DOPPELTE gewoehnliche Karten (letzte Kopie geschuetzt)
-function zutatenListe(prof) {
-  const cards = prof.cards || {};
-  return Object.keys(cards)
-    .map(id => ({ id: id, card: getCardById(id), anzahl: cards[id] }))
-    .filter(x => istZutat(x.card) && x.anzahl > 1)
-    .map(x => ({ id: x.id, name: x.card.name, extra: x.anzahl - 1 }))
-    .sort((a, b) => b.extra - a.extra);
-}
-function zutatenVerfuegbar(prof) {
-  return zutatenListe(prof).reduce((sum, x) => sum + x.extra, 0);
-}
-
-// Zutaten einsetzen: zuerst die haeufigsten Doppelten
-function zutatenEinsetzen(prof, n) {
-  const cards = prof.cards || {};
-  const liste = zutatenListe(prof);
-  const verbraucht = [];
-  let rest = n;
-  for (let i = 0; i < liste.length && rest > 0; i++) {
-    const x = liste[i];
-    const nimm = Math.min(x.extra, rest);
-    cards[x.id] -= nimm;
-    rest -= nimm;
-    verbraucht.push({ name: x.name, anzahl: nimm });
-  }
-  return verbraucht;
-}
+function zutatenKarten() { return CARD_DB.filter(c => c.zutat); }
 
 function renderPotions() {
   const prof = currentProfile ? getProfile(currentProfile) : null;
   if (!prof || !document.getElementById('potShelf')) return;
-  const bestand = traenkeVon(prof), aktiv = aktivVon(prof);
+  const bestand = traenkeVon(prof), aktiv = aktivVon(prof), cards = prof.cards || {};
 
   const gesamt = TRAENKE.reduce((s, t) => s + (bestand[t.id] || 0), 0);
   document.getElementById('potHeaderCount').textContent =
@@ -3958,7 +3964,6 @@ function renderPotions() {
   // ---- Regal ----
   const shelf = document.getElementById('potShelf');
   shelf.innerHTML = '';
-  // auch scharf gestellte Traenke zeigen (Bestand kann 0 sein)
   const vorhanden = TRAENKE.filter(t => (bestand[t.id] || 0) > 0 || aktiv[t.id]);
   if (!vorhanden.length) {
     shelf.innerHTML = '<span class="pot-empty">Noch keine Tränke – braue unten deinen ersten oder warte auf den Familien-Bonus.</span>';
@@ -3975,32 +3980,36 @@ function renderPotions() {
     });
   }
 
-  // ---- Zutaten ----
-  const liste = zutatenListe(prof);
-  const verfuegbar = liste.reduce((s, x) => s + x.extra, 0);
-  document.getElementById('potZutatenHint').innerHTML = verfuegbar > 0
-    ? 'Du hast <b>' + verfuegbar + '</b> gewöhnliche Karte' + (verfuegbar === 1 ? '' : 'n') +
-      ' als Doppelte zum Einsatz bereit.'
-    : 'Noch keine Doppelten. Öffne Packs – gewöhnliche Karten sind häufig dabei.';
-  document.getElementById('potIngredients').innerHTML = liste.length
-    ? liste.slice(0, 24).map(x => '<span class="pot-ing">' + x.name +
-        ' <b>×' + x.extra + '</b> <span class="pot-ing-plus">einsetzbar</span></span>').join('')
-    : '<span class="pot-empty">–</span>';
+  // ---- Zutaten-Galerie ----
+  document.getElementById('potZutatenHint').innerHTML =
+    'Zutaten findest du in den Packs – sie laufen dort mit wie jede andere gewöhnliche Karte.';
+  document.getElementById('potIngredients').innerHTML = zutatenKarten().map(z => {
+    const n = cards[z.id] || 0;
+    return '<div class="pot-zut' + (n > 0 ? '' : ' leer') + '">' +
+      '<img src="' + z.image + '" alt="' + z.name + '">' +
+      '<span class="pz-count">' + n + '</span>' +
+      '<span class="pz-name">' + (z.icon || '🧪') + ' ' + z.name + '</span></div>';
+  }).join('');
 
-  // ---- Rezepte (guenstig zuerst) ----
+  // ---- Rezepte (guenstigste zuerst) ----
   const rec = document.getElementById('potRecipes');
   rec.innerHTML = '';
-  TRAENKE.slice().sort((a, b) => (TRANK_REZEPT[a.id] || 0) - (TRANK_REZEPT[b.id] || 0)).forEach(t => {
-    const kosten = TRANK_REZEPT[t.id] || 0;
-    const genug = verfuegbar >= kosten;
+  TRAENKE.slice().sort((a, b) => rezeptKosten(TRANK_REZEPT[a.id]) - rezeptKosten(TRANK_REZEPT[b.id])).forEach(t => {
+    const rezept = TRANK_REZEPT[t.id] || {};
+    const genug = rezeptErfuellt(prof, rezept);
+    const zutTeile = Object.keys(rezept).map(zid => {
+      const c = getCardById(zid) || { name: zid, icon: '🧪' };
+      const haben = cards[zid] || 0, braucht = rezept[zid];
+      return '<span class="pr-ing ' + (haben >= braucht ? 'ok' : 'no') + '">' +
+        (c.icon || '🧪') + ' ' + c.name + ' ' + haben + '/' + braucht + '</span>';
+    }).join('');
     const el = document.createElement('div');
     el.className = 'pot-recipe' + (genug ? '' : ' locked');
     el.innerHTML =
       '<span class="pr-icon">' + t.icon + '</span>' +
       '<span class="pr-text"><span class="pr-name">' + t.name + '</span>' +
-      '<span class="pr-desc">' + t.desc + '</span></span>' +
-      '<span class="pr-cost ' + (genug ? 'ok' : 'no') + '">' + kosten + ' Karten<br>' +
-      (genug ? '✔ bereit' : 'noch ' + (kosten - verfuegbar)) + '</span>';
+      '<span class="pr-desc">' + t.desc + '</span>' +
+      '<span class="pr-ing-line">' + zutTeile + '</span></span>';
     const btn = document.createElement('button');
     btn.className = 'btn-primary btn-small';
     btn.textContent = 'Brauen';
@@ -4017,21 +4026,33 @@ function braueTrank(id) {
   const t = TRAENKE.find(x => x.id === id);
   const msg = document.getElementById('potMsg');
   if (!prof || !t) return;
-  const kosten = TRANK_REZEPT[id] || 0;
-  const verfuegbar = zutatenVerfuegbar(prof);
-  if (verfuegbar < kosten) {
-    if (msg) { msg.textContent = '⚠️ Nicht genug Zutaten für ' + t.name + ' (braucht ' + kosten + ' Karten).'; msg.style.color = '#c0392b'; }
+  const rezept = TRANK_REZEPT[id] || {};
+  if (!rezeptErfuellt(prof, rezept)) {
+    if (msg) {
+      msg.textContent = '⚠️ Es fehlen noch Zutaten für ' + t.name + ': ' + rezeptText(rezept) + '.';
+      msg.style.color = '#c0392b';
+    }
     return;
   }
-  if (!confirm('🧪 ' + t.name + ' brauen?\n\nEs werden ' + kosten + ' gewöhnliche Karten eingesetzt (zuerst die Doppelten).')) return;
-  const verbrauch = zutatenEinsetzen(prof, kosten);
+  if (!confirm('🧪 ' + t.name + ' brauen?\n\nZutaten: ' + rezeptText(rezept))) return;
+  Object.keys(rezept).forEach(zid => {
+    prof.cards[zid] = (prof.cards[zid] || 0) - rezept[zid];
+    if (prof.cards[zid] <= 0) delete prof.cards[zid];
+  });
   traenkeVon(prof)[id] = (traenkeVon(prof)[id] || 0) + 1;
   save();
   renderPotions();
   if (msg) {
-    msg.textContent = '✅ ' + t.name + ' gebraut! Eingesetzt: ' + verbrauch.map(v => v.anzahl + '× ' + v.name).join(', ') + '.';
+    msg.textContent = '✅ ' + t.name + ' gebraut! Verbraucht: ' + rezeptText(rezept) + '.';
     msg.style.color = '#2e7d32';
   }
+}
+
+function rezeptText(rezept) {
+  return Object.keys(rezept || {}).map(zid => {
+    const c = getCardById(zid) || { name: zid };
+    return rezept[zid] + '× ' + c.name;
+  }).join(' + ');
 }
 
 // ---- Trank-Details ----
@@ -4596,7 +4617,7 @@ function renderCollection(filter) {
   if (!currentProfile) return;
   const prof = getProfile(currentProfile);
   const owned = prof.cards || {};
-  const totalUnique = Object.keys(owned).length;
+  const totalUnique = Object.keys(owned).filter(id => !(getCardById(id) || {}).zutat).length;
   const totalCards = allCardsCount();
   
   document.getElementById('collectionCount').textContent = `${totalUnique}/${totalCards}`;
@@ -4618,7 +4639,7 @@ function renderCollection(filter) {
     }));
   } else {
     // Show base cards
-    cards = CARD_DB.map(c => ({
+    cards = CARD_DB.filter(c => !c.zutat).map(c => ({
       ...c,
       count: owned[c.id] || 0
     }));
@@ -6069,8 +6090,10 @@ function renderParentProfile(name) {
   const prof = getProfile(name);
   const tasks = prof.tasks || [];
   const cards = prof.cards || {};
-  const totalCards = Object.values(cards).reduce((a,b) => a + b, 0);
-  const uniqueCards = Object.keys(cards).length;
+  const zutatIds = Object.keys(cards).filter(id => (getCardById(id) || {}).zutat);
+  const totalCards = Object.keys(cards).filter(id => zutatIds.indexOf(id) < 0).reduce((a, id) => a + cards[id], 0);
+  const uniqueCards = Object.keys(cards).filter(id => zutatIds.indexOf(id) < 0).length;
+  const zutatenGesamt = zutatIds.reduce((a, id) => a + cards[id], 0);
 
   const statsDiv = document.getElementById('parentProfileStats');
   statsDiv.innerHTML = `
@@ -6079,7 +6102,8 @@ function renderParentProfile(name) {
       📅 Erstellt: ${new Date(prof.created).toLocaleDateString('de-DE')}<br>
       ✅ Aufgaben erledigt: ${tasks.length}<br>
       🎁 Packs erhalten: ${tasks.length}<br>
-      🃏 Karten gesammelt: ${totalCards} (${uniqueCards} verschiedene)
+      🃏 Karten gesammelt: ${totalCards} (${uniqueCards} verschiedene)<br>
+      🧪 Zutaten im Bestand: ${zutatenGesamt}
     </p>
   `;
 
@@ -6740,7 +6764,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v64';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v65';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
