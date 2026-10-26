@@ -3391,7 +3391,6 @@ const TRAENKE = [
 function todayStr() { return new Date().toISOString().slice(0,10); }
 function traenkeVon(prof) { if (!prof.traenke) prof.traenke = {}; return prof.traenke; }
 function aktivVon(prof)   { if (!prof.aktiv)   prof.aktiv   = {}; return prof.aktiv; }
-function hatAktivenTrank(prof, id) { const a = prof.aktiv || {}; return id ? !!a[id] : Object.keys(a).some(k => a[k]); }
 let pendingTrankMeldungen = [];   // Tage mit Familien-Bonus, fuer das Feier-Popup
 let pendingAchPopups = [];        // Orden, die erst nach der Feier gezeigt werden
 
@@ -6546,7 +6545,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v61';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v62';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 function renderVersionInfo() {
