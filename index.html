@@ -37,6 +37,7 @@
     }catch(_){}
   }
   window.__fehler = zeig;
+  window.addEventListener('error', function(e) { window.__letzterFehler = (e && (e.message || (e.target && e.target.src))) || 'unbekannt'; }, true);
   window.addEventListener('error', function(e){
     if(e && e.target && e.target !== window && e.target.tagName &&
        e.target.tagName !== 'SCRIPT' && e.target.tagName !== 'LINK') return;   // fehlende Bilder ignorieren
@@ -1434,6 +1435,11 @@ html, body {
 /* Sicherheitsnetz: der Hintergrund darf NIE Fingertipps schlucken (App bliebe sonst unbedienbar) */
 .ach-popup { pointer-events: none; }
 .ach-popup.active .ach-popup-box { pointer-events: auto; }
+/* Sicherheitsnetz fuer ALLE Vollbild-Overlays: sie duerfen die App nie blockieren
+   (ein haengendes Overlay macht sonst jeden Fingertipp wirkungslos – ohne Fehlermeldung) */
+.card-reveal, .card-detail-overlay, .album-wahl, .pot-detail, .trank-feier { pointer-events: none; }
+.card-reveal.active > *, .card-detail-overlay.active > *,
+.album-wahl.active > *, .pot-detail.active > *, .trank-feier.active > * { pointer-events: auto; }
 .ach-popup-box {
   background: linear-gradient(160deg, #fffaf0, #f3e3c0);
   border: 3px solid #c5a55a;
@@ -3990,6 +3996,15 @@ function closeAchievementPopup() {
 
 // ===================== NAVIGATION =====================
 function navigateTo(screen) {
+  // Sicherheitsnetz: haengende Vollbild-Overlays beim Bereichswechsel schliessen.
+  // Ein liegengebliebenes Overlay blockiert sonst jeden Fingertipp der ganzen App.
+  try {
+    if (typeof achPopupQueue !== 'undefined') achPopupQueue.length = 0;
+    clearTimeout(achPopupTimer);
+    document.querySelectorAll('.ach-popup, .card-reveal, .card-detail-overlay, .album-wahl, .pot-detail, .trank-feier, #phoenixRitual')
+      .forEach(function(el) { el.classList.remove('active'); });
+  } catch (e) {}
+
   // Hide all screens
   document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = ''; });
   
@@ -7117,7 +7132,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v74';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v75';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Diagnose-Anzeige auf der Startseite: verraet, welcher Stand wirklich geladen wurde.
@@ -7132,6 +7147,10 @@ const APP_DATE = '21.09.2026';
     Object.keys(profs).forEach(n => { kartenN += Object.keys((profs[n] || {}).cards || {}).length; });
   } catch (e) {}
   el.textContent = `Version ${APP_BUILD} · ${profileN} Profile · ${kartenN} Karten · ${ctrl}`;
+  el.style.cursor = 'pointer';
+  el.style.textDecoration = 'underline dotted';
+  el.title = 'Antippen: Selbstdiagnose anzeigen';
+  el.onclick = diagnoseApp;
 })();
 
 function renderVersionInfo() {
@@ -7139,6 +7158,38 @@ function renderVersionInfo() {
   if (!el) return;
   const ctrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? 'aktiv' : 'wird eingerichtet';
   el.textContent = `App-Stand ${APP_VERSION} (${APP_BUILD}) · Offline-Cache: ${ctrl}`;
+}
+
+// ---- Selbstdiagnose (erscheint in der Fehlerleiste ganz oben, also auch bei blockierter App) ----
+function diagnoseApp() {
+  const z = ['=== DIAGNOSE ' + APP_BUILD + ' ==='];
+  try {
+    const sichtbar = [...document.querySelectorAll('.screen')].filter(x => getComputedStyle(x).display !== 'none').map(x => x.id);
+    z.push('Sichtbare Bereiche: ' + (sichtbar.join(', ') || 'KEINE'));
+    z.push('Aktives Profil: ' + (currentProfile || 'KEINES'));
+    const p = (currentProfile && data && data.profiles) ? data.profiles[currentProfile] : null;
+    z.push('Profile gesamt: ' + Object.keys((data && data.profiles) || {}).length);
+    z.push(p ? ('Daten: Karten ' + Object.keys(p.cards || {}).length + ' · Packs ' + (p.packs || 0) + '+' + (p.bonusPacks || 0)
+               + ' · Aufgaben ' + ((p.tasks || []).length) + ' · Orden ' + Object.keys(p.achievements || {}).length
+               + ' · Brauvorgaenge ' + (p.brews ? Object.keys(p.brews).length : 0))
+            : 'Daten: PROFIL FEHLT');
+    const offen = [];
+    document.querySelectorAll('.ach-popup, .card-reveal, .card-detail-overlay, .album-wahl, .pot-detail, .trank-feier, #phoenixRitual, .update-banner')
+      .forEach(el => { if (getComputedStyle(el).display !== 'none') offen.push((el.id || el.className.split(' ')[0]) + '(z' + getComputedStyle(el).zIndex + ')'); });
+    z.push('Offene Overlays: ' + (offen.join(', ') || 'keine'));
+    const proben = [];
+    const nav = document.getElementById('bottomNav');
+    if (nav) { const r = nav.getBoundingClientRect(); proben.push(['Tab-Leiste', Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2)]); }
+    if (currentProfile && !nav) proben.push(['Bildmitte', Math.round(innerWidth / 2), Math.round(innerHeight / 2)]);
+    proben.forEach(pr => {
+      const e = document.elementFromPoint(pr[1], pr[2]);
+      const cs = e ? getComputedStyle(e) : null;
+      z.push('Tipp bei ' + pr[0] + ' erreicht: ' + (e ? (e.tagName + (e.id ? '#' + e.id : '') + (typeof e.className === 'string' && e.className ? '.' + e.className.split(' ')[0] : '')) : 'nichts')
+             + (cs ? ' pe=' + cs.pointerEvents : ''));
+    });
+    z.push('Letzter Fehler: ' + (window.__letzterFehler || 'keiner'));
+  } catch (e) { z.push('Diagnose-Ausnahme: ' + e.message); }
+  if (window.__fehler) window.__fehler(z.join('\n'));
 }
 
 function showUpdateBanner() {
