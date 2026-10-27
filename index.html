@@ -1435,6 +1435,13 @@ html, body {
 /* Sicherheitsnetz: der Hintergrund darf NIE Fingertipps schlucken (App bliebe sonst unbedienbar) */
 .ach-popup { pointer-events: none; }
 .ach-popup.active .ach-popup-box { pointer-events: auto; }
+  .sicherung-box { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .sicherung-btn { font: inherit; font-size: 14px; padding: 9px 16px; border-radius: 12px; cursor: pointer;
+    background: rgba(255,255,255,.10); color: #f4e6c8; border: 1px solid rgba(214,178,94,.45); }
+  .sicherung-btn.leicht { background: rgba(255,255,255,.04); font-size: 13px; padding: 7px 13px; opacity: .85; }
+  .sicherung-status { font-size: 13px; color: #f0dfae; max-width: 560px; text-align: center; line-height: 1.45; white-space: pre-wrap; }
+  #sicherungText { width: min(560px, 88vw); height: 130px; font-size: 11px; font-family: monospace;
+    background: rgba(0,0,0,.45); color: #e8dcc0; border: 1px solid rgba(214,178,94,.4); border-radius: 10px; padding: 8px; }
 /* Sicherheitsnetz fuer ALLE Vollbild-Overlays: sie duerfen die App nie blockieren
    (ein haengendes Overlay macht sonst jeden Fingertipp wirkungslos – ohne Fehlermeldung) */
 .card-reveal, .card-detail-overlay, .album-wahl, .pot-detail, .trank-feier { pointer-events: none; }
@@ -2411,6 +2418,14 @@ body{
     <p class="who-label">Wer bist du?</p>
     <div class="profile-grid" id="profileGrid"></div>
     <div class="build-tag" id="buildTag">Version wird geladen …</div>
+    <div class="sicherung-box">
+      <button class="sicherung-btn" id="btnSicherungExport" type="button">📥 Datensicherung herunterladen</button>
+      <button class="sicherung-btn leicht" id="btnSicherungText" type="button">Als Text anzeigen</button>
+      <label class="sicherung-btn leicht" for="sicherungDatei">⤴ Sicherung zurückspielen</label>
+      <input type="file" id="sicherungDatei" accept=".json,application/json" style="display:none">
+      <div class="sicherung-status" id="sicherungStatus"></div>
+      <textarea id="sicherungText" style="display:none" spellcheck="false"></textarea>
+    </div>
   </div>
 </div>
 
@@ -3748,6 +3763,19 @@ function loadServerBackup() {
 }
 
 function save() {
+  // SICHERUNG: den bisherigen Spielstand wegkopieren, BEVOR ueberschrieben wird.
+  // So laesst sich ein versehentlich leerer/veraenderter Stand immer zurueckholen.
+  try {
+    const alt = localStorage.getItem('magicCardsData');
+    if (alt && alt.length > 20) {
+      localStorage.setItem('magicCardsData_prev', alt);
+      const tag = new Date().toISOString().slice(0, 10);
+      const kk = 'magicCardsData_bak_' + tag;
+      if (!localStorage.getItem(kk)) localStorage.setItem(kk, alt);
+      const alle = Object.keys(localStorage).filter(x => x.indexOf('magicCardsData_bak_') === 0).sort();
+      while (alle.length > 7) localStorage.removeItem(alle.shift());
+    }
+  } catch(e) { /* Sicherung darf nie den Speichervorgang stoeren */ }
   // WICHTIG: Ein Speicher-Fehler (volles Geraet, Kontingent) darf NIE den Ablauf abbrechen.
   try {
     localStorage.setItem('magicCardsData', JSON.stringify(data));
@@ -7132,7 +7160,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v76';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v77';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Diagnose-Anzeige auf der Startseite: verraet, welcher Stand wirklich geladen wurde.
@@ -7159,6 +7187,69 @@ function renderVersionInfo() {
   const ctrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? 'aktiv' : 'wird eingerichtet';
   el.textContent = `App-Stand ${APP_VERSION} (${APP_BUILD}) · Offline-Cache: ${ctrl}`;
 }
+
+// ---- Notfall-Sicherung: Spielstand aus dem Geraet herausziehen / zurueckspielen ----
+function sicherungMeldung(t) { const e = document.getElementById('sicherungStatus'); if (e) e.textContent = t; if (window.__fehler) window.__fehler(t); }
+function sicherungUebersicht(roh) {
+  const d = JSON.parse(roh); const pr = d.profiles || {}; const teile = [];
+  Object.keys(pr).forEach(n => teile.push(n + ': ' + Object.keys((pr[n] || {}).cards || {}).length + ' Karten'));
+  return Math.round(roh.length / 1024) + ' kB · ' + Object.keys(pr).length + ' Profile [' + teile.join(' · ') + ']';
+}
+function sicherungExport() {
+  try {
+    const roh = localStorage.getItem('magicCardsData') || '';
+    if (!roh || roh.length < 20) { sicherungMeldung('Im Geraetespeicher liegt kein Spielstand (leer).'); return; }
+    const stamp = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([roh], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'hp-tcg-sicherung-' + stamp + '.json';
+    document.body.appendChild(a); a.click();
+    setTimeout(function() { a.remove(); }, 60000);   // URL erst spaeter freigeben: langsame Geraete (iPad) brauchen Zeit
+    sicherungMeldung('Sicherung erstellt und gespeichert (Dateien/Downloads): ' + sicherungUebersicht(roh));
+  } catch(e) { sicherungMeldung('Sicherung fehlgeschlagen: ' + e.message); }
+}
+function sicherungAlsText() {
+  try {
+    const roh = localStorage.getItem('magicCardsData') || '';
+    const ta = document.getElementById('sicherungText');
+    if (!ta) return;
+    if (!roh || roh.length < 20) { sicherungMeldung('Im Geraetespeicher liegt kein Spielstand (leer).'); return; }
+    ta.value = roh;
+    ta.style.display = ta.style.display === 'none' ? 'block' : 'none';
+    ta.focus(); ta.select();
+    if (ta.style.display === 'block') sicherungMeldung('Text steht unten (alles markieren und kopieren): ' + sicherungUebersicht(roh));
+  } catch(e) { sicherungMeldung('Anzeige fehlgeschlagen: ' + e.message); }
+}
+function sicherungImport(file) {
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = function() {
+    try {
+      const txt = String(r.result);
+      const d = JSON.parse(txt);
+      if (!d || typeof d !== 'object' || !d.profiles) throw new Error('Das ist keine gueltige Spielstand-Datei.');
+      if (!confirm('Sicherung zurueckspielen?\n\nInhalt: ' + sicherungUebersicht(txt) + '\n\nDer aktuelle Stand im Geraet wird ersetzt (vorher wird er weggesichert).')) return;
+      try { const alt = localStorage.getItem('magicCardsData'); if (alt) localStorage.setItem('magicCardsData_vorImport', alt); } catch(e) {}
+      localStorage.setItem('magicCardsData', txt);
+      data = JSON.parse(txt);
+      sicherungMeldung('Erfolg: ' + Object.keys(d.profiles).length + ' Profile wiederhergestellt. App wird neu geladen …');
+      setTimeout(function() { location.reload(); }, 1500);
+    } catch(e) { sicherungMeldung('Zurueckspielen fehlgeschlagen: ' + e.message); }
+  };
+  r.readAsText(file);
+}
+(function sicherungVerdrahten() {
+  const e = document.getElementById('btnSicherungExport'); if (e) e.onclick = sicherungExport;
+  const t = document.getElementById('btnSicherungText'); if (t) t.onclick = sicherungAlsText;
+  const f = document.getElementById('sicherungDatei');
+  if (f) f.onchange = function() { sicherungImport(this.files && this.files[0]); };
+  try {
+    const roh = localStorage.getItem('magicCardsData') || '';
+    if (roh && roh.length > 20) sicherungMeldung('Im Geraet gesichert: ' + sicherungUebersicht(roh));
+    else sicherungMeldung('Achtung: Im Geraetespeicher liegt kein Spielstand.');
+  } catch(e) {}
+})();
 
 // ---- Selbstdiagnose (erscheint in der Fehlerleiste ganz oben, also auch bei blockierter App) ----
 function diagnoseApp() {
@@ -7214,6 +7305,15 @@ function diagnoseApp() {
         } catch(e) { info += ' · INHALT NICHT LESBAR'; }
       } else { info += ' · LEER'; }
       z.push(info);
+      const baks = Object.keys(localStorage).filter(x => x.indexOf('magicCardsData') === 0 && x !== 'magicCardsData').sort();
+      if (baks.length) {
+        z.push('Sicherungen im Geraet: ' + baks.map(k => {
+          const v = localStorage.getItem(k) || '';
+          let kurz = '-';
+          try { const dd = JSON.parse(v); kurz = Object.keys(dd.profiles || {}).map(n => n.slice(0,8) + ':' + Object.keys((dd.profiles[n]||{}).cards||{}).length + 'K').join(','); } catch(e) { kurz = 'unlesbar'; }
+          return k.replace('magicCardsData', '') + ' ' + Math.round(v.length/1024) + 'kB [' + kurz + ']';
+        }).join(' | '));
+      } else { z.push('Sicherungen im Geraet: keine'); }
     } catch(e) { z.push('Speicher: nicht zugaenglich (' + e.message + ')'); }
   } catch (e) { z.push('Diagnose-Ausnahme: ' + e.message); }
   if (window.__fehler) window.__fehler(z.join('\n'));
