@@ -30,7 +30,10 @@
         b.setAttribute('style','position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#7b0f14;color:#ffe9e9;'+
           'font:13px/1.45 -apple-system,system-ui,sans-serif;padding:10px 12px;white-space:pre-wrap;'+
           'border-top:2px solid #ff8a8a;user-select:text;-webkit-user-select:text');
-        (document.body || document.documentElement).appendChild(b);
+                (document.body || document.documentElement).appendChild(b);
+        // Leiste per Tipp wieder schliessbar
+        b.style.pointerEvents = 'auto';
+        b.addEventListener('click', function() { b.style.display = 'none'; });
       }
       var zusatz = (typeof APP_BUILD !== 'undefined') ? (' [Stand ' + APP_BUILD + ']') : ' [App-Stand noch nicht geladen]';
       if(b.textContent.length < 800) b.textContent += (b.textContent ? '\n' : '') + text + zusatz;
@@ -3945,8 +3948,8 @@ function openBandPack(bandIdx) {
   // Pack-Öffnungs-Animation + Karten-Enthüllung
   showCardReveal(drawn, () => {
     renderDashboard();
-    renderAlbum();
-    renderPackScreen();
+    renderSicher(renderAlbum, 'album');
+    renderSicher(renderPackScreen, 'packs');
     queueAchievementPopups(freshAch);
   });
 }
@@ -4050,26 +4053,26 @@ function navigateTo(screen) {
     renderParentArea();
   } else if (screen === 'dashboard') {
     document.getElementById('screen-dashboard').classList.add('active');
-    renderDashboard();
+    renderSicher(renderDashboard, 'dashboard');
   } else if (screen === 'packs') {
     document.getElementById('screen-packs').classList.add('active');
     document.getElementById('screen-packs').style.display = '';
-    renderPackScreen();
+    renderSicher(renderPackScreen, 'packs');
   } else if (screen === 'collection') {
     document.getElementById('screen-collection').classList.add('active');
-    renderCollection();
+    renderSicher(renderCollection, 'collection');
   } else if (screen === 'album') {
     document.getElementById('screen-album').classList.add('active');
-    renderAlbum();
+    renderSicher(renderAlbum, 'album');
   } else if (screen === 'achievements') {
     document.getElementById('screen-achievements').classList.add('active');
-    renderAchievements();
+    renderSicher(renderAchievements, 'achievements');
   } else if (screen === 'trades') {
     document.getElementById('screen-trades').classList.add('active');
-    renderTrades();
+    renderSicher(renderTrades, 'trades');
   } else if (screen === 'potions') {
     document.getElementById('screen-potions').classList.add('active');
-    renderPotions();
+    renderSicher(renderPotions, 'potions');
   } else if (screen === 'welcome') {
     document.getElementById('screen-welcome').classList.add('active');
   }
@@ -4254,7 +4257,7 @@ function braueTrank(id) {
   prof.brews = prof.brews || {};                 // Zähler für die Tränke-Orden
   prof.brews[id] = (prof.brews[id] || 0) + 1;
   save();
-  renderPotions();
+  renderSicher(renderPotions, 'potions');
   const freshAch = checkAchievements(prof);      // neue Orden sofort freischalten + feiern
   if (freshAch.length) queueAchievementPopups(freshAch);
   if (msg) {
@@ -4981,9 +4984,9 @@ function renderRevealedCards() {
 }
 
 function afterPackOpen() {
-  renderPackScreen();
+  renderSicher(renderPackScreen, 'packs');
   renderDashboard();
-  renderAlbum();
+  renderSicher(renderAlbum, 'album');
 }
 
 // ===================== COLLECTION =====================
@@ -5108,7 +5111,7 @@ function renderCollection(filter) {
 
 function setFilter(filter) {
   currentFilter = filter;
-  renderCollection();
+  renderSicher(renderCollection, 'collection');
 }
 
 // ===================== ALBUM =====================
@@ -5136,7 +5139,7 @@ function toggleBewegteBilder() {
   try { localStorage.setItem('hpAlbumAnimated', bewegteBilder ? '1' : '0'); } catch(e) {}
   document.querySelectorAll('.anim-toggle-btn').forEach(b => b.classList.toggle('active', bewegteBilder));
   renderAlbumBand();
-  renderCollection();
+  renderSicher(renderCollection, 'collection');
 }
 
 // Videos in Album UND Sammlung nur, wenn der Bewegt-Schalter an ist (Detail/Shop/Tausch unberührt)
@@ -5917,7 +5920,7 @@ function halUpgradeFromDetail() {
 
   // halBuy löst Einsatz (angezeigte Karte + Taler) ein und gibt die Halloween-Karte (+ Baron-Bonus)
   halBuy(zielId, opfer.id);
-  renderCollection();
+  renderSicher(renderCollection, 'collection');
   closeCardDetail();
 }
 
@@ -6199,8 +6202,8 @@ function halKarteFuerTaler() {
   const freshAch = checkAchievements(prof);
   save();
   halTokenToast(1, 'Kartentausch im Halloween-Shop');
-  renderCollection();
-  renderAlbum();
+  renderSicher(renderCollection, 'collection');
+  renderSicher(renderAlbum, 'album');
   renderDashboard();
   showCardDetail(cardId);
   queueAchievementPopups(freshAch);
@@ -6235,8 +6238,8 @@ function executeTrade() {
     save();
     closeCardDetail();
     setTimeout(() => showCardReveal([{...funny, isNew: true}], () => {
-      renderCollection();
-      renderAlbum();
+      renderSicher(renderCollection, 'collection');
+      renderSicher(renderAlbum, 'album');
       renderDashboard();
       queueAchievementPopups(freshAch);
     }), 100);
@@ -6315,8 +6318,8 @@ function executeTrade2zu1() {
   save();
   closeCardDetail();
   setTimeout(() => showCardReveal([{...randomCard, isNew: !alreadyOwned}], () => {
-    renderCollection();
-    renderAlbum();
+    renderSicher(renderCollection, 'collection');
+    renderSicher(renderAlbum, 'album');
     renderDashboard();
     queueAchievementPopups(freshAch);
   }), 100);
@@ -6836,7 +6839,7 @@ function confirmTradeAccept() {
     if (!myProf.cards[wId] || myProf.cards[wId] < 1) {
       document.getElementById('tradeConfirmError').textContent = '❌ Du besitzt die benötigte Karte nicht mehr.';
       closeTradeConfirm();
-      renderTrades();
+      renderSicher(renderTrades, 'trades');
       return;
     }
   }
@@ -6845,7 +6848,7 @@ function confirmTradeAccept() {
     offers.splice(idx, 1);
     save();
     closeTradeConfirm();
-    renderTrades();
+    renderSicher(renderTrades, 'trades');
     showSuccess('❌ Dieses Angebot ist nicht mehr gültig – die Karte wurde bereits weggetauscht.');
     return;
   }
@@ -6898,7 +6901,7 @@ function confirmTradeAccept() {
   save();
   closeTradeConfirm();
   showSuccess('🔄 Tausch erfolgreich!');
-  renderTrades();
+  renderSicher(renderTrades, 'trades');
   queueAchievementPopups(freshAch);
 }
 
@@ -6911,7 +6914,7 @@ function deleteTradeOffer(offerId) {
   if (!confirm('Angebot wirklich löschen?')) return;
   offers.splice(idx, 1);
   save();
-  renderTrades();
+  renderSicher(renderTrades, 'trades');
 }
 
 function openCreateTradeModal(cardId) {
@@ -7160,7 +7163,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v77';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v78';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Diagnose-Anzeige auf der Startseite: verraet, welcher Stand wirklich geladen wurde.
@@ -7249,6 +7252,43 @@ function sicherungImport(file) {
     if (roh && roh.length > 20) sicherungMeldung('Im Geraet gesichert: ' + sicherungUebersicht(roh));
     else sicherungMeldung('Achtung: Im Geraetespeicher liegt kein Spielstand.');
   } catch(e) {}
+})();
+
+// Bildschirmaufbau abgesichert: Fehler werden angezeigt statt den Bereich leer zu lassen
+function renderSicher(fn, name) {
+  try { fn(); }
+  catch (e) {
+    let zeile = '';
+    try { const st = (e.stack || '').split('\n'); if (st[1]) zeile = ' in ' + st[1].trim().replace(/^at\s+/, '').replace(/https?:[^ ]*\//g, ''); } catch(x) {}
+    if (window.__fehler) window.__fehler('Bereich ' + name + ' konnte nicht aufgebaut werden: ' + e.message + zeile);
+  }
+}
+
+// ---- Diagnose per Langdruck (ca. 1 Sekunde irgendwo im Bild) ----
+// Wichtig: die Versionszeile gibt es nur auf dem Startbildschirm -> hier ist die Diagnose
+// auch MIT ausgewaehltem Profil erreichbar. passiv=true, damit normale Tipps unberuehrt bleiben.
+(function diagnoseLangdruck() {
+  let timer = null, x0 = 0, y0 = 0;
+  function punkt(e) { return e.touches ? e.touches[0] : e; }
+  function start(e) {
+    if (e.touches && e.touches.length > 1) { clearTimeout(timer); return; }
+    const pt = punkt(e); x0 = pt.clientX; y0 = pt.clientY;
+    clearTimeout(timer);
+    timer = setTimeout(function() { timer = null; diagnoseApp(); }, 900);
+  }
+  function bewegt(e) {
+    if (!timer) return;
+    const pt = punkt(e);
+    if (Math.abs(pt.clientX - x0) > 14 || Math.abs(pt.clientY - y0) > 14) { clearTimeout(timer); timer = null; }
+  }
+  function ende() { clearTimeout(timer); timer = null; }
+  document.addEventListener('touchstart', start, { passive: true });
+  document.addEventListener('touchmove', bewegt, { passive: true });
+  document.addEventListener('touchend', ende, { passive: true });
+  document.addEventListener('touchcancel', ende, { passive: true });
+  document.addEventListener('mousedown', start);
+  document.addEventListener('mousemove', bewegt);
+  document.addEventListener('mouseup', ende);
 })();
 
 // ---- Selbstdiagnose (erscheint in der Fehlerleiste ganz oben, also auch bei blockierter App) ----
