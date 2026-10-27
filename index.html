@@ -17,6 +17,36 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+<script>
+/* Frueher Fehler-Melder: laeuft unabhaengig vom App-Skript und zeigt jeden Fehler
+   als roten Balken unten an. So ist ein Problem auf dem iPad direkt lesbar. */
+(function(){
+  function zeig(text){
+    try{
+      var b = document.getElementById('__errbar');
+      if(!b){
+        b = document.createElement('div');
+        b.id = '__errbar';
+        b.setAttribute('style','position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#7b0f14;color:#ffe9e9;'+
+          'font:13px/1.45 -apple-system,system-ui,sans-serif;padding:10px 12px;white-space:pre-wrap;'+
+          'border-top:2px solid #ff8a8a;user-select:text;-webkit-user-select:text');
+        (document.body || document.documentElement).appendChild(b);
+      }
+      var zusatz = (typeof APP_BUILD !== 'undefined') ? (' [Stand ' + APP_BUILD + ']') : ' [App-Stand noch nicht geladen]';
+      if(b.textContent.length < 800) b.textContent += (b.textContent ? '\n' : '') + text + zusatz;
+    }catch(_){}
+  }
+  window.__fehler = zeig;
+  window.addEventListener('error', function(e){
+    if(e && e.target && e.target !== window && e.target.tagName &&
+       e.target.tagName !== 'SCRIPT' && e.target.tagName !== 'LINK') return;   // fehlende Bilder ignorieren
+    zeig('Fehler: ' + (e && (e.message || (e.target && e.target.src) || 'unbekannt')) + (e && e.lineno ? ' (Zeile ' + e.lineno + ')' : ''));
+  }, true);
+  window.addEventListener('unhandledrejection', function(e){
+    zeig('Fehler (Zusage): ' + ((e.reason && (e.reason.message || e.reason)) || 'unbekannt'));
+  });
+})();
+</script>
 <style>
 /* ============================================================
    CSS – Magische Belohnungen
@@ -152,6 +182,7 @@ html, body {
   margin-bottom: 16px;
   filter: drop-shadow(0 0 8px var(--gold-light));
 }
+.build-tag { margin-top:16px; font-size:11px; letter-spacing:.4px; color:var(--dark-light); opacity:.7; text-align:center; }
 .profile-grid {
   display: flex;
   gap: 16px;
@@ -576,30 +607,31 @@ html, body {
     align-items:center;justify-content:center;perspective:1150px;perspective-origin:50% 44%;
     touch-action:none;-webkit-user-select:none;user-select:none}
   .pk-shadow{position:absolute;left:50%;bottom:30px;width:266px;height:38px;margin-left:-133px;border-radius:50%;
-    background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.62),rgba(0,0,0,0) 70%);filter:blur(3px)}
+    background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.62),rgba(0,0,0,0) 70%)}
   .pk-float{position:relative;transform-style:preserve-3d;animation:pkFloat 6.5s ease-in-out infinite}
   @keyframes pkFloat{0%,100%{transform:scale(1.14) translateY(0) rotateX(0deg)}
     50%{transform:scale(1.14) translateY(-7px) rotateX(1.6deg)}}
   .pk-body{position:relative;width:250px;height:350px;transform-style:preserve-3d;
-    transform:rotateX(-13deg) rotateY(0deg);will-change:transform}
+    transform:rotateX(-13deg) rotateY(0deg)}
   .pk-body.springing{transition:transform .5s cubic-bezier(.2,1.25,.35,1)}
-  .pk-face{position:absolute;backface-visibility:hidden;overflow:hidden;border-radius:5px}
+  .pk-face{position:absolute;backface-visibility:hidden;border-radius:5px}
   .pk-front{left:0;top:0;width:250px;height:350px;transform:translateZ(23px);
     background:#2a0a0e url('pack/pack-front.jpg') center/cover no-repeat;
     box-shadow:inset 0 0 60px rgba(0,0,0,.55),0 18px 40px rgba(0,0,0,.55)}
   .pk-back{left:0;top:0;width:250px;height:350px;transform:rotateY(180deg) translateZ(23px);
     background:#2a0a0e url('pack/pack-foil.jpg') center/cover no-repeat}
   .pk-left{left:calc(50% - 23px);top:0;width:46px;height:350px;transform:rotateY(-90deg) translateZ(125px);
-    background:#2a0a0e url('pack/pack-foil.jpg') -200px center/cover no-repeat;filter:brightness(.8);
-    box-shadow:inset 14px 0 18px rgba(0,0,0,.75)}
+    background:#2a0a0e url('pack/pack-foil.jpg') -200px center/cover no-repeat;
+    box-shadow:inset 0 0 0 999px rgba(0,0,0,.20),inset 14px 0 18px rgba(0,0,0,.75)}
   .pk-right{left:calc(50% - 23px);top:0;width:46px;height:350px;transform:rotateY(90deg) translateZ(125px);
-    background:#2a0a0e url('pack/pack-foil.jpg') -60px center/cover no-repeat;filter:brightness(1.05);
-    box-shadow:inset -14px 0 18px rgba(0,0,0,.6)}
+    background:#2a0a0e url('pack/pack-foil.jpg') -60px center/cover no-repeat;
+    box-shadow:inset 0 0 0 999px rgba(255,255,255,.05),inset -14px 0 18px rgba(0,0,0,.6)}
   .pk-topf{left:0;top:calc(50% - 23px);width:250px;height:46px;transform:rotateX(90deg) translateZ(175px);
-    background:#2a0a0e url('pack/pack-foil.jpg') center/cover no-repeat;filter:brightness(.72);
-    box-shadow:inset 0 0 22px rgba(0,0,0,.7)}
+    background:#2a0a0e url('pack/pack-foil.jpg') center/cover no-repeat;
+    box-shadow:inset 0 0 0 999px rgba(0,0,0,.28),inset 0 0 22px rgba(0,0,0,.7)}
   .pk-botf{left:0;top:calc(50% - 23px);width:250px;height:46px;transform:rotateX(-90deg) translateZ(175px);
-    background:#2a0a0e url('pack/pack-foil.jpg') center/cover no-repeat;filter:brightness(.5)}
+    background:#2a0a0e url('pack/pack-foil.jpg') center/cover no-repeat;
+    box-shadow:inset 0 0 0 999px rgba(0,0,0,.5)}
   .pk-sheen{position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(105deg,transparent 38%,rgba(255,240,200,.16) 47%,rgba(255,255,255,.28) 50%,rgba(255,240,200,.16) 53%,transparent 62%);
     background-size:220% 100%;animation:pkSheen 5.5s ease-in-out infinite}
@@ -630,14 +662,17 @@ html, body {
     letter-spacing:2px;color:rgba(242,226,184,.6)}
   .pk-fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
   /* ===== Bonus-Pack: goldene Folie (nur Flaechen filtern, nie .pk-float/.pk-body – das zerstoert preserve-3d) ===== */
-  .pk-bonus .pk-front{filter:sepia(.78) saturate(2.2) contrast(1.16) brightness(1.0) hue-rotate(-5deg);
-    box-shadow:inset 0 0 60px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.55),0 0 26px rgba(240,205,110,.45)}
+  .pk-bonus .pk-front{background-image:linear-gradient(178deg,#f6e3a6,#d3a63c 42%,#a97c1c 78%,#7d5a12),
+    url('pack/pack-front.jpg');background-position:center,center;background-size:cover,cover;background-repeat:no-repeat,no-repeat;
+    background-blend-mode:multiply,normal;
+    box-shadow:inset 0 0 60px rgba(60,38,0,.45),0 18px 40px rgba(0,0,0,.55),0 0 26px rgba(240,205,110,.45)}
   .pk-bonus .pk-back,.pk-bonus .pk-left,.pk-bonus .pk-right,
-  .pk-bonus .pk-topf,.pk-bonus .pk-botf{filter:sepia(.85) saturate(2.1) contrast(1.1) brightness(1.0) hue-rotate(-7deg)}
-  .pk-bonus .pk-goldo{position:absolute;inset:0;pointer-events:none;mix-blend-mode:soft-light;
-    background:radial-gradient(ellipse at 50% 40%,rgba(255,232,150,.7),rgba(168,116,26,.5) 66%,rgba(74,48,6,.8))}
-  .pk-bonus .pk-goldo::after{content:'';position:absolute;inset:0;mix-blend-mode:overlay;opacity:.5;
-    background:linear-gradient(160deg,rgba(255,246,210,.55),rgba(255,214,120,0) 45%,rgba(120,80,10,.65))}
+  .pk-bonus .pk-topf,.pk-bonus .pk-botf{background-blend-mode:multiply,normal;
+    background-image:linear-gradient(180deg,#e9c874,#b98f28),url('pack/pack-foil.jpg')}
+  .pk-bonus .pk-goldo{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 40%,rgba(255,236,168,.34),rgba(168,116,26,.18) 66%,rgba(74,48,6,.30))}
+  .pk-bonus .pk-goldo::after{content:'';position:absolute;inset:0;opacity:.45;
+    background:linear-gradient(160deg,rgba(255,250,225,.5),rgba(255,214,120,0) 45%,rgba(120,80,10,.5))}
   .pk-bonus .pk-sub{color:#ffe9a8;letter-spacing:3px}
   .pk-bonus .pk-left{box-shadow:inset 14px 0 18px rgba(0,0,0,.55)}
   .pk-bonus .pk-right{box-shadow:inset -14px 0 18px rgba(0,0,0,.45)}
@@ -2366,6 +2401,7 @@ body{
     <p class="subtitle">Ein Harry-Potter-Kartenspiel für fleißige Zauberer!</p>
     <p class="who-label">Wer bist du?</p>
     <div class="profile-grid" id="profileGrid"></div>
+    <div class="build-tag" id="buildTag">Version wird geladen …</div>
   </div>
 </div>
 
@@ -3700,7 +3736,13 @@ function loadServerBackup() {
 }
 
 function save() {
-  localStorage.setItem('magicCardsData', JSON.stringify(data));
+  // WICHTIG: Ein Speicher-Fehler (volles Geraet, Kontingent) darf NIE den Ablauf abbrechen.
+  try {
+    localStorage.setItem('magicCardsData', JSON.stringify(data));
+  } catch(e) {
+    if (window.__fehler) window.__fehler('Spielstand konnte nicht im Geraet gespeichert werden: ' +
+      (e && e.name ? e.name : 'Fehler') + '. Weiter spielen ist moeglich, Aenderungen gehen beim Neuladen verloren.');
+  }
   // Also save to server for backup
   try {
     var xhr = new XMLHttpRequest();
@@ -7062,8 +7104,16 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v72';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v73';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
+
+// Diagnose-Anzeige auf der Startseite: verraet, welcher Stand wirklich geladen wurde.
+(function(){
+  const el = document.getElementById('buildTag');
+  if (!el) return;
+  const ctrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? 'offline bereit' : 'offline noch nicht bereit';
+  el.textContent = `Version ${APP_BUILD} · ${ctrl}`;
+})();
 
 function renderVersionInfo() {
   const el = document.getElementById('versionLine');
