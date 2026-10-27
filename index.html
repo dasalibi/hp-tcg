@@ -1431,6 +1431,9 @@ html, body {
   padding: 24px;
 }
 .ach-popup.active { display: flex; }
+/* Sicherheitsnetz: der Hintergrund darf NIE Fingertipps schlucken (App bliebe sonst unbedienbar) */
+.ach-popup { pointer-events: none; }
+.ach-popup.active .ach-popup-box { pointer-events: auto; }
 .ach-popup-box {
   background: linear-gradient(160deg, #fffaf0, #f3e3c0);
   border: 3px solid #c5a55a;
@@ -3543,6 +3546,9 @@ function checkAchievements(prof) {
       fresh.push(a);
     }
   });
+  // WICHTIG: neu erreichte Orden sofort sichern – sonst werden beim naechsten Start
+  // alle laengst erreichten Orden erneut als "neu" gefeiert (Popup-Lawine, App blockiert).
+  if (fresh.length) save();
   return fresh;
 }
 
@@ -3954,6 +3960,7 @@ function renderAchievements() {
 
 // ---- Popups für neu erreichte Orden (nacheinander) ----
 let achPopupQueue = [];
+let achPopupTimer = null;
 function queueAchievementPopups(fresh) {
   if (!fresh || !fresh.length) return;
   achPopupQueue = achPopupQueue.concat(fresh);
@@ -3968,9 +3975,15 @@ function showNextAchievementPopup() {
   document.getElementById('achPopupName').textContent = next.name;
   document.getElementById('achPopupDesc').textContent = next.desc;
   popup.classList.add('active');
+  // Selbst-Weiterschalten, falls das Popup unbeachtet stehen bleibt
+  clearTimeout(achPopupTimer);
+  achPopupTimer = setTimeout(function() {
+    if (popup.classList.contains('active')) closeAchievementPopup();
+  }, 9000);
 }
 function closeAchievementPopup() {
   const popup = document.getElementById('achPopup');
+  clearTimeout(achPopupTimer);
   popup.classList.remove('active');
   setTimeout(() => { if (achPopupQueue.length) showNextAchievementPopup(); }, 250);
 }
@@ -7104,7 +7117,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v73';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v74';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Diagnose-Anzeige auf der Startseite: verraet, welcher Stand wirklich geladen wurde.
@@ -7112,7 +7125,13 @@ const APP_DATE = '21.09.2026';
   const el = document.getElementById('buildTag');
   if (!el) return;
   const ctrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? 'offline bereit' : 'offline noch nicht bereit';
-  el.textContent = `Version ${APP_BUILD} · ${ctrl}`;
+  let profileN = 0, kartenN = 0;
+  try {
+    const profs = (data && data.profiles) ? data.profiles : {};
+    profileN = Object.keys(profs).length;
+    Object.keys(profs).forEach(n => { kartenN += Object.keys((profs[n] || {}).cards || {}).length; });
+  } catch (e) {}
+  el.textContent = `Version ${APP_BUILD} · ${profileN} Profile · ${kartenN} Karten · ${ctrl}`;
 })();
 
 function renderVersionInfo() {
