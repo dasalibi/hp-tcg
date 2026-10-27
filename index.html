@@ -122,6 +122,7 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 .screen.active { display: block; }
+.screen, .screen > * { min-height: 0; }   /* iOS-Safari: verhindert kollabierenden Scrollbereich */
 .screen.album-screen.active { display: flex; }
 
 /* Bottom Navigation */
@@ -2597,6 +2598,11 @@ body{
   <canvas id="pkFx" class="pk-fx"></canvas>
 
   <!-- (Pack-Animation ist jetzt das 3D-Pack oben) -->
+
+  <div class="empty-state" id="packEmpty" style="display:none;">
+    <div class="empty-icon">📭</div>
+    <p>Du hast keine Packs mehr.<br>Erledige Aufgaben, um neue zu verdienen!</p>
+  </div>
   </div>
 
 
@@ -2605,12 +2611,6 @@ body{
     <div class="reveal-cards" id="revealCards"></div>
     <button class="btn-primary" onclick="afterPackOpen()" style="margin-top:8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:17px;height:17px;vertical-align:-3px;margin-right:6px"><rect x="3" y="5" width="13" height="16" rx="2"/><path d="M8 2h11a2 2 0 0 1 2 2v14"/></svg>In die Sammlung</button>
   </div>
-
-  <div class="empty-state" id="packEmpty" style="display:none;">
-    <div class="empty-icon">📭</div>
-    <p>Du hast keine Packs mehr.<br>Erledige Aufgaben, um neue zu verdienen!</p>
-  </div>
-</div>
 
 <!-- ==================== SCREEN: COLLECTION ==================== -->
 <div class="screen" id="screen-collection">
@@ -3637,6 +3637,7 @@ const STORAGE_KEY = 'hp_magische_belohnungen';
 
 // ===================== STATE =====================
 let currentProfile = null;
+let currentScreen = 'welcome';
 let pinBuffer = '';
 let pendingTask = null;
 let pendingSonstigesText = '';
@@ -4036,6 +4037,7 @@ function navigateTo(screen) {
       .forEach(function(el) { el.classList.remove('active'); });
   } catch (e) {}
 
+  currentScreen = screen;
   // Hide all screens
   document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = ''; });
   
@@ -7163,7 +7165,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v78';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v79';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Diagnose-Anzeige auf der Startseite: verraet, welcher Stand wirklich geladen wurde.
@@ -7345,6 +7347,21 @@ function diagnoseApp() {
         } catch(e) { info += ' · INHALT NICHT LESBAR'; }
       } else { info += ' · LEER'; }
       z.push(info);
+      try {
+        const schirm = document.getElementById('screen-' + (currentScreen || 'welcome')) || document.querySelector('.screen.active');
+        const vv = window.visualViewport;
+        z.push('Viewport: innerHeight ' + innerHeight + ' · clientHeight ' + document.documentElement.clientHeight +
+               (vv ? ' · visualViewport ' + Math.round(vv.height) : ''));
+        z.push('App/Grundgeruest: body ' + document.body.clientHeight + ' · #app ' +
+               (document.getElementById('app') ? document.getElementById('app').clientHeight : '?') +
+               ' · .screen ' + (schirm ? schirm.clientHeight : '?'));
+        if (schirm) {
+          const r = schirm.getBoundingClientRect();
+          z.push('Aktiver Bereich: top ' + Math.round(r.top) + ' · Hoehe ' + Math.round(r.height) +
+                 ' · scrollbar ' + (schirm.scrollHeight > schirm.clientHeight + 2 ? ('ja (' + schirm.scrollHeight + ')' ) : 'nein') +
+                 ' · Inhalt startet bei y=' + Math.round(schirm.firstElementChild ? schirm.firstElementChild.getBoundingClientRect().top : r.top));
+        }
+      } catch(e) { z.push('Geometrie-Messung: ' + e.message); }
       const baks = Object.keys(localStorage).filter(x => x.indexOf('magicCardsData') === 0 && x !== 'magicCardsData').sort();
       if (baks.length) {
         z.push('Sicherungen im Geraet: ' + baks.map(k => {
