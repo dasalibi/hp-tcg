@@ -7132,7 +7132,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v75';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v76';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Diagnose-Anzeige auf der Startseite: verraet, welcher Stand wirklich geladen wurde.
@@ -7188,6 +7188,33 @@ function diagnoseApp() {
              + (cs ? ' pe=' + cs.pointerEvents : ''));
     });
     z.push('Letzter Fehler: ' + (window.__letzterFehler || 'keiner'));
+
+    // --- Selbsttest: jeden Bereich einmal oeffnen, Fehler abfangen, Zeichenzahl messen ---
+    const vorher = [...document.querySelectorAll('.screen')].filter(x => getComputedStyle(x).display !== 'none').map(x => x.id)[0] || 'welcome';
+    ['dashboard','packs','collection','album','trades','potions','achievements'].forEach(function(id) {
+      try {
+        navigateTo(id);
+        const s = document.getElementById('screen-' + id);
+        const n = s ? (s.innerText || '').replace(/\s+/g, ' ').trim().length : -1;
+        z.push('  Bereich ' + id + ': ' + n + ' Zeichen' + (n === 0 ? '  <-- LEER' : ''));
+      } catch(e) { z.push('  Bereich ' + id + ': AUSNAHME ' + e.message); }
+    });
+    try { navigateTo(vorher.replace('screen-', '')); } catch (e) {}
+
+    // --- Rohspeicher pruefen: steht im Geraetespeicher dasselbe wie im Arbeitsspeicher? ---
+    try {
+      const raw = localStorage.getItem('magicCardsData') || '';
+      let info = 'Speicher: ' + Math.round(raw.length / 1024) + ' kB';
+      if (raw) {
+        try {
+          const d = JSON.parse(raw);
+          const pr = d.profiles || {};
+          info += ' · Profile ' + Object.keys(pr).length + ' [' +
+            Object.keys(pr).map(nm => nm.slice(0, 12) + ':' + Object.keys((pr[nm] || {}).cards || {}).length + 'K').join(', ') + ']';
+        } catch(e) { info += ' · INHALT NICHT LESBAR'; }
+      } else { info += ' · LEER'; }
+      z.push(info);
+    } catch(e) { z.push('Speicher: nicht zugaenglich (' + e.message + ')'); }
   } catch (e) { z.push('Diagnose-Ausnahme: ' + e.message); }
   if (window.__fehler) window.__fehler(z.join('\n'));
 }
