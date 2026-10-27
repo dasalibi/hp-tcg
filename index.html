@@ -18,9 +18,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
 <script>
-/* Frueher Fehler-Melder: laeuft unabhaengig vom App-Skript und zeigt jeden Fehler
-   als roten Balken unten an. So ist ein Problem auf dem iPad direkt lesbar. */
-(function(){
+/* Fehler-Melder und Diagnose-Werkzeuge laufen NUR im Diagnose-Modus
+   (App mit "?debug=1" aufrufen). Im normalen Betrieb ist nichts davon aktiv. */
+if (/[?&]debug=1/.test(location.search)) (function(){
   function zeig(text){
     try{
       var b = document.getElementById('__errbar');
@@ -30,20 +30,19 @@
         b.setAttribute('style','position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#7b0f14;color:#ffe9e9;'+
           'font:13px/1.45 -apple-system,system-ui,sans-serif;padding:10px 12px;white-space:pre-wrap;'+
           'border-top:2px solid #ff8a8a;user-select:text;-webkit-user-select:text');
-                (document.body || document.documentElement).appendChild(b);
-        // Leiste per Tipp wieder schliessbar
+        (document.body || document.documentElement).appendChild(b);
         b.style.pointerEvents = 'auto';
         b.addEventListener('click', function() { b.style.display = 'none'; });
       }
       var zusatz = (typeof APP_BUILD !== 'undefined') ? (' [Stand ' + APP_BUILD + ']') : ' [App-Stand noch nicht geladen]';
-      if(b.textContent.length < 800) b.textContent += (b.textContent ? '\n' : '') + text + zusatz;
+      if(b.textContent.length < 3000) b.textContent += (b.textContent ? '\n' : '') + text + zusatz;
     }catch(_){}
   }
   window.__fehler = zeig;
   window.addEventListener('error', function(e) { window.__letzterFehler = (e && (e.message || (e.target && e.target.src))) || 'unbekannt'; }, true);
   window.addEventListener('error', function(e){
     if(e && e.target && e.target !== window && e.target.tagName &&
-       e.target.tagName !== 'SCRIPT' && e.target.tagName !== 'LINK') return;   // fehlende Bilder ignorieren
+       e.target.tagName !== 'SCRIPT' && e.target.tagName !== 'LINK') return;
     zeig('Fehler: ' + (e && (e.message || (e.target && e.target.src) || 'unbekannt')) + (e && e.lineno ? ' (Zeile ' + e.lineno + ')' : ''));
   }, true);
   window.addEventListener('unhandledrejection', function(e){
@@ -3784,8 +3783,7 @@ function save() {
   try {
     localStorage.setItem('magicCardsData', JSON.stringify(data));
   } catch(e) {
-    if (window.__fehler) window.__fehler('Spielstand konnte nicht im Geraet gespeichert werden: ' +
-      (e && e.name ? e.name : 'Fehler') + '. Weiter spielen ist moeglich, Aenderungen gehen beim Neuladen verloren.');
+    console.error('Spielstand konnte nicht im Geraet gespeichert werden:', e);
   }
   // Also save to server for backup
   try {
@@ -7165,25 +7163,21 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v79';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v80';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
-// Diagnose-Anzeige auf der Startseite: verraet, welcher Stand wirklich geladen wurde.
+// Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
 (function(){
   const el = document.getElementById('buildTag');
   if (!el) return;
-  const ctrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? 'offline bereit' : 'offline noch nicht bereit';
-  let profileN = 0, kartenN = 0;
-  try {
-    const profs = (data && data.profiles) ? data.profiles : {};
-    profileN = Object.keys(profs).length;
-    Object.keys(profs).forEach(n => { kartenN += Object.keys((profs[n] || {}).cards || {}).length; });
-  } catch (e) {}
-  el.textContent = `Version ${APP_BUILD} · ${profileN} Profile · ${kartenN} Karten · ${ctrl}`;
-  el.style.cursor = 'pointer';
-  el.style.textDecoration = 'underline dotted';
-  el.title = 'Antippen: Selbstdiagnose anzeigen';
-  el.onclick = diagnoseApp;
+  const ctrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? 'offline bereit' : 'offline wird eingerichtet';
+  el.textContent = `Version ${APP_BUILD} · ${ctrl}`;
+  if (/[?&]debug=1/.test(location.search)) {      // Selbstdiagnose nur im Diagnose-Modus
+    el.style.cursor = 'pointer';
+    el.style.textDecoration = 'underline dotted';
+    el.title = 'Antippen: Selbstdiagnose';
+    el.onclick = diagnoseApp;
+  }
 })();
 
 function renderVersionInfo() {
@@ -7194,7 +7188,7 @@ function renderVersionInfo() {
 }
 
 // ---- Notfall-Sicherung: Spielstand aus dem Geraet herausziehen / zurueckspielen ----
-function sicherungMeldung(t) { const e = document.getElementById('sicherungStatus'); if (e) e.textContent = t; if (window.__fehler) window.__fehler(t); }
+function sicherungMeldung(t) { const e = document.getElementById('sicherungStatus'); if (e) e.textContent = t; }
 function sicherungUebersicht(roh) {
   const d = JSON.parse(roh); const pr = d.profiles || {}; const teile = [];
   Object.keys(pr).forEach(n => teile.push(n + ': ' + Object.keys((pr[n] || {}).cards || {}).length + ' Karten'));
@@ -7258,18 +7252,14 @@ function sicherungImport(file) {
 
 // Bildschirmaufbau abgesichert: Fehler werden angezeigt statt den Bereich leer zu lassen
 function renderSicher(fn, name) {
-  try { fn(); }
-  catch (e) {
-    let zeile = '';
-    try { const st = (e.stack || '').split('\n'); if (st[1]) zeile = ' in ' + st[1].trim().replace(/^at\s+/, '').replace(/https?:[^ ]*\//g, ''); } catch(x) {}
-    if (window.__fehler) window.__fehler('Bereich ' + name + ' konnte nicht aufgebaut werden: ' + e.message + zeile);
-  }
+  // Ein Fehler in einer Ansicht darf nie den ganzen Bereich leer lassen.
+  try { fn(); } catch (e) { console.error('Bereich ' + name + ' konnte nicht aufgebaut werden:', e); }
 }
 
 // ---- Diagnose per Langdruck (ca. 1 Sekunde irgendwo im Bild) ----
 // Wichtig: die Versionszeile gibt es nur auf dem Startbildschirm -> hier ist die Diagnose
 // auch MIT ausgewaehltem Profil erreichbar. passiv=true, damit normale Tipps unberuehrt bleiben.
-(function diagnoseLangdruck() {
+if (/[?&]debug=1/.test(location.search)) (function diagnoseLangdruck() {
   let timer = null, x0 = 0, y0 = 0;
   function punkt(e) { return e.touches ? e.touches[0] : e; }
   function start(e) {
