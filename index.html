@@ -2406,6 +2406,49 @@ body{
   }
 }
 
+
+  /* ===== Zauberkessel (Brauen) ===== */
+  .brau-szene { position:fixed; inset:0; z-index:2600; display:none; background:rgba(8,5,2,.93); }
+  .brau-szene.active { display:flex; align-items:center; justify-content:center; padding:14px; }
+  .brau-box { pointer-events:auto; position:relative; width:min(560px,94vw); max-height:96vh; overflow-y:auto; text-align:center; }
+  .brau-titel { font-family:var(--font-serif); font-size:21px; color:#f0dfae; margin:2px 0 4px; }
+  .brau-hinweis { font-size:14px; color:#cdbf9d; margin:2px 0 8px; min-height:19px; }
+  .brau-kessel { position:relative; width:min(400px,74vw); margin:0 auto; aspect-ratio:538/633; touch-action:none; }
+  .brau-kessel-bild { width:100%; display:block; filter:drop-shadow(0 12px 26px rgba(0,0,0,.65)); }
+  .brau-sud { position:absolute; left:50%; top:28.3%; width:68.8%; height:35.7%; transform:translate(-50%,-50%);
+    border-radius:50%; background:#5f6a74; opacity:.94; overflow:hidden;
+    background-image:radial-gradient(circle at 40% 34%, rgba(255,255,255,.5), rgba(255,255,255,0) 58%);
+    box-shadow:inset 0 0 24px rgba(0,0,0,.6);
+    transition:background-color 1s ease, box-shadow 1s ease; }
+  .brau-sud::after { content:''; position:absolute; inset:-30%;
+    background:conic-gradient(from 0deg, rgba(255,255,255,0), rgba(255,255,255,.30), rgba(255,255,255,0) 55%);
+    opacity:0; }
+  .brau-kessel.ruehrt .brau-sud::after { opacity:1; animation:brauDreh 1.05s linear infinite; }
+  @keyframes brauDreh { to { transform:rotate(360deg); } }
+  .brau-bubble { position:absolute; bottom:-14%; width:9%; aspect-ratio:1; border-radius:50%;
+    background:rgba(255,255,255,.55); animation:brauBlub 2.1s ease-in infinite; }
+  @keyframes brauBlub { 0%{transform:translateY(0) scale(.4); opacity:0} 25%{opacity:.8} 100%{transform:translateY(-115%) scale(1); opacity:0} }
+  .brau-dampf { position:absolute; left:34%; top:6%; width:32%; height:44%; pointer-events:none; opacity:0; transition:opacity .8s ease; }
+  .brau-kessel.heiss .brau-dampf { opacity:1; }
+  .brau-dampf i { position:absolute; bottom:0; width:26%; aspect-ratio:1; border-radius:50%;
+    background:rgba(255,255,255,.16); filter:blur(7px); animation:brauDampf 3.4s ease-in infinite; }
+  @keyframes brauDampf { 0%{transform:translateY(20%) scale(.5); opacity:0} 30%{opacity:.85} 100%{transform:translateY(-160%) scale(1.7); opacity:0} }
+  .brau-zutaten { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:12px auto 6px; min-height:76px; }
+  .brau-zut { width:74px; height:74px; object-fit:contain; cursor:grab; touch-action:none;
+    filter:drop-shadow(0 4px 9px rgba(0,0,0,.55)); transition:transform .18s ease; }
+  .brau-zut.rein { transform:scale(.1); opacity:0; }
+  .brau-flakon { position:absolute; left:50%; top:26%; width:26%; transform:translate(-50%,-50%) scale(.15);
+    opacity:0; pointer-events:none; z-index:3; }
+  .brau-flakon.steigt { animation:brauFlakon 1.7s cubic-bezier(.2,.9,.3,1.2) forwards; }
+  @keyframes brauFlakon { 0%{opacity:0; transform:translate(-50%,-50%) scale(.15)} 30%{opacity:1} 100%{opacity:1; transform:translate(-50%,-38%) scale(1.12)} }
+  .brau-blitz { position:fixed; inset:0; background:radial-gradient(circle at 50% 42%, rgba(255,246,214,.95), rgba(255,230,160,0) 62%);
+    opacity:0; pointer-events:none; z-index:3400; transition:opacity .28s ease; }
+  .brau-blitz.an { opacity:1; }
+  .brau-funken { position:absolute; left:50%; top:28.3%; width:2px; height:2px; pointer-events:none; }
+  .brau-funken span { position:absolute; width:7px; height:7px; border-radius:50%; background:#ffe9a8;
+    box-shadow:0 0 8px rgba(255,220,140,.9); animation:brauFunke .85s ease-out forwards; }
+  @keyframes brauFunke { 0%{opacity:1; transform:translate(0,0) scale(1)} 100%{opacity:0; transform:translate(var(--dx),var(--dy)) scale(.2)} }
+  .brau-stand { font-size:13px; color:#b8a883; margin-bottom:8px; }
 </style>
 </head>
 <body>
@@ -4031,7 +4074,7 @@ function navigateTo(screen) {
   try {
     if (typeof achPopupQueue !== 'undefined') achPopupQueue.length = 0;
     clearTimeout(achPopupTimer);
-    document.querySelectorAll('.ach-popup, .card-reveal, .card-detail-overlay, .album-wahl, .pot-detail, .trank-feier, #phoenixRitual')
+    document.querySelectorAll('.ach-popup, .card-reveal, .card-detail-overlay, .album-wahl, .pot-detail, .trank-feier, .brau-szene, .brau-blitz, #phoenixRitual')
       .forEach(function(el) { el.classList.remove('active'); });
   } catch (e) {}
 
@@ -4248,7 +4291,17 @@ function braueTrank(id) {
     }
     return;
   }
-  if (!confirm('🧪 ' + t.name + ' brauen?\n\nZutaten: ' + rezeptText(rezept))) return;
+  oeffneBrauSzene(id);                            // statt Bestaetigung: der Zauberkessel
+}
+
+// Ausfuehrung nach dem gelungenen Brauen im Kessel (verbraucht Zutaten, schreibt Trank gut)
+function braueTrankAusfuehren(id) {
+  const prof = getProfile(currentProfile);
+  const t = TRAENKE.find(x => x.id === id);
+  const msg = document.getElementById('potMsg');
+  if (!prof || !t) return;
+  const rezept = TRANK_REZEPT[id] || {};
+  if (!rezeptErfuellt(prof, rezept)) return;
   Object.keys(rezept).forEach(zid => {
     prof.cards[zid] = (prof.cards[zid] || 0) - rezept[zid];
     if (prof.cards[zid] <= 0) delete prof.cards[zid];
@@ -4271,6 +4324,201 @@ function rezeptText(rezept) {
     const c = getCardById(zid) || { name: zid };
     return rezept[zid] + '× ' + c.name;
   }).join(' + ');
+}
+
+
+// ===== Zauberkessel: magisches Brau-Erlebnis =====
+const ZUT_FARBE = { 'hp-zut-001':[122,140,190], 'hp-zut-002':[70,150,80], 'hp-zut-003':[95,75,55],
+                    'hp-zut-004':[150,40,40], 'hp-zut-005':[212,216,228], 'hp-zut-006':[110,95,55] };
+const ZUT_BILD = { 'hp-zut-001':`kessel/zut-mondstein.png`, 'hp-zut-002':`kessel/zut-kiem.png`,
+                   'hp-zut-003':`kessel/zut-bezoar.png`, 'hp-zut-004':`kessel/zut-drachenblut.png`,
+                   'hp-zut-005':`kessel/zut-einhorn.png`, 'hp-zut-006':`kessel/zut-alraune.png` };
+const FLASKON_BILD = { felix:`kessel/flakon-felix.png`, fuelle:`kessel/flakon-fuelle.png`,
+                       sucher:`kessel/flakon-sucher.png`, erleuchtung:`kessel/flakon-erleuchtung.png`,
+                       verwandlung:`kessel/flakon-verwandlung.png` };
+const TRANK_FARBE = { felix:[228,172,62], fuelle:[84,172,92], sucher:[152,92,212],
+                      erleuchtung:[196,222,238], verwandlung:[228,112,52] };
+let brauZustand = null;
+let brauRuehrHandler = null;
+
+function brauSzeneInit() {
+  const kb = document.getElementById('brauKesselBild');
+  if (kb) kb.src = `kessel/kessel.png`;
+  const sud = document.getElementById('brauSud');
+  if (sud) for (let i = 0; i < 5; i++) {
+    const b = document.createElement('i');
+    b.className = 'brau-bubble';
+    b.style.left = (8 + i * 19) + '%';
+    b.style.animationDelay = (i * 0.42) + 's';
+    sud.appendChild(b);
+  }
+  const fb = document.getElementById('brauFertig');
+  if (fb) fb.onclick = function () {
+    const id = brauZustand ? brauZustand.id : null;
+    schliesseBrauSzene();
+    if (id) braueTrankAusfuehren(id);
+  };
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', brauSzeneInit); else brauSzeneInit();
+
+function oeffneBrauSzene(id) {
+  const prof = getProfile(currentProfile);
+  const t = TRAENKE.find(x => x.id === id);
+  if (!prof || !t) return;
+  const rezept = TRANK_REZEPT[id] || {};
+  const stuecke = [];
+  Object.keys(rezept).forEach(zid => { for (let i = 0; i < rezept[zid]; i++) stuecke.push(zid); });
+  brauZustand = { id: id, t: t, stuecke: stuecke, rein: 0, summe: [0,0,0], laeuft: false, ruehrt: false, winkelSumme: 0, letzterWinkel: null };
+  const sud = document.getElementById('brauSud');
+  sud.style.backgroundColor = '#5f6a74';
+  sud.style.boxShadow = 'inset 0 0 24px rgba(0,0,0,.6)';
+  const k = document.getElementById('brauKessel');
+  k.classList.remove('ruehrt', 'heiss');
+  const fl = document.getElementById('brauFlakon');
+  fl.classList.remove('steigt'); fl.style.opacity = ''; fl.removeAttribute('src');
+  document.getElementById('brauFertig').style.display = 'none';
+  const row = document.getElementById('brauZutaten');
+  row.innerHTML = '';
+  stuecke.forEach(function (zid) {
+    const c = getCardById(zid) || { name: zid };
+    const el = document.createElement('img');
+    el.className = 'brau-zut';
+    el.src = ZUT_BILD[zid] || '';
+    el.alt = c.name; el.title = c.name; el.draggable = false;
+    el.dataset.zid = zid;
+    row.appendChild(el);
+    brauZutDragVerdrahten(el);
+  });
+  document.getElementById('brauTitel').textContent = '🧪 ' + t.name;
+  document.getElementById('brauHinweis').textContent = stuecke.length + ' Zutaten – ziehe sie in den Kessel!';
+  document.getElementById('brauStand').textContent = '0 / ' + stuecke.length + ' Zutaten im Kessel';
+  document.getElementById('brauSzene').classList.add('active');
+}
+
+function brauZutDragVerdrahten(el) {
+  el.addEventListener('pointerdown', function (e) {
+    if (!brauZustand || brauZustand.laeuft || el.dataset.weg) return;
+    e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+    el.style.transition = 'none';
+    const sx = e.clientX, sy = e.clientY;
+    function move(ev) {
+      const dx = ev.clientX - sx, dy = ev.clientY - sy;
+      el.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.12)';
+    }
+    function up(ev) {
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
+      const r = document.getElementById('brauKessel').getBoundingClientRect();
+      const px = ((ev.clientX - r.left) / r.width) * 100;
+      const py = ((ev.clientY - r.top) / r.height) * 100;
+      const nx = (px - 50) / 34.4, ny = (py - 28.28) / 17.85;
+      if (nx * nx + ny * ny <= 1.3) brauZutatRein(el);
+      else { el.style.transition = 'transform .25s ease'; el.style.transform = ''; }
+    }
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+  });
+}
+
+function brauZutatRein(el) {
+  if (!brauZustand || el.dataset.weg) return;
+  el.dataset.weg = '1';
+  const zid = el.dataset.zid;
+  el.classList.add('rein');
+  setTimeout(function () { el.remove(); }, 240);
+  const f = ZUT_FARBE[zid] || [150,150,150];
+  brauZustand.summe[0] += f[0]; brauZustand.summe[1] += f[1]; brauZustand.summe[2] += f[2];
+  brauZustand.rein++;
+  const n = brauZustand.rein;
+  const sud = document.getElementById('brauSud');
+  sud.style.backgroundColor = 'rgb(' + Math.round(brauZustand.summe[0]/n) + ',' + Math.round(brauZustand.summe[1]/n) + ',' + Math.round(brauZustand.summe[2]/n) + ')';
+  brauFunkenBurst();
+  document.getElementById('brauStand').textContent = n + ' / ' + brauZustand.stuecke.length + ' Zutaten im Kessel';
+  if (n >= brauZustand.stuecke.length) brauRuehrenStart();
+}
+
+function brauFunkenBurst() {
+  const box = document.getElementById('brauFunken');
+  if (!box) return;
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement('span');
+    const a = Math.random() * Math.PI * 2, d = 34 + Math.random() * 56;
+    s.style.setProperty('--dx', Math.cos(a) * d + 'px');
+    s.style.setProperty('--dy', (Math.sin(a) * d - 26) + 'px');
+    box.appendChild(s);
+    setTimeout(function () { s.remove(); }, 900);
+  }
+}
+
+function brauRuehrenStart() {
+  if (!brauZustand) return;
+  document.getElementById('brauHinweis').textContent = '🌀 Rühre mit dem Finger kreisend im Kessel!';
+  const k = document.getElementById('brauKessel');
+  k.classList.add('heiss');
+  brauZustand.winkelSumme = 0;
+  brauZustand.letzterWinkel = null;
+  brauRuehrHandler = function (e) {
+    if (!brauZustand || brauZustand.laeuft) return;
+    const r = k.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * 100;
+    const y = ((e.clientY - r.top) / r.height) * 100;
+    const w = Math.atan2((y - 28.28) / 17.85, (x - 50) / 34.4);
+    if (brauZustand.letzterWinkel !== null) {
+      let d = w - brauZustand.letzterWinkel;
+      if (d > Math.PI) d -= 2 * Math.PI;
+      if (d < -Math.PI) d += 2 * Math.PI;
+      brauZustand.winkelSumme += Math.abs(d);
+    }
+    brauZustand.letzterWinkel = w;
+    if (brauZustand.winkelSumme > 6.2 && !k.classList.contains('ruehrt')) k.classList.add('ruehrt');
+    if (brauZustand.winkelSumme > 12.6) {
+      k.removeEventListener('pointermove', brauRuehrHandler);
+      brauRuehrHandler = null;
+      brauAbschluss();
+    }
+  };
+  k.addEventListener('pointermove', brauRuehrHandler);
+}
+
+function brauAbschluss() {
+  if (!brauZustand || brauZustand.laeuft) return;
+  brauZustand.laeuft = true;
+  const k = document.getElementById('brauKessel');
+  const sud = document.getElementById('brauSud');
+  k.classList.add('ruehrt');
+  document.getElementById('brauHinweis').textContent = '✨ Der Trank nimmt Gestalt an …';
+  const ziel = TRANK_FARBE[brauZustand.id] || [160,130,200];
+  setTimeout(function () {
+    sud.style.backgroundColor = 'rgb(' + ziel[0] + ',' + ziel[1] + ',' + ziel[2] + ')';
+    sud.style.boxShadow = 'inset 0 0 26px rgba(0,0,0,.5), 0 0 44px rgba(' + ziel[0] + ',' + ziel[1] + ',' + ziel[2] + ',.8)';
+    const blitz = document.getElementById('brauBlitz');
+    blitz.classList.add('an');
+    setTimeout(function () { blitz.classList.remove('an'); }, 620);
+  }, 1500);
+  setTimeout(function () {
+    k.classList.remove('ruehrt');
+    const fl = document.getElementById('brauFlakon');
+    fl.src = FLASKON_BILD[brauZustand.id] || brauZustand.t.img;
+    fl.style.opacity = '0';
+    fl.classList.add('steigt');
+    document.getElementById('brauFertig').style.display = '';
+    document.getElementById('brauHinweis').textContent = '🎉 ' + brauZustand.t.name + ' ist fertig!';
+  }, 2500);
+}
+
+function schliesseBrauSzene() {
+  document.getElementById('brauSzene').classList.remove('active');
+  const k = document.getElementById('brauKessel');
+  if (k) {
+    k.classList.remove('ruehrt', 'heiss');
+    if (brauRuehrHandler) { k.removeEventListener('pointermove', brauRuehrHandler); brauRuehrHandler = null; }
+  }
+  const fb = document.getElementById('brauFertig'); if (fb) fb.style.display = 'none';
+  const blitz = document.getElementById('brauBlitz'); if (blitz) blitz.classList.remove('an');
+  brauZustand = null;
 }
 
 // ---- Trank-Details ----
@@ -7162,8 +7410,8 @@ function setStreak() {
 init();
 
 // ===================== APP-VERSION & UPDATES =====================
-const APP_VERSION = '2.6';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v80';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
+const APP_BUILD = 'v81';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
@@ -7297,7 +7545,7 @@ function diagnoseApp() {
                + ' · Brauvorgaenge ' + (p.brews ? Object.keys(p.brews).length : 0))
             : 'Daten: PROFIL FEHLT');
     const offen = [];
-    document.querySelectorAll('.ach-popup, .card-reveal, .card-detail-overlay, .album-wahl, .pot-detail, .trank-feier, #phoenixRitual, .update-banner')
+    document.querySelectorAll('.ach-popup, .card-reveal, .card-detail-overlay, .album-wahl, .pot-detail, .trank-feier, .brau-szene, .brau-blitz, #phoenixRitual, .update-banner')
       .forEach(el => { if (getComputedStyle(el).display !== 'none') offen.push((el.id || el.className.split(' ')[0]) + '(z' + getComputedStyle(el).zIndex + ')'); });
     z.push('Offene Overlays: ' + (offen.join(', ') || 'keine'));
     const proben = [];
@@ -7424,6 +7672,26 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<!-- ==================== BRAU-SZENE (Zauberkessel) ==================== -->
+<div class="brau-szene" id="brauSzene">
+  <div class="brau-box">
+    <div class="brau-titel" id="brauTitel">🧪 Brauen</div>
+    <div class="brau-hinweis" id="brauHinweis"></div>
+    <div class="brau-kessel" id="brauKessel">
+      <img class="brau-kessel-bild" id="brauKesselBild" alt="Hexenkessel">
+      <div class="brau-sud" id="brauSud"></div>
+      <div class="brau-dampf"><i style="left:12%"></i><i style="left:44%;animation-delay:.9s"></i><i style="left:74%;animation-delay:1.7s"></i></div>
+      <div class="brau-funken" id="brauFunken"></div>
+      <img class="brau-flakon" id="brauFlakon" alt="">
+    </div>
+    <div class="brau-stand" id="brauStand"></div>
+    <div class="brau-zutaten" id="brauZutaten"></div>
+    <button class="btn-primary" id="brauFertig" style="display:none;margin-top:6px;">In dein Regal stellen ✨</button>
+    <div><button class="btn-secondary" style="margin-top:8px;" onclick="schliesseBrauSzene()">Abbrechen</button></div>
+  </div>
+</div>
+<div class="brau-blitz" id="brauBlitz"></div>
+
 <!-- ==================== TRANK-FEIER (Familienbonus) ==================== -->
 <div class="pot-detail" id="potDetail">
   <div class="pot-detail-box">

@@ -2,10 +2,22 @@
    Magische Belohnungen – Service Worker
    Cached animierte Porträt-Videos für sofortige Wiedergabe
    ============================================================ */
-const CACHE_NAME = 'hp-tcg-v80';
+const CACHE_NAME = 'hp-tcg-v81';
 const BASE = '.';
 
 const PRECACHE_URLS = [
+  `${BASE}/kessel/flakon-felix.png`,
+  `${BASE}/kessel/flakon-fuelle.png`,
+  `${BASE}/kessel/flakon-sucher.png`,
+  `${BASE}/kessel/flakon-erleuchtung.png`,
+  `${BASE}/kessel/flakon-verwandlung.png`,
+  `${BASE}/kessel/kessel.png`,
+  `${BASE}/kessel/zut-mondstein.png`,
+  `${BASE}/kessel/zut-kiem.png`,
+  `${BASE}/kessel/zut-bezoar.png`,
+  `${BASE}/kessel/zut-drachenblut.png`,
+  `${BASE}/kessel/zut-einhorn.png`,
+  `${BASE}/kessel/zut-alraune.png`,
   `${BASE}/`,
   `${BASE}/index.html`,
   `${BASE}/manifest.json`,
