@@ -2440,7 +2440,7 @@ body{
   .brau-flakon { position:absolute; left:50%; top:26%; width:26%; transform:translate(-50%,-50%) scale(.15);
     opacity:0; pointer-events:none; z-index:3; }
   .brau-flakon.steigt { animation:brauFlakon 1.7s cubic-bezier(.2,.9,.3,1.2) forwards; }
-  @keyframes brauFlakon { 0%{opacity:0; transform:translate(-50%,-50%) scale(.15)} 30%{opacity:1} 100%{opacity:1; transform:translate(-50%,-38%) scale(1.12)} }
+  @keyframes brauFlakon { 0%{opacity:0; transform:translate(-50%,-50%) scale(.15)} 30%{opacity:1} 100%{opacity:1; transform:translate(-50%,-140%) scale(1.05)} }
   .brau-blitz { position:fixed; inset:0; background:radial-gradient(circle at 50% 42%, rgba(255,246,214,.95), rgba(255,230,160,0) 62%);
     opacity:0; pointer-events:none; z-index:3400; transition:opacity .28s ease; }
   .brau-blitz.an { opacity:1; }
@@ -4505,7 +4505,7 @@ function brauAbschluss() {
     fl.style.opacity = '0';
     fl.classList.add('steigt');
     document.getElementById('brauFertig').style.display = '';
-    document.getElementById('brauHinweis').textContent = '🎉 ' + brauZustand.t.name + ' ist fertig!';
+    document.getElementById('brauHinweis').textContent = '';
   }, 2500);
 }
 
@@ -7411,7 +7411,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v81';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v82';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
