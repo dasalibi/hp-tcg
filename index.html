@@ -6600,7 +6600,13 @@ function showCardReveal(cards, callback) {
   try {
     currentPackCards = cards;
     renderRevealedCards();
-    // cardReveal ist Kind von screen-packs – muss sichtbar sein
+    // Der Reveal liegt im Pack-Screen: komplett dorthin wechseln. Sonst bleiben zwei
+    // Screens aktiv, teilen sich die Hoehe und die Karten landen unten unter dem alten Screen.
+    const vorherigerScreen = (function() {
+      const akt = document.querySelector('.screen.active');
+      return akt && akt.id ? akt.id : 'screen-dashboard';
+    })();
+    document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = ''; });
     document.getElementById('screen-packs').classList.add('active');
     document.getElementById('packIdle').style.display = 'none';
     const btn = document.querySelector('#cardReveal .btn-primary');
@@ -6615,6 +6621,14 @@ function showCardReveal(cards, callback) {
       if (typeof savedCallback === 'function') {
         setTimeout(savedCallback, 50);
       }
+      // Zurueck zum vorherigen Bereich, falls der Callback nicht selbst wechselt
+      setTimeout(function() {
+        try {
+          if (!document.querySelector('.screen.active')) {
+            navigateTo(vorherigerScreen.replace('screen-', ''));
+          }
+        } catch (e) {}
+      }, 120);
     };
     document.getElementById('cardReveal').classList.add('active');
   } catch(e) {
@@ -7412,7 +7426,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v84';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v85';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
