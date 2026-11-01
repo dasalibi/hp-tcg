@@ -6208,55 +6208,17 @@ function renderHalloweenShop() {
   if (!box) return;
 
   const aktiv = halloweenActive();
-  const st = halState();
   const tokens = currentProfile ? halTokens(currentProfile) : 0;
-  const bought = currentProfile ? halBought(currentProfile) : [];
-  const ids = Object.keys(HALLOWEEN_CARDS).filter(id => id !== HALLOWEEN_SEASON.rewardId);
-  const gekauft12 = ids.filter(id => bought.includes(id)).length;
-  const baronDa = bought.includes(HALLOWEEN_SEASON.rewardId);
   const tage = halloweenDaysLeft();
 
-  if (!aktiv && !bought.length && !tokens) { box.style.display = 'none'; return; }
+  // Seit dem Saisonende zeigt die Startseite nur noch Taler-Stand + Hinweis;
+  // ohne Taler taucht gar keine Halloween-Box mehr auf.
+  if (!aktiv && tokens <= 0) { box.style.display = 'none'; return; }
   box.style.display = 'block';
 
   const countdown = aktiv
     ? `<span class="hal-days">noch ${tage} ${tage === 1 ? 'Tag' : 'Tage'}</span>`
     : `<span class="hal-days hal-over">Saison beendet · Taler bleiben gültig</span>`;
-
-  const halProf = currentProfile ? getProfile(currentProfile) : null;
-  const profCards = (halProf ? (halProf.cards || {}) : {});
-  const kacheln = ids.map(id => {
-    const c = HALLOWEEN_CARDS[id];
-    const hat = bought.includes(id);
-    const vid = hat ? cardVideoSrc(id, halProf) : null;
-    const basisId = halBasisFuerZiel(id);
-    const opfer = basisId ? halOpferKarte(basisId, profCards) : null;
-    const einsatzOk = !basisId || !!opfer;
-    const leistbar = tokens >= HALLOWEEN_SEASON.price && !hat && einsatzOk;
-    return `<div class="hal-item ${hat ? 'owned' : 'locked'} ${leistbar ? 'affordable' : ''}"
-                 ${hat ? `onclick="showCardDetail('${id}')"` : (einsatzOk ? `onclick="halBuy('${id}')"` : '')}>
-      ${hat ? (vid ? `<video src="${vid}" autoplay loop muted playsinline></video>`
-                   : `<img src="${c.image}" alt="${c.name}" loading="lazy">`)
-            : `<div class="hal-silhouette">🎃</div>`}
-      <div class="hal-name">${c.name}</div>
-      ${hat ? '<div class="hal-owned-tag">✓</div>'
-            : (einsatzOk
-                ? `<div class="hal-price">🎃 ${HALLOWEEN_SEASON.price} + 1 Karte</div>`
-                : `<div class="hal-price hal-need-basis">1 Karte fehlt</div>`)}
-    </div>`;
-  }).join('');
-
-  const baron = HALLOWEEN_CARDS[HALLOWEEN_SEASON.rewardId];
-  const baronVid = baronDa ? cardVideoSrc(HALLOWEEN_SEASON.rewardId, halProf) : null;
-  const baronKachel = `<div class="hal-item hal-baron ${baronDa ? 'owned' : 'locked'}"
-      ${baronDa ? `onclick="showCardDetail('${HALLOWEEN_SEASON.rewardId}')"` : ''}>
-    ${baronDa ? (baronVid ? `<video src="${baronVid}" autoplay loop muted playsinline></video>`
-                          : `<img src="${baron.image}" alt="${baron.name}" loading="lazy">`)
-              : `<div class="hal-silhouette">👻</div>`}
-    <div class="hal-name">${baron.name}</div>
-    ${baronDa ? '<div class="hal-owned-tag">✓</div>'
-              : `<div class="hal-price">${gekauft12}/12</div>`}
-  </div>`;
 
   // Schenken (nur wenn es andere Profile gibt)
   const andere = Object.keys(data.profiles || {}).filter(n => n !== currentProfile);
@@ -6275,10 +6237,8 @@ function renderHalloweenShop() {
     </div>
     <p class="hal-hint">
       ${aktiv ? `<strong>Taler verdienen:</strong> 1 pro Aufgabe · 1 pro 3er-Serie · 5 pro Wochenchallenge – nur während der Saison.` : '<strong>Die Saison ist beendet – neue Taler gibt es nicht mehr.</strong>'}
-      Deine Taler verfallen nicht: Jede Karte kostet ${HALLOWEEN_SEASON.price} Taler + 1 Basiskarte (oder deren Strandparty-Version) – auch später noch.
+      Deine Taler verfallen nicht: Öffne in der Sammlung eine Basiskarte und verwandle sie mit ${HALLOWEEN_SEASON.price} Talern und der Karte in ihre Halloween-Version – jederzeit.
     </p>
-    <div class="hal-progress">${gekauft12} von 12 Halloween-Karten gesammelt</div>
-    <div class="hal-grid">${kacheln}${baronKachel}</div>
     ${giftButtons ? `<div class="hal-gift">${giftButtons}</div>` : ''}
     <p class="hal-msg" id="halMsg"></p>
   `;
@@ -7438,7 +7398,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v86';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v87';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
