@@ -3296,6 +3296,17 @@ const CARD_DB = [
   { id:'hp-146', name:'Der Hogwarts-Express', rarity:'rare', type:'Gegenstand', subtype:'Die rote Dampflok', house:'—', desc:'Die scharlachrote Dampflok, die jedes Jahr am 1. September von Gleis 9 3/4 nach Hogwarts faehrt.', image:'cards/hp-146.jpg' },
   { id:'hp-147', name:'Der schwarze See', rarity:'common', type:'Ort', subtype:'Die Ueberfahrt nach Hogwarts', house:'—', desc:'Im ersten Jahr fahren die Erstklaessler im Boot ueber den See - und sehen Hogwarts zum ersten Mal.', image:'cards/hp-147.jpg' },
   { id:'hp-148', name:'Bane', rarity:'common', type:'Charakter', subtype:'Der Zentaur', house:'—', desc:'Ein Zentaur aus dem Verbotenen Wald, misstrauisch gegenueber Menschen und ihren Absichten.', image:'cards/hp-148.jpg' },
+  // ---- Die Kammer des Schreckens · Teil 2 ----
+  { id:'hp-149', name:'Die Maulende Myrte', rarity:'rare', type:'Charakter', subtype:'Geist von Hogwarts', house:'Ravenclaw', desc:'Myrte spukt im Mädchenklo von Hogwarts und ist nicht gerade begeistert, wenn jemand sie stört. Doch sie weiß mehr über die Kammer des Schreckens, als Harry zunächst ahnt.', image:'cards/hp-149.jpg' },
+  { id:'hp-150', name:'Colin Creevey', rarity:'common', type:'Charakter', subtype:'Harrys Bewunderer', house:'Gryffindor', desc:'Colin ist Harry Potters begeisterter Bewunderer und hat seine Kamera fast immer dabei. In seinem ersten Hogwarts-Jahr möchte er am liebsten jeden magischen Augenblick festhalten.', image:'cards/hp-150.jpg' },
+  { id:'hp-151', name:'Professor Sprout', rarity:'common', type:'Charakter', subtype:'Professorin für Kräuterkunde', house:'Hufflepuff', desc:'Professor Sprout unterrichtet Kräuterkunde in den Gewächshäusern von Hogwarts. Ihre Alraunen sind nicht nur laut, sondern auch wichtig für alle, die vom Blick des Basilisken versteinert wurden.', image:'cards/hp-151.jpg' },
+  { id:'hp-152', name:'Tom Riddle als Schüler', rarity:'legendary', type:'Charakter', subtype:'Das Geheimnis des Tagebuchs', house:'Slytherin', desc:'Tom Riddle war ein glänzender Schüler und Vertrauensschüler in Hogwarts. Doch hinter seinem höflichen Auftreten verbarg sich ein Geheimnis, das Harry Jahre später in einem alten Tagebuch entdeckt.', image:'cards/hp-152.jpg' },
+  { id:'hp-153', name:'Der fliegende Ford Anglia', rarity:'rare', type:'Gegenstand', subtype:'Das Auto der Weasleys', house:'—', desc:'Eigentlich sollte das alte Auto der Weasleys unsichtbar fliegen können. Doch als Harry und Ron damit nach Hogwarts reisen, läuft nicht alles nach Plan.', image:'cards/hp-153.jpg' },
+  { id:'hp-154', name:'Die Peitschende Weide', rarity:'common', type:'Ort', subtype:'Ein ungewöhnlicher Baum', house:'—', desc:'Dieser Baum auf dem Hogwarts-Gelände schlägt mit seinen Ästen nach allem, was ihm zu nahe kommt. Harry und Ron lernen das kennen, als ihr fliegendes Auto in seinen Zweigen landet.', image:'cards/hp-154.jpg' },
+  { id:'hp-155', name:'Der Duellierclub', rarity:'common', type:'Ort', subtype:'Zauberduelle in Hogwarts', house:'—', desc:'Im Duellierclub sollen die Schülerinnen und Schüler lernen, sich mit Zaubern zu verteidigen. Als Harry gegen Draco antritt, sorgt eine Schlange für eine Überraschung.', image:'cards/hp-155.jpg' },
+  { id:'hp-156', name:'Der Heuler', rarity:'common', type:'Gegenstand', subtype:'Ein lauter Brief', house:'—', desc:'Ein roter Brief, den man lieber sofort öffnen sollte! Rons Heuler von seiner Mutter verkündet vor versammelter Großer Halle, was sie von seiner Fahrt im fliegenden Auto hält.', image:'cards/hp-156.jpg' },
+  { id:'hp-157', name:'Der Vielsaft-Trank', rarity:'rare', type:'Gegenstand', subtype:'Verwandlungstrank', house:'—', desc:'Dieser komplizierte Trank lässt einen Menschen vorübergehend wie jemand anderes aussehen. Harry, Ron und Hermine brauen ihn heimlich, um mehr über die Kammer des Schreckens herauszufinden.', image:'cards/hp-157.jpg' },
+  { id:'hp-158', name:'Molly Weasley', rarity:'rare', type:'Charakter', subtype:'Mutter der Weasley-Familie', house:'Gryffindor', desc:'Im Fuchsbau sorgt Molly mit viel Herz und noch mehr Entschlossenheit für ihre Familie. Auch Harry ist bei den Weasleys willkommen – selbst wenn Ron und er gerade mit einem fliegenden Auto verschwunden sind.', image:'cards/hp-158.jpg' },
   // ---- Zutaten fuer das Alchimielabor ------------------------------------------
   // Gewöhnliche Seltenheit: sie laufen genau wie andere Commons in die Packs.
   // Über die Markierung zutat:true bleiben sie aus Sammlung, Album und Zählern raus.
@@ -3382,6 +3393,8 @@ const ALBUM_BANDS = [
     reward: 1 },
   { id: 2, title: 'Die Kammer des Schreckens', short: 'Band 2', icon: '📗', bg: 'album/bg-band2.jpg',
     cards: ['hp-017','hp-013','hp-085','hp-040','hp-047','hp-058','hp-053','hp-070','hp-048','hp-067','hp-087','hp-034','hp-033'],
+    title2: 'Die Kammer des Schreckens · Teil 2',
+    cards2: ['hp-149','hp-150','hp-151','hp-152','hp-153','hp-154','hp-155','hp-156','hp-157','hp-158'],
     reward: 2 },
   { id: 3, title: 'Der Gefangene von Askaban', short: 'Band 3', icon: '📘', bg: 'album/bg-band3.jpg',
     cards: ['hp-009','hp-061','hp-089','hp-088','hp-078','hp-079','hp-080','hp-066','hp-052','hp-094','hp-046','hp-092','hp-091','hp-054','hp-043'],
@@ -7398,7 +7411,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v87';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v88';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
