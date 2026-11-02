@@ -2,7 +2,7 @@
    Magische Belohnungen – Service Worker
    Cached animierte Porträt-Videos für sofortige Wiedergabe
    ============================================================ */
-const CACHE_NAME = 'hp-tcg-v93';
+const CACHE_NAME = 'hp-tcg-v94';
 const BASE = '.';
 
 const PRECACHE_URLS = [
@@ -100,6 +100,16 @@ const PRECACHE_URLS = [
   `${BASE}/cards/hp-196.jpg`,
   `${BASE}/cards/hp-197.jpg`,
   `${BASE}/cards/hp-198.jpg`,
+  `${BASE}/cards/hp-199.jpg`,
+  `${BASE}/cards/hp-200.jpg`,
+  `${BASE}/cards/hp-201.jpg`,
+  `${BASE}/cards/hp-202.jpg`,
+  `${BASE}/cards/hp-203.jpg`,
+  `${BASE}/cards/hp-204.jpg`,
+  `${BASE}/cards/hp-205.jpg`,
+  `${BASE}/cards/hp-206.jpg`,
+  `${BASE}/cards/hp-207.jpg`,
+  `${BASE}/cards/hp-208.jpg`,
   `${BASE}/album/bg-band1.jpg`,
   `${BASE}/album/bg-band2.jpg`,
   `${BASE}/album/bg-band3.jpg`,

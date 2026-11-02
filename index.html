@@ -3351,6 +3351,17 @@ const CARD_DB = [
   { id:'hp-196', name:'Bill Weasley', rarity:'common', type:'Charakter', subtype:'Fluchbrecher bei Gringotts', house:'Gryffindor', desc:'Bill ist der älteste Weasley-Sohn und arbeitet als Fluchbrecher in den alten Gräbern Ägyptens. In diesem Jahr wird er von Fenrir Greyback angefallen – und ist danach nicht mehr ganz derselbe.', image:'cards/hp-196.jpg' },
   { id:'hp-197', name:'Dumbledores Büro', rarity:'common', type:'Ort', subtype:'Arbeitszimmer des Schulleiters', house:'—', desc:'Hinter der steinernen Wendeltreppe liegt Dumbledores rundes Büro voller summender Silberinstrumente. Hier steht das Denkarium, hier sitzt Fawkes auf seiner Stange – und hier erfährt Harry die schlimmste Wahrheit.', image:'cards/hp-197.jpg' },
   { id:'hp-198', name:'Der Slug-Club', rarity:'common', type:'Ort', subtype:'Slughorns Abendgesellschaften', house:'—', desc:'Bei Slughorn treffen sich nur die vielversprechendsten Schüler zu Kerzenlicht, Kristallgläsern und guten Gesprächen. Wer eingeladen wird, darf sich geschmeichelt fühlen – und erfährt trotzdem nur das, was Slughorn preisgeben will.', image:'cards/hp-198.jpg' },
+  // ---- Die Heiligtümer des Todes · Teil 2 ----
+  { id:'hp-199', name:'Das Diadem von Ravenclaw', rarity:'legendary', type:'Gegenstand', subtype:'Verlorene Krone der Gründerin', house:'Ravenclaw', desc:'Rowena Ravenclaws Diadem verleiht seinem Träger Weisheit – sagen die Legenden. Voldemort machte daraus einen Horkrux und versteckte es im Raum der Wünsche, wo es jahrhundertelang niemand fand.', image:'cards/hp-199.jpg' },
+  { id:'hp-200', name:'Der Drache von Gringotts', rarity:'rare', type:'Kreatur', subtype:'Blinder Wächter der Verliese', house:'—', desc:'Tief unter der Zaubererbank bewacht ein blinder Drache die ältesten Verliese von Gringotts. Wer ihn reizt, wird verbrannt – wer ihn befreit, bekommt eine wilde Flucht durch die Decke der Bank.', image:'cards/hp-200.jpg' },
+  { id:'hp-201', name:'Der Stammbaum der Blacks', rarity:'rare', type:'Gegenstand', subtype:'Wandteppich in Grimmauldplatz 12', house:'Slytherin', desc:'Auf diesem alten Wandteppich ist jeder Zweig der Familie Black verewigt. Wer gegen die Familie handelte, wurde einfach weggesengt – ein Loch im Stoff erinnert an Sirius.', image:'cards/hp-201.jpg' },
+  { id:'hp-202', name:'Crabbe', rarity:'rare', type:'Charakter', subtype:'Dracos Gefolgsmann', house:'Slytherin', desc:'Crabbe ist Dracos massiger Schatten und macht meistens genau das, was Malfoy ihm sagt. Im Raum der Wünsche entfesselt er ein Feuer, das er nicht mehr beherrschen kann.', image:'cards/hp-202.jpg' },
+  { id:'hp-203', name:'Goyle', rarity:'rare', type:'Charakter', subtype:'Dracos Gefolgsmann', house:'Slytherin', desc:'Goyle ist der zweite stille Schatten an Dracos Seite und versteht selten, worum es eigentlich geht. In der Schlacht von Hogwarts steht er trotzdem auf der falschen Seite.', image:'cards/hp-203.jpg' },
+  { id:'hp-204', name:'Griphook', rarity:'common', type:'Charakter', subtype:'Goblin der Zaubererbank', house:'—', desc:'Griphook arbeitet in Gringotts und kennt die Verliese besser als jeder Zauberer. Er hilft Harry bei der Flucht – aber nur gegen einen Preis, den Harry später bereut.', image:'cards/hp-204.jpg' },
+  { id:'hp-205', name:'Das Haus der Lovegoods', rarity:'common', type:'Ort', subtype:'Turm nahe Ottery St. Catchpole', house:'Ravenclaw', desc:'Das Haus der Lovegoods sieht aus wie ein schwarz gestrichener Schachturm und ist voller seltsamer Erfindungen. Hier hängt das Symbol der Heiligtümer an der Wand – und Xenophilius verrät es aus Angst.', image:'cards/hp-205.jpg' },
+  { id:'hp-206', name:'Die Todesser', rarity:'common', type:'Charakter', subtype:'Voldemorts Anhänger', house:'Slytherin', desc:'Hinter silbernen Masken verbergen sich Voldemorts Anhänger, wenn sie zusammenkommen. In diesem Jahr sitzen sie wieder offen am Tisch – und niemand wagt mehr, ihnen zu widersprechen.', image:'cards/hp-206.jpg' },
+  { id:'hp-207', name:'Borgin & Burkes', rarity:'common', type:'Ort', subtype:'Laden in der Nokturngasse', house:'—', desc:'Zwischen staubigen Vitrinen liegen hier abgetrennte Hände, Totenköpfe und Gegenstände, über die niemand gern spricht. Draco kommt hierher, um etwas zu reparieren, das besser kaputt geblieben wäre.', image:'cards/hp-207.jpg' },
+  { id:'hp-208', name:'Fang', rarity:'common', type:'Tier', subtype:'Hagrids Hund', house:'—', desc:'Fang ist ein riesiger, gutmütiger Hund und Hagrids ständiger Begleiter. Er bellt viel lauter, als er beißt – und in der Schlacht von Hogwarts kämpft er trotzdem mit.', image:'cards/hp-208.jpg' },
   // ---- Zutaten fuer das Alchimielabor ------------------------------------------
   // Gewöhnliche Seltenheit: sie laufen genau wie andere Commons in die Packs.
   // Über die Markierung zutat:true bleiben sie aus Sammlung, Album und Zählern raus.
@@ -3462,6 +3473,8 @@ const ALBUM_BANDS = [
     reward: 6 },
   { id: 7, title: 'Die Heiligtümer des Todes', short: 'Band 7', icon: '📘', bg: 'album/bg-band7.jpg',
     cards: ['hp-015','hp-016','hp-018','hp-019','hp-023','hp-026','hp-027','hp-032','hp-050','hp-060','hp-073','hp-075','hp-077','hp-100','hp-101'],
+    title2: 'Die Heiligtümer des Todes · Teil 2',
+    cards2: ['hp-199','hp-200','hp-201','hp-202','hp-203','hp-204','hp-205','hp-206','hp-207','hp-208'],
     reward: 7 },
   { id: 8, sonder: true, title: 'Strandparty', short: 'Strandparty', icon: '🏖️', bg: 'album/bg-beach.jpg',
     cards: ['hp-fun-001','hp-fun-002','hp-fun-003','hp-fun-004','hp-fun-005','hp-fun-006','hp-fun-007','hp-fun-008','hp-fun-009','hp-fun-010','hp-fun-011','hp-fun-012','hp-fun-013','hp-fun-014','hp-fun-015','hp-fun-016','hp-fun-017','hp-fun-018','hp-fun-019','hp-fun-020','hp-fun-021','hp-fun-022','hp-fun-023','hp-fun-024','hp-fun-025','hp-fun-026','hp-fun-027','hp-fun-028','hp-fun-029','hp-fun-030','hp-fun-031','hp-fun-032','hp-fun-033','hp-fun-034'],
@@ -7488,7 +7501,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v93';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v94';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
