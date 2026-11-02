@@ -3307,6 +3307,17 @@ const CARD_DB = [
   { id:'hp-156', name:'Der Heuler', rarity:'common', type:'Gegenstand', subtype:'Ein lauter Brief', house:'—', desc:'Ein roter Brief, den man lieber sofort öffnen sollte! Rons Heuler von seiner Mutter verkündet vor versammelter Großer Halle, was sie von seiner Fahrt im fliegenden Auto hält.', image:'cards/hp-156.jpg' },
   { id:'hp-157', name:'Der Vielsaft-Trank', rarity:'rare', type:'Gegenstand', subtype:'Verwandlungstrank', house:'—', desc:'Dieser komplizierte Trank lässt einen Menschen vorübergehend wie jemand anderes aussehen. Harry, Ron und Hermine brauen ihn heimlich, um mehr über die Kammer des Schreckens herauszufinden.', image:'cards/hp-157.jpg' },
   { id:'hp-158', name:'Molly Weasley', rarity:'rare', type:'Charakter', subtype:'Mutter der Weasley-Familie', house:'Gryffindor', desc:'Im Fuchsbau sorgt Molly mit viel Herz und noch mehr Entschlossenheit für ihre Familie. Auch Harry ist bei den Weasleys willkommen – selbst wenn Ron und er gerade mit einem fliegenden Auto verschwunden sind.', image:'cards/hp-158.jpg' },
+  // ---- Der Gefangene von Askaban · Teil 2 ----
+  { id:'hp-159', name:'Honigtopf', rarity:'common', type:'Ort', subtype:'Süßigkeitenladen in Hogsmeade', house:'—', desc:'Der Honigtopf ist Hogsmeades buntester Laden, vollgestopft mit Bonbons, Schokofröschen und Scherzartikeln. Harry entdeckt hier zum ersten Mal, dass es Süßigkeiten gibt, die sich noch bewegen.', image:'cards/hp-159.jpg' },
+  { id:'hp-160', name:'Die Drei Besen', rarity:'common', type:'Ort', subtype:'Gasthaus in Hogsmeade', house:'—', desc:'Das gemütliche Wirtshaus ist Hogsmeades Treffpunkt für Schüler und Dorfbewohner. An einem Winterabend hört Harry hier zufällig mit, wie Cornelius Fudge über Sirius Black spricht.', image:'cards/hp-160.jpg' },
+  { id:'hp-161', name:'Krätze', rarity:'common', type:'Tier', subtype:'Rons Ratte', house:'Gryffindor', desc:'Krätze lebt seit Jahren bei den Weasleys und schläft am liebsten in Rons Bett. Niemand ahnt, dass in der alten Ratte der Verräter Peter Pettigrew steckt – bis Krummbein sie jagt.', image:'cards/hp-161.jpg' },
+  { id:'hp-162', name:'Die Fette Dame', rarity:'common', type:'Charakter', subtype:'Wächterin des Gryffindor-Eingangs', house:'Gryffindor', desc:'Die Fette Dame bewacht das Porträtloch zum Gryffindor-Turm und gibt nur gegen das richtige Kennwort nach. In diesem Jahr wird ihr Bild aufgeschlitzt, und Sirius Black kommt trotzdem nicht hinein.', image:'cards/hp-162.jpg' },
+  { id:'hp-163', name:'Stan Shunpike', rarity:'common', type:'Charakter', subtype:'Schaffner des Fahrenden Ritters', house:'—', desc:'Stan ist der junge Schaffner des verrückten violetten Busses und erzählt gern alles, was er in der Zeitung gelesen hat. Mit ihm fährt Harry mitten in der Nacht zurück nach Hogwarts.', image:'cards/hp-163.jpg' },
+  { id:'hp-164', name:'Krummbein', rarity:'rare', type:'Tier', subtype:'Hermines Kater', house:'Gryffindor', desc:'Krummbein ist Hermines großer, struppiger Kater mit dem platten Gesicht. Er durchschaut als Erster, dass mit Krätze etwas nicht stimmt, und jagt die Ratte durch das ganze Schloss.', image:'cards/hp-164.jpg' },
+  { id:'hp-165', name:'Oliver Wood', rarity:'rare', type:'Charakter', subtype:'Quidditch-Kapitän', house:'Gryffindor', desc:'Oliver Wood ist Gryffindors Quidditch-Kapitän und der ehrgeizigste Spieler der Mannschaft. In diesem Jahr will er unbedingt den Pokal gewinnen – und Harrys Feuerblitz soll dabei helfen.', image:'cards/hp-165.jpg' },
+  { id:'hp-166', name:'Cornelius Fudge', rarity:'rare', type:'Charakter', subtype:'Zaubereiminister', house:'—', desc:'Cornelius Fudge ist der Zaubereiminister und felsenfest davon überzeugt, dass Sirius Black schuldig ist. Er schickt Dementoren nach Hogwarts, ohne zu ahnen, wer wirklich hinter allem steckt.', image:'cards/hp-166.jpg' },
+  { id:'hp-167', name:'Tante Magda', rarity:'rare', type:'Charakter', subtype:'Harrys Muggel-Verwandte', house:'—', desc:'Magda ist Harrys strenge Tante und verabscheut alles, was nicht normal ist. Über Zauberei redet sie nicht gern – bis eine kleine Unachtsamkeit sie buchstäblich aufbläht.', image:'cards/hp-167.jpg' },
+  { id:'hp-168', name:'Der Grim', rarity:'legendary', type:'Kreatur', subtype:'Das Todesomen', house:'—', desc:'Der Grim erscheint als riesiger schwarzer Hund und gilt in der Zaubererwelt als Todesomen. Harry begegnet ihm in diesem Jahr mehrfach – und ahnt nicht, dass der Hund ihn beschützen will.', image:'cards/hp-168.jpg' },
   // ---- Zutaten fuer das Alchimielabor ------------------------------------------
   // Gewöhnliche Seltenheit: sie laufen genau wie andere Commons in die Packs.
   // Über die Markierung zutat:true bleiben sie aus Sammlung, Album und Zählern raus.
@@ -3398,6 +3409,8 @@ const ALBUM_BANDS = [
     reward: 2 },
   { id: 3, title: 'Der Gefangene von Askaban', short: 'Band 3', icon: '📘', bg: 'album/bg-band3.jpg',
     cards: ['hp-009','hp-061','hp-089','hp-088','hp-078','hp-079','hp-080','hp-066','hp-052','hp-094','hp-046','hp-092','hp-091','hp-054','hp-043'],
+    title2: 'Der Gefangene von Askaban · Teil 2',
+    cards2: ['hp-159','hp-160','hp-161','hp-162','hp-163','hp-164','hp-165','hp-166','hp-167','hp-168'],
     reward: 3 },
   { id: 4, title: 'Der Feuerkelch', short: 'Band 4', icon: '📙', bg: 'album/bg-band4.jpg',
     cards: ['hp-004','hp-064','hp-065','hp-041','hp-044','hp-022','hp-035','hp-036','hp-038','hp-076','hp-030','hp-028','hp-021'],
@@ -7436,7 +7449,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v89';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v90';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
