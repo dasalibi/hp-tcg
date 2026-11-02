@@ -3711,18 +3711,18 @@ const TRAENKE = [
   { id:'sucher',      icon:'🔮', img:'cards/pot-sucher.jpg', name:'Trank des Suchers', kurz:'Gezielte Karte',
     desc:'Dein nächster Pack enthält garantiert 1 Karte aus dem gewählten Album (eine der Karten kommt daraus).' },
   { id:'erleuchtung', icon:'✨', img:'cards/pot-erleuchtung.jpg', name:'Trank der Erleuchtung', kurz:'Sichere Seltene',
-    desc:'Sofort: 1 garantierte seltene Karte + 2 normale Karten.' },
+    desc:'Dein nächstes Pack enthält garantiert eine seltene Karte. Die anderen Karten behalten ihre üblichen Chancen.' },
   { id:'verwandlung', icon:'🔄', img:'cards/pot-verwandlung.jpg', name:'Trank der Verwandlung', kurz:'Tausch-Upgrade',
     desc:'Dein nächster 2:1-Tausch liefert garantiert die nächsthöhere Seltenheit.' }
 ];
 // Rezepte: jeder Trank braucht eine eigene Mischung aus Zutaten-Karten
-// Rezeptkosten seit v86 verdoppelt – Zutaten gibt es dafuer jetzt genau 1x pro Pack.
+// Zutatenkosten halbiert; die Mischung jedes Rezepts bleibt gleich.
 const TRANK_REZEPT = {
-  felix:       { 'hp-zut-001': 2, 'hp-zut-006': 2 },                       // 2x Mondstein + 2x Alraunewurzel
-  sucher:      { 'hp-zut-002': 2, 'hp-zut-001': 2 },                       // 2x Kiemenkraut + 2x Mondstein
-  fuelle:      { 'hp-zut-005': 4, 'hp-zut-002': 2 },                       // 4x Einhornhaar + 2x Kiemenkraut
-  verwandlung: { 'hp-zut-004': 4, 'hp-zut-003': 2 },                       // 4x Drachenblut + 2x Bezoar
-  erleuchtung: { 'hp-zut-006': 4, 'hp-zut-003': 4, 'hp-zut-005': 2 }       // 4x Alraune + 4x Bezoar + 2x Einhornhaar
+  felix:       { 'hp-zut-001': 1, 'hp-zut-006': 1 },
+  sucher:      { 'hp-zut-002': 1, 'hp-zut-001': 1 },
+  fuelle:      { 'hp-zut-005': 2, 'hp-zut-002': 1 },
+  verwandlung: { 'hp-zut-004': 2, 'hp-zut-003': 1 },
+  erleuchtung: { 'hp-zut-006': 2, 'hp-zut-003': 2, 'hp-zut-005': 1 }
 };
 function rezeptKosten(rezept)   { return Object.values(rezept || {}).reduce((a, b) => a + b, 0); }
 function rezeptErfuellt(prof, rezept) {
@@ -3733,8 +3733,8 @@ function rezeptErfuellt(prof, rezept) {
 function todayStr() { return new Date().toISOString().slice(0,10); }
 function traenkeVon(prof) { if (!prof.traenke) prof.traenke = {}; return prof.traenke; }
 function aktivVon(prof)   { if (!prof.aktiv)   prof.aktiv   = {}; return prof.aktiv; }
-let pendingTrankMeldungen = [];   // Tage mit Familien-Bonus, fuer das Feier-Popup
-let pendingAchPopups = [];        // Orden, die erst nach der Feier gezeigt werden
+let trankFeierProfil = null;       // Wem die aktuell angezeigte Meldung gehoert
+let trankFeierTage = [];
 
 // Auslosung: vier Traenke je 22 %, Erleuchtung halb so oft (12 %)
 function ziehTrank() {
@@ -3773,8 +3773,9 @@ function checkFamilyBonus() {
       const tr = traenkeVon(p);
       tr[id] = (tr[id] || 0) + 1;
       p.familienTraenke = (p.familienTraenke || 0) + 1;   // Zähler für den 🎁-Orden
+      if (!Array.isArray(p.pendingTrankMeldungen)) p.pendingTrankMeldungen = [];
+      p.pendingTrankMeldungen.push(day);
     });
-    pendingTrankMeldungen.push(day);
   });
   data.familyBonus.lastCheck = today;
   save();
@@ -3962,6 +3963,16 @@ function closeBandPick() {
   document.getElementById('bandPickModal').classList.remove('active');
 }
 
+// Jedes Pack legt genau eine Zutat extra in den Bestand (nicht als Sammelkarte).
+function gibPackZutat(prof, gezogeneKarten) {
+  const pool = CARD_DB.filter(c => c.zutat);
+  if (!pool.length) return;
+  const zutat = pool[Math.floor(Math.random() * pool.length)];
+  const isNew = !prof.cards[zutat.id];
+  gezogeneKarten.push({ ...zutat, isNew });
+  prof.cards[zutat.id] = (prof.cards[zutat.id] || 0) + 1;
+}
+
 // Öffnet ein Band-Pack: 3 Karten, Pool = Band-Karten + Relikte möglich
 function openBandPack(bandIdx) {
   const band = ALBUM_BANDS[bandIdx];
@@ -3977,11 +3988,17 @@ function openBandPack(bandIdx) {
   const pool = bandCards.concat(relikts);
   if (pool.length === 0) return;
 
-  // 3 Karten ziehen (normale Raritätsverteilung)
+  // Erleuchtung ersetzt eine der drei Karten durch eine garantierte Seltene.
+  const erleuchtungAktiv = !!aktivVon(prof).erleuchtung;
+  if (erleuchtungAktiv && !bandCards.some(c => c.rarity === 'rare' && cardErhaeltlich(c, prof))) {
+    alert('In diesem Band ist gerade keine seltene Karte verfügbar. Wähle bitte ein anderes Band – dein Trank bleibt erhalten.');
+    return;
+  }
   const drawn = [];
   for (let i = 0; i < CARDS_PER_PACK; i++) {
-    const rarity = rollRarity(false);
-    // Bei Relikt: nur Relikte; sonst passende Band-Karten; Fallback: ganzer Pool
+    const garantiertSelten = erleuchtungAktiv && i === 0;
+    const rarity = garantiertSelten ? 'rare' : rollRarity(false);
+    // Das Band-Pack bleibt beim gewählten Band; Relikte bleiben wie bisher möglich.
     let candidates = pool.filter(c => c.rarity === rarity);
     if (candidates.length === 0) candidates = pool;
     const card = candidates[Math.floor(Math.random() * candidates.length)];
@@ -3994,8 +4011,10 @@ function openBandPack(bandIdx) {
   const gezogeneRaritaeten = drawn.map(c => c.rarity);
   if (new Set(gezogeneRaritaeten).size >= 3) prof.packTriRarities = 1;
   if (gezogeneRaritaeten.filter(r => r === 'rare').length >= 3) prof.packsWith3Rare = 1;
+  gibPackZutat(prof, drawn);
 
   // Einlöse-Status setzen (Woche merken) + Orden-Zähler + speichern
+  if (erleuchtungAktiv) delete aktivVon(prof).erleuchtung;
   prof.weekRewardClaimed = wc.week;
   prof.weekWins = (prof.weekWins || 0) + 1;
   // Halloween-Taler für die geschaffte Wochenchallenge
@@ -4552,9 +4571,9 @@ function oeffnePotDetail(id) {
     (aktivVon(prof)[id] ? '<br><span style="color:#8ce0a0;font-size:12px;">✓ Bereits scharf gestellt</span>' : '');
   const btn = document.getElementById('potDetailTrink');
   const schonScharf = !!aktivVon(prof)[id];
-  btn.disabled = schonScharf && id !== 'erleuchtung' && id !== 'sucher';
+  btn.disabled = schonScharf && id !== 'sucher';
   btn.style.opacity = btn.disabled ? '.5' : '1';
-  btn.textContent = id === 'sucher' ? 'Album wählen' : (id === 'erleuchtung' ? 'Sofort trinken' : 'Trinken');
+  btn.textContent = id === 'sucher' ? 'Album wählen' : 'Trinken';
   btn.onclick = () => trinkTrank(id);
   document.getElementById('potDetail').classList.add('active');
 }
@@ -4565,31 +4584,7 @@ function trinkTrank(id) {
   const t = TRAENKE.find(x => x.id === id);
   const bestand = traenkeVon(prof);
   if (!t || !(bestand[id] > 0)) return;
-
-  // Erleuchtung wirkt sofort: 1 garantierte seltene Karte + 2 normale
-  if (id === 'erleuchtung') {
-    bestand[id]--; if (bestand[id] <= 0) delete bestand[id];
-    const owned = prof.cards || (prof.cards = {});
-    const gezogen = [];
-    const gib = (card) => {
-      if (!card) return;
-      const isNew = !owned[card.id];
-      owned[card.id] = (owned[card.id] || 0) + 1;
-      gezogen.push({ ...card, isNew });
-    };
-    const rares = CARD_DB.filter(c => c.rarity === 'rare' && cardErhaeltlich(c, prof));
-    if (rares.length) gib(rares[Math.floor(Math.random() * rares.length)]);
-    for (let i = 0; i < 2; i++) {
-      const rar = rollRarity(false);
-      const pool = CARD_DB.filter(c => c.rarity === rar && cardErhaeltlich(c, prof));
-      if (pool.length) gib(pool[Math.floor(Math.random() * pool.length)]);
-    }
-    prof.packsOpened = (prof.packsOpened || 0) + 1;
-    checkAchievements(prof); save();
-    schliessePotDetail(); renderPotions();
-    if (gezogen.length) showCardReveal(gezogen, renderPotions);
-    return;
-  }
+  if (id !== 'sucher' && aktivVon(prof)[id]) return;
 
   // Sucher: Album bequem auswaehlen, dann liefert der naechste Pack gezielt
   if (id === 'sucher') { schliessePotDetail(); oeffneAlbumWahl(); return; }
@@ -4639,13 +4634,17 @@ function waehleSucherBand(bandId) {
 
 // ---- Feier-Meldung nach dem Login ----
 function zeigeTrankFeier() {
-  if (!pendingTrankMeldungen.length || !currentProfile) return;
-  const anz = pendingTrankMeldungen.length;
-  pendingTrankMeldungen = [];
+  if (!currentProfile || currentScreen !== 'dashboard') return;
   const prof = getProfile(currentProfile);
+  const tage = Array.isArray(prof.pendingTrankMeldungen) ? prof.pendingTrankMeldungen : [];
+  if (!tage.length || document.getElementById('trankFeier').classList.contains('active')) return;
+  trankFeierProfil = currentProfile;
+  trankFeierTage = tage.slice();
+  const anz = tage.length;
   const bestand = traenkeVon(prof);
+  const gestern = new Date(Date.now() - 86400000).toISOString().slice(0,10);
   document.getElementById('trankFeierText').textContent = anz === 1
-    ? 'Gestern hat jeder mindestens eine Aufgabe geschafft. Zur Belohnung wartet ein Zaubertrank auf dich – schau ins Alchimielabor!'
+    ? (tage[0] === gestern ? 'Gestern' : 'An einem Tag') + ' hat jeder mindestens eine Aufgabe geschafft. Zur Belohnung wartet ein Zaubertrank auf dich – schau ins Alchimielabor!'
     : 'An ' + anz + ' Tagen hat jeder mindestens eine Aufgabe geschafft. Zur Belohnung warten ' + anz + ' Zaubertränke im Alchimielabor auf dich!';
   document.getElementById('trankFeierFlasks').innerHTML = TRAENKE
     .filter(t => (bestand[t.id] || 0) > 0)
@@ -4653,26 +4652,57 @@ function zeigeTrankFeier() {
   document.getElementById('trankFeier').classList.add('active');
 }
 function schliesseTrankFeier() {
-  document.getElementById('trankFeier').classList.remove('active');
-  if (pendingAchPopups.length) {                 // jetzt die zurueckgestellten Orden feiern
-    const p = pendingAchPopups; pendingAchPopups = [];
-    setTimeout(() => queueAchievementPopups(p), 300);
+  const feier = document.getElementById('trankFeier');
+  if (!feier.classList.contains('active')) return;
+  feier.classList.remove('active');
+  const owner = trankFeierProfil && data.profiles[trankFeierProfil];
+  if (owner && Array.isArray(owner.pendingTrankMeldungen)) {
+    owner.pendingTrankMeldungen = owner.pendingTrankMeldungen.filter(day => !trankFeierTage.includes(day));
+    save();
   }
+  const name = trankFeierProfil;
+  trankFeierProfil = null;
+  trankFeierTage = [];
+  setTimeout(() => zeigeAufgeschobeneOrden(name), 300);
+}
+
+function zeigeAufgeschobeneOrden(name) {
+  if (!name || currentProfile !== name) return;
+  const prof = data.profiles[name];
+  if (!prof || !Array.isArray(prof.pendingFamilienOrden) || !prof.pendingFamilienOrden.length) return;
+  const ids = prof.pendingFamilienOrden;
+  const orden = ids.map(id => ACHIEVEMENTS.find(a => a.id === id)).filter(Boolean);
+  delete prof.pendingFamilienOrden;
+  save();
+  queueAchievementPopups(orden);
 }
 
 function renderDashboard() {
   if (!currentProfile) return;
   const prof = getProfile(currentProfile);
   document.getElementById('dashName').textContent = currentProfile;
-  if (pendingTrankMeldungen.length) setTimeout(zeigeTrankFeier, 500);
+  const feierFaellig = Array.isArray(prof.pendingTrankMeldungen) && prof.pendingTrankMeldungen.length > 0;
+  if (feierFaellig) {
+    const name = currentProfile;
+    setTimeout(() => { if (currentProfile === name) zeigeTrankFeier(); }, 500);
+  }
 
   // Orden rückwirkend prüfen (z.B. nach App-Updates) – neue Orden werden gefeiert
   const freshAch = checkAchievements(prof);
-  const feierFaellig = pendingTrankMeldungen.length > 0;
   if (freshAch.length) {
-    save();
-    if (feierFaellig) pendingAchPopups = freshAch;   // erst nach der Trank-Feier zeigen
-    else queueAchievementPopups(freshAch);
+    if (feierFaellig) {
+      const ids = prof.pendingFamilienOrden || [];
+      freshAch.forEach(a => { if (!ids.includes(a.id)) ids.push(a.id); });
+      prof.pendingFamilienOrden = ids;
+      save();
+    } else {
+      save();
+      queueAchievementPopups(freshAch);
+    }
+  }
+  if (!feierFaellig && Array.isArray(prof.pendingFamilienOrden) && prof.pendingFamilienOrden.length) {
+    const name = currentProfile;
+    setTimeout(() => zeigeAufgeschobeneOrden(name), 300);
   }
 
   const taskCount = prof.tasks ? prof.tasks.length : 0;
@@ -4989,13 +5019,14 @@ function openPack() {
   const aktiv = aktivVon(prof);
   const felixAktiv    = !!aktiv.felix;
   const fuelleAktiv   = !!aktiv.fuelle;
+  const erleuchtungAktiv = !!aktiv.erleuchtung;
   const sucherBandId  = aktiv.sucher || null;
   // Fülle: garantiert 1 Zusatzkarte. Sucher: eine Basiskarte wird durch die
   // garantierte Band-Karte ERSETZT (keine vierte Karte). Beides zusammen: 3 + 1.
   const anzahlKarten  = CARDS_PER_PACK + (fuelleAktiv ? 1 : 0) - (sucherBandId ? 1 : 0);
 
   for (let i = 0; i < anzahlKarten; i++) {
-    const rarity = rollRarity(isBonus || felixAktiv);
+    const rarity = erleuchtungAktiv && i === 0 ? 'rare' : rollRarity(isBonus || felixAktiv);
     const pool = CARD_DB.filter(c => c.rarity === rarity && cardErhaeltlich(c, prof));
     if (pool.length === 0) continue;
     const card = pool[Math.floor(Math.random() * pool.length)];
@@ -5020,20 +5051,14 @@ function openPack() {
   // Verbrauchte Traenke entfernen (einmalig scharf)
   if (felixAktiv)  delete aktiv.felix;
   if (fuelleAktiv) delete aktiv.fuelle;
+  if (erleuchtungAktiv) delete aktiv.erleuchtung;
   if (sucherBandId) delete aktiv.sucher;
   // Sonder-Packs: 3 verschiedene Seltenheiten oder 3 seltene Karten
   const gezogeneRaritaeten = currentPackCards.map(c => c.rarity);
   if (new Set(gezogeneRaritaeten).size >= 3) prof.packTriRarities = 1;
   if (gezogeneRaritaeten.filter(r => r === 'rare').length >= 3) prof.packsWith3Rare = 1;
-  // Jedes Pack enthaelt genau EINE zufaellige Zutat (seit v86; zaehlt NICHT fuer die
-  // Sonder-Pack-Orden oben). Dafuer sind Zutaten aus dem regulaeren Kartenpool raus.
-  const zutatenPool = CARD_DB.filter(c => c.zutat);
-  if (zutatenPool.length) {
-    const zutat = zutatenPool[Math.floor(Math.random() * zutatenPool.length)];
-    const zutIsNew = !prof.cards[zutat.id];
-    currentPackCards.push({ ...zutat, isNew: zutIsNew });
-    prof.cards[zutat.id] = (prof.cards[zutat.id] || 0) + 1;
-  }
+  // Zutat zählt nicht für die Sonder-Pack-Orden.
+  gibPackZutat(prof, currentPackCards);
   const freshAch = checkAchievements(prof);
   save();
   queueAchievementPopups(freshAch);
@@ -7411,7 +7436,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v88';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v89';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
