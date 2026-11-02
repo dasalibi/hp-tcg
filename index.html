@@ -3782,10 +3782,10 @@ const TRAENKE = [
     desc:'Dein nächster 2:1-Tausch liefert garantiert die nächsthöhere Seltenheit.' }
 ];
 // Rezepte: jeder Trank braucht eine eigene Mischung aus Zutaten-Karten
-// Zutatenkosten halbiert; die Mischung jedes Rezepts bleibt gleich.
+// Mindestens 3 Zutaten pro Trank, damit die Aura "Kesselbund" (-1 beliebige Zutat) ueberall greift.
 const TRANK_REZEPT = {
-  felix:       { 'hp-zut-001': 1, 'hp-zut-006': 1 },
-  sucher:      { 'hp-zut-002': 1, 'hp-zut-001': 1 },
+  felix:       { 'hp-zut-001': 2, 'hp-zut-006': 1 },
+  sucher:      { 'hp-zut-002': 2, 'hp-zut-001': 1 },
   fuelle:      { 'hp-zut-005': 2, 'hp-zut-002': 1 },
   verwandlung: { 'hp-zut-004': 2, 'hp-zut-003': 1 },
   erleuchtung: { 'hp-zut-006': 2, 'hp-zut-003': 2, 'hp-zut-005': 1 }
@@ -7498,7 +7498,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v95';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v96';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
