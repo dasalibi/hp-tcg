@@ -1443,6 +1443,8 @@ html, body {
   .sicherung-btn { font: inherit; font-size: 14px; padding: 9px 16px; border-radius: 12px; cursor: pointer;
     background: rgba(255,255,255,.10); color: #f4e6c8; border: 1px solid rgba(214,178,94,.45); }
   .sicherung-btn.leicht { background: rgba(255,255,255,.04); font-size: 13px; padding: 7px 13px; opacity: .85; }
+  .sicherung-btn.eltern { border-color: rgba(214,178,94,.75); font-weight: 600; }
+  .eltern-row { margin-top: 22px; display: flex; justify-content: center; }
   .sicherung-status { font-size: 13px; color: #f0dfae; max-width: 560px; text-align: center; line-height: 1.45; white-space: pre-wrap; }
   #sicherungText { width: min(560px, 88vw); height: 130px; font-size: 11px; font-family: monospace;
     background: rgba(0,0,0,.45); color: #e8dcc0; border: 1px solid rgba(214,178,94,.4); border-radius: 10px; padding: 8px; }
@@ -2465,6 +2467,9 @@ body{
     <p class="who-label">Wer bist du?</p>
     <div class="profile-grid" id="profileGrid"></div>
     <div class="build-tag" id="buildTag">Version wird geladen …</div>
+    <div class="eltern-row">
+      <button class="sicherung-btn eltern" id="btnElternbereich" type="button" onclick="navigateTo('parent-login')">🔒 Elternbereich</button>
+    </div>
     <div class="sicherung-box">
       <button class="sicherung-btn" id="btnSicherungExport" type="button">📥 Datensicherung herunterladen</button>
       <button class="sicherung-btn leicht" id="btnSicherungText" type="button">Als Text anzeigen</button>
@@ -3118,10 +3123,6 @@ body{
   <button class="nav-item" data-screen="achievements" onclick="navigateTo('achievements')">
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 21h8M12 17v4M17 4H7v6a5 5 0 0 0 10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/></svg></span>
     <span>Orden</span>
-  </button>
-  <button class="nav-item" data-screen="parent-login" onclick="navigateTo('parent-login')">
-    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.7 1.1 2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.7-1.1 2 2 0 1 1-2.8-2.8A1.6 1.6 0 0 0 3 14.2a2 2 0 1 1 0-4A1.6 1.6 0 0 0 4.6 7a2 2 0 1 1 2.8-2.8A1.6 1.6 0 0 0 9 3a2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.7 1.1 2 2 0 1 1 2.8 2.8A1.6 1.6 0 0 0 21 9a2 2 0 1 1 0 4 1.6 1.6 0 0 0-1.6 2z"/></svg></span>
-    <span>Eltern</span>
   </button>
 </div>
 
@@ -4185,10 +4186,6 @@ function navigateTo(screen) {
   
   // Special handling for parent
   if (screen === 'parent-login') {
-    if (currentProfile === null) {
-      document.getElementById('screen-welcome').classList.add('active');
-      return;
-    }
     document.getElementById('screen-parent-login').classList.add('active');
     resetPinPad();
   } else if (screen === 'parent-area') {
@@ -4225,9 +4222,9 @@ function navigateTo(screen) {
   document.querySelectorAll('.nav-item').forEach(n => {
     n.classList.toggle('active', n.dataset.screen === screen);
   });
-  // Keep bottom nav hidden on welcome
-  document.getElementById('bottomNav').style.display = 
-    (screen === 'welcome') ? 'none' : 'flex';
+  // Keep bottom nav hidden on welcome (and whenever nobody is logged in)
+  document.getElementById('bottomNav').style.display =
+    (!currentProfile || screen === 'welcome') ? 'none' : 'flex';
 }
 
 // ===================== WELCOME / PROFILES =====================
@@ -7001,7 +6998,7 @@ function importData(event) {
 }
 
 function parentLogout() {
-  navigateTo('dashboard');
+  navigateTo(currentProfile ? 'dashboard' : 'welcome');
 }
 
 
@@ -7501,7 +7498,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v94';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v95';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
