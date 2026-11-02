@@ -3329,6 +3329,17 @@ const CARD_DB = [
   { id:'hp-176', name:'Der Friedhof von Little Hangleton', rarity:'rare', type:'Ort', subtype:'Ort der Rückkehr', house:'—', desc:'Zwischen alten Grabsteinen und einer knorrigen Eibe liegt dieser kleine Dorffriedhof. Hier landet Harry am Ende des Turniers – und hier kehrt Lord Voldemort mit Hilfe von Peter Pettigrew in seinen Körper zurück.', image:'cards/hp-176.jpg' },
   { id:'hp-177', name:'Der Trimagische Pokal', rarity:'legendary', type:'Gegenstand', subtype:'Das Ziel des Turniers', house:'—', desc:'Wer den Pokal zuerst berührt, hat das Trimagische Turnier gewonnen. Dieses Mal ist der Pokal verhext: Er ist ein Portschlüssel, der Harry und Cedric weit weg von Hogwarts bringt.', image:'cards/hp-177.jpg' },
   { id:'hp-178', name:'Priori Incantatem', rarity:'legendary', type:'Zauber', subtype:'Die verbundenen Zauberstäbe', house:'—', desc:'Als Harrys und Voldemorts Zauberstäbe aufeinandertreffen, verbindet ein goldener Faden ihre Spitzen. Aus dem Licht steigen die Schatten derer, die Voldemort getötet hat – angeführt von Harrys Eltern.', image:'cards/hp-178.jpg' },
+  // ---- Der Orden des Phönix · Teil 2 ----
+  { id:'hp-179', name:'Grawp', rarity:'common', type:'Kreatur', subtype:'Hagrids Halbbruder', house:'—', desc:'Grawp ist ein Riese und Hagrids kleiner Halbbruder – kleiner heißt in diesem Fall: nur fünf Meter groß. Hagrid versteckt ihn tief im Verbotenen Wald und bringt ihm mühsam ein paar Worte bei.', image:'cards/hp-179.jpg' },
+  { id:'hp-180', name:'Die Graue Dame', rarity:'common', type:'Charakter', subtype:'Geist von Ravenclaw', house:'Ravenclaw', desc:'Die Graue Dame schwebt still durch die Korridore des Ravenclaw-Turms und spricht selten mit jemandem. Nur Luna und Harry gelingt es, ihr etwas über die verlorene Krone zu entlocken.', image:'cards/hp-180.jpg' },
+  { id:'hp-181', name:'Der Fette Mönch', rarity:'common', type:'Charakter', subtype:'Geist von Hufflepuff', house:'Hufflepuff', desc:'Der Fette Mönch ist der freundlichste Geist von Hogwarts und begrüßt jeden Neuankömmling mit einem Lachen. Bei den Festmahlen schwebt er über den Tischen und prostet den Schülern zu.', image:'cards/hp-181.jpg' },
+  { id:'hp-182', name:'Der Eberkopf', rarity:'common', type:'Ort', subtype:'Taverne in Hogsmeade', house:'—', desc:'Der Eberkopf ist die schäbigste Taverne von Hogsmeade, und genau deshalb trifft sich hier niemand, der gesehen werden will. In einem Hinterzimmer entsteht an diesem Ort Dumbledores Armee.', image:'cards/hp-182.jpg' },
+  { id:'hp-183', name:'Die Eulerei', rarity:'common', type:'Ort', subtype:'Turm der Hogwarts-Eulen', house:'—', desc:'Im runden Turm der Eulerei warten Dutzende Eulen auf ihre Post und ihre Leckerbissen. Wer hier hinaufsteigt, muss zwischen Federn, Stroh und herabfallenden Briefen aufpassen.', image:'cards/hp-183.jpg' },
+  { id:'hp-184', name:'Arthur Weasley', rarity:'rare', type:'Charakter', subtype:'Leiter des Büros für Muggelartefakte', house:'Gryffindor', desc:'Arthur Weasley arbeitet im Zaubereiministerium und ist fasziniert von allem, was Muggel erfinden. Sein Büro quillt über von Steckern, Batterien und Dingen, deren Namen er noch lernen muss.', image:'cards/hp-184.jpg' },
+  { id:'hp-185', name:'Mundungus Fletcher', rarity:'rare', type:'Charakter', subtype:'Zwielichtiger Ordenshelfer', house:'—', desc:'Mundungus handelt mit allem, was sich irgendwie weiterverkaufen lässt, und hält sich nur selten an Absprachen. Für den Orden ist er trotzdem nützlich – wenn er gerade nicht verschwunden ist.', image:'cards/hp-185.jpg' },
+  { id:'hp-186', name:'Die Blutige Feder', rarity:'rare', type:'Gegenstand', subtype:'Umbridges Strafwerkzeug', house:'—', desc:'Diese schwarze Feder schreibt den Straftext von selbst – mit der Tinte ihres Opfers. Wer sie benutzt, trägt die Worte danach als Narben auf dem Handrücken.', image:'cards/hp-186.jpg' },
+  { id:'hp-187', name:'Die Stundengläser von Hogwarts', rarity:'rare', type:'Gegenstand', subtype:'Hauspunkte in Edelsteinen', house:'—', desc:'Vier große Stundengläser zeigen in der Eingangshalle den Punktestand der Häuser. Rubin für Gryffindor, Smaragd für Slytherin, Saphir für Ravenclaw und Topas für Hufflepuff – jede gute Tat lässt sie steigen.', image:'cards/hp-187.jpg' },
+  { id:'hp-188', name:'Die Prophezeiung', rarity:'legendary', type:'Gegenstand', subtype:'Kugel in der Mysteriumsabteilung', house:'—', desc:'In dieser kleinen Glaskugel schwebt eine Prophezeiung, die von Harry und Voldemort handelt. Nur wer gemeint ist, kann sie hören – alle anderen verlieren beim Berühren den Verstand.', image:'cards/hp-188.jpg' },
   // ---- Zutaten fuer das Alchimielabor ------------------------------------------
   // Gewöhnliche Seltenheit: sie laufen genau wie andere Commons in die Packs.
   // Über die Markierung zutat:true bleiben sie aus Sammlung, Album und Zählern raus.
@@ -3430,6 +3441,8 @@ const ALBUM_BANDS = [
     reward: 4 },
   { id: 5, title: 'Der Orden des Phönix', short: 'Band 5', icon: '📕', bg: 'album/bg-band5.jpg',
     cards: ['hp-086','hp-012','hp-011','hp-014','hp-059','hp-074','hp-095','hp-068','hp-093','hp-062','hp-063','hp-049','hp-096','hp-097'],
+    title2: 'Der Orden des Phönix · Teil 2',
+    cards2: ['hp-179','hp-180','hp-181','hp-182','hp-183','hp-184','hp-185','hp-186','hp-187','hp-188'],
     reward: 5 },
   { id: 6, title: 'Der Halbblutprinz', short: 'Band 6', icon: '📗', bg: 'album/bg-band6.jpg',
     cards: ['hp-003','hp-008','hp-039','hp-037','hp-051','hp-056','hp-072','hp-071','hp-069','hp-031','hp-090','hp-098','hp-099'],
@@ -7462,7 +7475,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v91';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v92';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
