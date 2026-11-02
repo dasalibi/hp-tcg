@@ -3340,6 +3340,17 @@ const CARD_DB = [
   { id:'hp-186', name:'Die Blutige Feder', rarity:'rare', type:'Gegenstand', subtype:'Umbridges Strafwerkzeug', house:'—', desc:'Diese schwarze Feder schreibt den Straftext von selbst – mit der Tinte ihres Opfers. Wer sie benutzt, trägt die Worte danach als Narben auf dem Handrücken.', image:'cards/hp-186.jpg' },
   { id:'hp-187', name:'Die Stundengläser von Hogwarts', rarity:'rare', type:'Gegenstand', subtype:'Hauspunkte in Edelsteinen', house:'—', desc:'Vier große Stundengläser zeigen in der Eingangshalle den Punktestand der Häuser. Rubin für Gryffindor, Smaragd für Slytherin, Saphir für Ravenclaw und Topas für Hufflepuff – jede gute Tat lässt sie steigen.', image:'cards/hp-187.jpg' },
   { id:'hp-188', name:'Die Prophezeiung', rarity:'legendary', type:'Gegenstand', subtype:'Kugel in der Mysteriumsabteilung', house:'—', desc:'In dieser kleinen Glaskugel schwebt eine Prophezeiung, die von Harry und Voldemort handelt. Nur wer gemeint ist, kann sie hören – alle anderen verlieren beim Berühren den Verstand.', image:'cards/hp-188.jpg' },
+  // ---- Der Halbblutprinz · Teil 2 ----
+  { id:'hp-189', name:'Das Buch des Halbblutprinzen', rarity:'rare', type:'Gegenstand', subtype:'Snapes altes Zaubertränkebuch', house:'—', desc:'In diesem abgegriffenen Buch stehen nicht nur Rezepte, sondern auch jede Menge freche Notizen am Rand. Harry ahnt nicht, dass der Schreiber der Halbblutprinz ist – sein Lehrer Snape.', image:'cards/hp-189.jpg' },
+  { id:'hp-190', name:'Felix Felicis', rarity:'rare', type:'Gegenstand', subtype:'Der Glückstrank', house:'—', desc:'Ein einziger Schluck Felix Felicis macht für einige Stunden alles möglich. Harry gewinnt eine Flasche in Slughorns Unterricht – und setzt sie genau im richtigen Moment ein.', image:'cards/hp-190.jpg' },
+  { id:'hp-191', name:'Amortentia', rarity:'common', type:'Gegenstand', subtype:'Der Liebestrank', house:'—', desc:'Amortentia duftet für jeden Menschen anders – nach dem, was er am meisten liebt. Der Trank erzeugt keine echte Liebe, aber er bringt so manchen Schüler gehörig durcheinander.', image:'cards/hp-191.jpg' },
+  { id:'hp-192', name:'Der Ring der Gaunts', rarity:'legendary', type:'Gegenstand', subtype:'Voldemorts erster Horkrux', house:'—', desc:'Dieser schwere Goldring mit dem schwarzen Stein gehörte Voldemorts Mutter und wurde zu seinem ersten Horkrux. Dumbledore findet ihn in der verfallenen Hütte der Gaunts – und bezahlt dafür mit seiner Hand.', image:'cards/hp-192.jpg' },
+  { id:'hp-193', name:'Der Brief von R.A.B.', rarity:'rare', type:'Gegenstand', subtype:'Die Nachricht im Medaillon', house:'—', desc:'Ein kurzer, zorniger Brief liegt in dem falschen Medaillon in der Höhle. Der Schreiber R.A.B. schwört, den echten Horkrux zu zerstören – Harry rätselt lange, wer das sein könnte.', image:'cards/hp-193.jpg' },
+  { id:'hp-194', name:'Narcissa Malfoy', rarity:'rare', type:'Charakter', subtype:'Dracos Mutter', house:'Slytherin', desc:'Narcissa ist stolz, kalt und bereit, alles für ihren Sohn zu tun. In einer Winternacht sucht sie Snape auf und bittet ihn um einen Schwur, der über Leben und Tod entscheidet.', image:'cards/hp-194.jpg' },
+  { id:'hp-195', name:'Lavender Brown', rarity:'common', type:'Charakter', subtype:'Rons Verehrerin', house:'Gryffindor', desc:'Lavender ist begeistert von Ron und zeigt das auch jedem, der es sehen will. Ein Liebestrank aus den Schokoküssen von Weasleys Zauberhaften Zauberscherzen wäre dafür fast nicht nötig gewesen.', image:'cards/hp-195.jpg' },
+  { id:'hp-196', name:'Bill Weasley', rarity:'common', type:'Charakter', subtype:'Fluchbrecher bei Gringotts', house:'Gryffindor', desc:'Bill ist der älteste Weasley-Sohn und arbeitet als Fluchbrecher in den alten Gräbern Ägyptens. In diesem Jahr wird er von Fenrir Greyback angefallen – und ist danach nicht mehr ganz derselbe.', image:'cards/hp-196.jpg' },
+  { id:'hp-197', name:'Dumbledores Büro', rarity:'common', type:'Ort', subtype:'Arbeitszimmer des Schulleiters', house:'—', desc:'Hinter der steinernen Wendeltreppe liegt Dumbledores rundes Büro voller summender Silberinstrumente. Hier steht das Denkarium, hier sitzt Fawkes auf seiner Stange – und hier erfährt Harry die schlimmste Wahrheit.', image:'cards/hp-197.jpg' },
+  { id:'hp-198', name:'Der Slug-Club', rarity:'common', type:'Ort', subtype:'Slughorns Abendgesellschaften', house:'—', desc:'Bei Slughorn treffen sich nur die vielversprechendsten Schüler zu Kerzenlicht, Kristallgläsern und guten Gesprächen. Wer eingeladen wird, darf sich geschmeichelt fühlen – und erfährt trotzdem nur das, was Slughorn preisgeben will.', image:'cards/hp-198.jpg' },
   // ---- Zutaten fuer das Alchimielabor ------------------------------------------
   // Gewöhnliche Seltenheit: sie laufen genau wie andere Commons in die Packs.
   // Über die Markierung zutat:true bleiben sie aus Sammlung, Album und Zählern raus.
@@ -3446,6 +3457,8 @@ const ALBUM_BANDS = [
     reward: 5 },
   { id: 6, title: 'Der Halbblutprinz', short: 'Band 6', icon: '📗', bg: 'album/bg-band6.jpg',
     cards: ['hp-003','hp-008','hp-039','hp-037','hp-051','hp-056','hp-072','hp-071','hp-069','hp-031','hp-090','hp-098','hp-099'],
+    title2: 'Der Halbblutprinz · Teil 2',
+    cards2: ['hp-189','hp-190','hp-191','hp-192','hp-193','hp-194','hp-195','hp-196','hp-197','hp-198'],
     reward: 6 },
   { id: 7, title: 'Die Heiligtümer des Todes', short: 'Band 7', icon: '📘', bg: 'album/bg-band7.jpg',
     cards: ['hp-015','hp-016','hp-018','hp-019','hp-023','hp-026','hp-027','hp-032','hp-050','hp-060','hp-073','hp-075','hp-077','hp-100','hp-101'],
@@ -7475,7 +7488,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v92';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v93';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
