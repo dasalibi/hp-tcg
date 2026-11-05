@@ -1533,6 +1533,13 @@ html, body {
 }
 .filter-btn.active { background: var(--burgundy); color: var(--white); border-color: var(--burgundy); }
 .filter-btn:active { transform: scale(0.95); }
+/* 3+-Filter: eigene Achse, deshalb gestrichelt statt wie die Raritaeten-Chips */
+.filter-btn.filter-multi { border-style: dashed; margin-left: auto; }
+.filter-btn.filter-multi.active { border-style: solid; }
+/* Im 3+-Modus verschwinden die Raritaets-Chips komplett: es gilt nur noch "3+ im Besitz"
+   ueber alle Raritaeten. Der 3+-Chip bleibt als Ausstieg (✕) stehen. */
+.collection-filter.zeigt-mehrfach .filter-btn:not(.filter-multi) { display: none; }
+.collection-filter.zeigt-mehrfach .filter-btn.filter-multi { margin-left: 0; }
 
 .card-grid {
   display: grid;
@@ -2671,13 +2678,14 @@ body{
     </div>
   </div>
   <div class="collection-progress"><div class="collection-progress-fill" id="collectionProgress" style="width:0%"></div></div>
-  <div class="collection-filter">
+  <div class="collection-filter" id="collectionFilter">
     <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Alle</button>
     <button class="filter-btn" data-filter="relikt" onclick="setFilter('relikt')">Relikt</button>
     <button class="filter-btn" data-filter="legendary" onclick="setFilter('legendary')">Legendär</button>
     <button class="filter-btn" data-filter="rare" onclick="setFilter('rare')">Selten</button>
     <button class="filter-btn" data-filter="common" onclick="setFilter('common')">Gewöhnlich</button>
     <button class="filter-btn" data-filter="funny" onclick="setFilter('funny')">Strandparty</button>
+    <button class="filter-btn filter-multi" id="filterMulti" onclick="toggleMultiFilter()">3+ im Besitz</button>
   </div>
   <div class="collection-grid" id="collectionGrid"></div>
   <div class="collection-empty" id="collectionEmpty" style="display:none;">
@@ -3849,6 +3857,9 @@ function checkFamilyBonus() {
 
 let currentPackCards = [];
 let currentFilter = 'all';
+// Zweite Filterachse der Sammlung: nur Karten mit 3+ Exemplaren (Verschmelzen/Tausch).
+// Bewusst NICHT in localStorage – wie currentFilter nur fuer die laufende Sitzung.
+let nurMehrfach = false;
 
 // ===================== DATA MANAGEMENT =====================
 function loadData() {
@@ -5418,13 +5429,34 @@ function renderCollection(filter) {
   }
 
   if (filter) currentFilter = filter;
-  if (currentFilter !== 'all' && currentFilter !== 'funny') {
+  if (!nurMehrfach && currentFilter !== 'all' && currentFilter !== 'funny') {
     cards = cards.filter(c => c.rarity === currentFilter);
   }
+
+  // Zaehler am 3+-Chip: bezieht sich auf die aktive Raritaetsauswahl, damit
+  // "3+ im Besitz (2)" genau die Treffer ankuendigt, die der Klick bringt.
+  const mehrfachAnzahl = cards.filter(c => c.count >= 3).length;
+  const multiBtn = document.getElementById('filterMulti');
+  const filterRow = document.getElementById('collectionFilter');
+  if (filterRow) filterRow.classList.toggle('zeigt-mehrfach', nurMehrfach);
+  if (multiBtn) {
+    const label = mehrfachAnzahl > 0 ? `3+ im Besitz (${mehrfachAnzahl})` : '3+ im Besitz';
+    multiBtn.textContent = nurMehrfach ? '✕ ' + label : label;
+    multiBtn.title = nurMehrfach ? 'Tippen: zurück zu allen Karten'
+                                 : 'Nur Karten, von denen du 3 oder mehr besitzt';
+    multiBtn.classList.toggle('active', nurMehrfach);
+  }
+
+  if (nurMehrfach) cards = cards.filter(c => c.count >= 3);
 
   // Sort by rarity (legendary first)
   const rarityOrder = { relikt:0, legendary:1, rare:2, common:3 };
   cards.sort((a, b) => {
+    // Im 3+-Filter ist die Anzahl die interessante Ordnung: dickste Stapel zuerst.
+    if (nurMehrfach) {
+      if (b.count !== a.count) return b.count - a.count;
+      return (rarityOrder[a.rarity] || 9) - (rarityOrder[b.rarity] || 9);
+    }
     const aOwned = a.count > 0 ? 0 : 1;
     const bOwned = b.count > 0 ? 0 : 1;
     if (aOwned !== bOwned) return aOwned - bOwned;
@@ -5435,7 +5467,14 @@ function renderCollection(filter) {
   grid.innerHTML = '';
 
   const hasAny = cards.some(c => c.count > 0);
-  document.getElementById('collectionEmpty').style.display = hasAny ? 'none' : 'block';
+  const emptyEl = document.getElementById('collectionEmpty');
+  const emptyP = emptyEl.querySelector('p');
+  if (emptyP) {
+    emptyP.textContent = nurMehrfach
+      ? 'Keine Karte in dieser Auswahl besitzt du dreifach oder öfter.'
+      : 'Noch keine Karten in dieser Kategorie.';
+  }
+  emptyEl.style.display = hasAny ? 'none' : 'block';
 
   cards.forEach(card => {
     const div = document.createElement('div');
@@ -5464,10 +5503,18 @@ function renderCollection(filter) {
     grid.appendChild(div);
   });
 
-  // Update filter buttons
-  document.querySelectorAll('.filter-btn').forEach(b => {
+  // Update filter buttons (der 3+-Chip wird oben separat gesetzt – er ist keine Raritaet)
+  document.querySelectorAll('.filter-btn:not(.filter-multi)').forEach(b => {
     b.classList.toggle('active', b.dataset.filter === currentFilter);
   });
+}
+
+function toggleMultiFilter() {
+  nurMehrfach = !nurMehrfach;
+  // Der 3+-Filter gilt ueber ALLE Raritaeten – die Raritaetswahl wird deshalb
+  // zurueckgesetzt, damit ein Ausstieg wieder die volle Sammlung zeigt.
+  if (nurMehrfach) currentFilter = 'all';
+  renderSicher(renderCollection, 'collection');
 }
 
 function setFilter(filter) {
@@ -7498,7 +7545,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v96';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v97';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
