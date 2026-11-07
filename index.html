@@ -1905,22 +1905,49 @@ html, body {
 }
 .logout-btn:active { background: var(--parchment-dark); }
 
-/* Streak display */
-.streak-box {
-  background: linear-gradient(135deg, #fff8e1, #fff3cd);
-  border: 2px solid var(--gold);
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
+/* Serie-Zeitleiste (Dashboard): aktueller 7-Tage-Block mit Belohnungs-Markern */
+.serie-panel {
+  background: rgba(243,234,217,.055);
+  border: 1px solid var(--g-line-soft);
+  border-radius: 14px;
+  padding: 12px 14px 10px;
   margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
-.streak-box .streak-icon { font-size: 28px; }
-.streak-box .streak-info { flex: 1; }
-.streak-box .streak-num { font-size: 22px; font-weight: 700; color: var(--burgundy); }
-.streak-box .streak-label { font-size: 13px; color: var(--dark-light); }
-.streak-box .streak-progress { font-size: 12px; color: var(--gold-dark); }
+.serie-head { display: flex; align-items: center; gap: 10px; }
+.serie-flame { color: var(--g-gold); display: grid; place-items: center; }
+.serie-flame svg { width: 22px; height: 22px; }
+.serie-head-txt { flex: 1; min-width: 0; }
+.serie-title { font-family: var(--font-serif); font-size: 18px; line-height: 1.2; color: var(--g-hi); }
+.serie-sub { font-size: 12px; color: var(--g-dim); margin-top: 2px; }
+.serie-block { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap;
+  color: rgba(201,169,97,.8); border: 1px solid var(--g-line-soft); border-radius: 999px; padding: 3px 9px; }
+.serie-track { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 12px; }
+.serie-track::before { content: ''; position: absolute; left: 7%; right: 7%; top: 31px; height: 2px;
+  background: rgba(201,169,97,.18); z-index: 0; }
+.serie-fill { position: absolute; left: 7%; top: 31px; height: 2px; width: 0; z-index: 0;
+  background: linear-gradient(90deg, #a8842c, #e8cd8a); transition: width .6s ease; }
+.serie-day { display: flex; flex-direction: column; align-items: center; gap: 3px; position: relative; z-index: 1; }
+.serie-day .rw { height: 16px; display: flex; align-items: center; justify-content: center; gap: 2px;
+  color: rgba(201,169,97,.9); }
+.serie-day .rw svg { width: 15px; height: 15px; }
+.serie-day.done .rw { color: #f0dca0; }
+.serie-day .node { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--font-serif); font-size: 12px; font-weight: 700; color: var(--g-faint);
+  background: var(--g-bg2); border: 1px solid var(--g-line-soft); }
+.serie-day.done .node { background: linear-gradient(180deg, #e8cd8a, #c9a961); border-color: transparent;
+  color: #2a1a10; box-shadow: 0 0 10px rgba(232,205,138,.30); }
+.serie-day.today:not(.done) .node { border-color: rgba(232,205,138,.75); color: var(--g-hi);
+  animation: seriePuls 1.8s ease-in-out infinite; }
+.serie-day.done.today .node { box-shadow: 0 0 0 3px rgba(232,205,138,.20), 0 0 14px rgba(232,205,138,.55); }
+.serie-day .lbl { font-size: 10px; color: var(--g-faint); }
+.serie-day.done .lbl { color: var(--g-dim); }
+@keyframes seriePuls {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232,205,138,.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(232,205,138,0); }
+}
+.serie-legend { display: flex; gap: 14px; margin-top: 8px; font-size: 10.5px; color: var(--g-faint); }
+.serie-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.serie-legend svg { width: 12px; height: 12px; color: rgba(201,169,97,.8); }
 
 /* Album collection card (unowned) */
 .collection-card.unowned {
@@ -2139,13 +2166,7 @@ body{
 .pack-reminder .emoji{filter:drop-shadow(0 0 10px rgba(232,205,138,.45));}
 .pack-reminder .count{font-family:var(--font-serif);font-size:30px;color:var(--g-hi);}
 
-/* ---- Streak-Kacheln ---- */
-.streak-box{background:rgba(243,234,217,.055);border:1px solid var(--g-line-soft);border-radius:14px;}
-.streak-box .streak-icon{color:var(--g-gold);display:grid;place-items:center;font-size:0;}
-.streak-box .streak-icon svg{width:24px;height:24px;}
-.streak-box .streak-num{font-family:var(--font-serif);color:var(--g-hi);}
-.streak-box .streak-label{color:var(--g-dim);}
-.streak-box .streak-progress{color:rgba(201,169,97,.75);}
+/* ---- Serie-Kachel ---- */
 .profile-btn .pb-ic{display:inline-flex;vertical-align:-3px;margin-right:6px;}
 .profile-btn .pb-ic svg{width:16px;height:16px;}
 
@@ -2528,20 +2549,20 @@ body{
     </div>
   </div>
 
-  <!-- Serie-Kacheln (bestehende IDs) -->
-  <div class="streak-box" id="streakBox" style="display:none;">
-    <span class="streak-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3s4.5 5.5 4.5 9.5a4.5 4.5 0 0 1-9 0C7.5 8.5 12 3 12 3z"/><path d="M12 21a6 6 0 0 0 6-6"/><path d="M12 21a6 6 0 0 1-6-6"/></svg></span>
-    <div class="streak-info">
-      <div class="streak-num"><span id="instrumentStreakNum">0</span> Tage</div>
-      <div class="streak-label">Üben am Stück</div>
+  <!-- Serie-Zeitleiste: aktueller 7-Tage-Block mit Belohnungs-Markern -->
+  <div class="serie-panel" id="seriePanel">
+    <div class="serie-head">
+      <span class="serie-flame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3s4.5 5.5 4.5 9.5a4.5 4.5 0 0 1-9 0C7.5 8.5 12 3 12 3z"/><path d="M12 21a6 6 0 0 0 6-6"/><path d="M12 21a6 6 0 0 1-6-6"/></svg></span>
+      <div class="serie-head-txt">
+        <div class="serie-title" id="serieTitle">Deine Serie beginnt</div>
+        <div class="serie-sub" id="serieSub">Tag 1 wartet auf dich</div>
+      </div>
+      <span class="serie-block" id="serieBlock" style="display:none;">Block 1</span>
     </div>
-  </div>
-  <div class="streak-box" id="weekStreakBox" style="display:none;">
-    <span class="streak-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
-    <div class="streak-info">
-      <div class="streak-num"><span id="weekStreakNum">0</span> Tage</div>
-      <div class="streak-label">Serie</div>
-      <div class="streak-progress" id="weekStreakHint">Alle 7 Tage gibt's ein Bonus-Pack!</div>
+    <div class="serie-track" id="serieTrack"><div class="serie-fill" id="serieFill"></div></div>
+    <div class="serie-legend">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="13" height="16" rx="2"/><path d="M8 2h11a2 2 0 0 1 2 2v14"/></svg>Karte</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7S9.5 3 7 4.5 8 8 12 7zM12 7s2.5-4 5-2.5S16 8 12 7z"/></svg>Bonus-Pack</span>
     </div>
   </div>
 
@@ -4805,26 +4826,12 @@ function renderDashboard() {
   if (achNumEl) achNumEl.textContent = `${earnedAch}/${ACHIEVEMENTS.length}`;
 
   // Streaks
-  const today = new Date().toISOString().slice(0,10);
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
-  const instStreak = prof.instrumentStreak || 0;
-  const lastDate = prof.lastInstrumentDate;
-  const isActive = lastDate === today || lastDate === yesterday;
-  const displayStreak = isActive ? instStreak : 0;
-  document.getElementById('streakBox').style.display = 'none';   // Serie steht bereits im Untertitel
-  document.getElementById('instrumentStreakNum').textContent = displayStreak;
-  document.getElementById('weekStreakBox').style.display = displayStreak > 0 ? 'flex' : 'none';
-  document.getElementById('weekStreakNum').textContent = displayStreak;
-  // Show remaining days until next bonus pack
-  const remaining = 7 - (displayStreak % 7);
-  const hint = remaining === 7 ? 'Morgen gibt es ein Bonus-Pack!' : `${remaining} Tage bis zum nächsten Bonus-Pack`;
-  document.getElementById('weekStreakHint').textContent = hint;
+  renderSerie(prof);
 
   // Untertitel unter der Begrüßung
   const sub = document.getElementById('dashSub');
   if (sub) {
     const parts = [];
-    if (displayStreak > 0) parts.push(`${displayStreak} Tage Serie`);
     parts.push(`${earnedAch} von ${ACHIEVEMENTS.length} Orden`);
     parts.push(`${completedStoryBands(prof)} Bände vollständig`);
     sub.textContent = parts.join(' · ');
@@ -4852,6 +4859,66 @@ function renderDashboard() {
 
   // Halloween-Edition (Taler-Stand, Countdown, Kacheln) aktualisieren
   if (typeof renderHalloweenShop === 'function') renderHalloweenShop();
+}
+
+// ---- Serie-Zeitleiste: aktueller 7-Tage-Block mit Belohnungs-Markern ----
+// Belohnungen laut completeTask(): jeder 3. Streak-Tag = 1 Karte, jeder 7. = Bonus-Pack.
+// Darstellung: Block 1 = Serientage 1-7, Block 2 = 8-14 usw.
+function renderSerie(prof) {
+  const track = document.getElementById('serieTrack');
+  if (!track) return;
+  const today = new Date().toISOString().slice(0,10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  const lastDate = prof.lastInstrumentDate;
+  const isActive = lastDate === today || lastDate === yesterday;
+  const streak = isActive ? (prof.instrumentStreak || 0) : 0;   // gerissene Serie zeigt 0
+  const heuteGeschafft = lastDate === today;
+
+  // Welchen Serientag stellt "heute" dar? Ohne heutige Aufgabe den naechsten (streak+1).
+  const tagHeute = heuteGeschafft ? streak : streak + 1;
+  const block = Math.ceil(tagHeute / 7);                        // 1-basiert
+  const geschafft = streak - (block - 1) * 7;                   // 0..7 Knoten im Block erledigt
+
+  const titel = document.getElementById('serieTitle');
+  const unter = document.getElementById('serieSub');
+  const blockChip = document.getElementById('serieBlock');
+  if (titel) titel.textContent = streak > 0
+    ? `${streak} ${streak === 1 ? 'Tag' : 'Tage'} am Stück`
+    : 'Deine Serie beginnt';
+  if (blockChip) {
+    blockChip.textContent = `Block ${block}`;
+    blockChip.style.display = block > 1 ? '' : 'none';
+  }
+
+  // Abstand zur naechsten Belohnung in Tagen (1 = heute offen bzw. morgen erledigt)
+  const karteIn = 3 - (streak % 3);
+  const packIn  = 7 - (streak % 7);
+  const wann = (d) => d === 1 ? (heuteGeschafft ? 'morgen' : 'heute') : `in ${d} Tagen`;
+  const teile = [];
+  if (!heuteGeschafft) teile.push(streak === 0 ? 'Tag 1 wartet auf dich' : `Heute fehlt noch Tag ${geschafft + 1}`);
+  teile.push(`Karte ${wann(karteIn)}`);
+  teile.push(`Bonus-Pack ${wann(packIn)}`);
+  if (unter) unter.textContent = teile.join(' · ');
+
+  // Knoten neu aufbauen; die Fortschrittslinie #serieFill bleibt erstes Kind
+  track.querySelectorAll('.serie-day').forEach(n => n.remove());
+  for (let i = 1; i <= 7; i++) {
+    const tagGlobal = (block - 1) * 7 + i;
+    const istKarte = tagGlobal % 3 === 0;
+    const istPack = i === 7;
+    const fertig = i <= geschafft;
+    const istHeute = heuteGeschafft ? (i === geschafft) : (i === geschafft + 1);
+    const el = document.createElement('div');
+    el.className = 'serie-day' + (fertig ? ' done' : '') + (istHeute ? ' today' : '');
+    const marker = (istKarte ? icon('cards') : '') + (istPack ? icon('gift') : '');
+    el.innerHTML = `<div class="rw">${marker}</div><div class="node">${fertig ? '✓' : i}</div><div class="lbl">${i}</div>`;
+    el.title = `Tag ${tagGlobal}` + (istKarte ? ' – Karte' : '') + (istPack ? ' – Bonus-Pack' : '');
+    track.appendChild(el);
+  }
+
+  // Fortschrittslinie bis zum zuletzt erledigten Knoten (7% Rand je Seite im Track)
+  const fill = document.getElementById('serieFill');
+  if (fill) fill.style.width = geschafft >= 2 ? `${(geschafft - 1) * (86 / 6)}%` : '0%';
 }
 
 // ===================== TASK MODAL =====================
@@ -7545,7 +7612,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v97';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v98';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
