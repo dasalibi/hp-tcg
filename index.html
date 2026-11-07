@@ -3569,7 +3569,8 @@ const ACHIEVEMENTS = [
   { id:'coll50', cat:'Sammlung', icon:'🃏', name:'Eifriger Sammler', desc:'Sammle 50 verschiedene Karten', goal:50, val: p => uniqueCards(p) },
   { id:'coll75', cat:'Sammlung', icon:'📚', name:'Halbe Sammlung', desc:'Sammle 75 verschiedene Karten', goal:75, val: p => uniqueCards(p) },
   { id:'coll125', cat:'Sammlung', icon:'💎', name:'Sammler-Legende', desc:'Sammle 125 verschiedene Karten', goal:125, val: p => uniqueCards(p) },
-  { id:'collAll', cat:'Sammlung', icon:'👑', name:'Der Zauberermeister', desc:'Sammle alle Karten der Editionen (ohne Belohnungen)', goal: 175, val: p => uniqueCards(p) },
+  { id:'collAll', cat:'Sammlung', icon:'👑', name:'Der Zauberermeister', desc:'Sammle 175 verschiedene Karten (Editionen ohne Bonus-Zutaten)', goal: 175, val: p => uniqueCards(p) },
+  { id:'coll200', cat:'Sammlung', icon:'🏆', name:'Großer Sammler', desc:'Sammle 200 verschiedene Karten', goal: 200, val: p => uniqueCards(p) },
   { id:'dup5', cat:'Sammlung', icon:'🃏', name:'Doppelt hält besser', desc:'Besitze 5 Kopien derselben Karte', goal:5, val: p => maxCopies(p) },
   // ---- Fleiß ----
   { id:'task1', cat:'Fleiß', icon:'⚡', name:'Der erste Zauber', desc:'Erledige deine erste Aufgabe', goal:1, val: p => taskCount(p) },
@@ -3585,6 +3586,7 @@ const ACHIEVEMENTS = [
   { id:'streak7', cat:'Ausdauer', icon:'📆', name:'Eine ganze Woche', desc:'7 Tage in Folge geübt', goal:7, val: p => p.instrumentStreak || 0 },
   { id:'streak14', cat:'Ausdauer', icon:'🗓️', name:'Zwei Wochen stark', desc:'14 Tage in Folge geübt', goal:14, val: p => p.instrumentStreak || 0 },
   { id:'streak30', cat:'Ausdauer', icon:'🌟', name:'Monat der Magie', desc:'30 Tage in Folge geübt', goal:30, val: p => p.instrumentStreak || 0 },
+  { id:'streak60', cat:'Ausdauer', icon:'☄️', name:'Zwei Monate Zauber', desc:'60 Tage in Folge geübt', goal:60, val: p => p.instrumentStreak || 0 },
   // ---- Packs ----
   { id:'pack1', cat:'Packs', icon:'🎁', name:'Das erste Pack', desc:'Öffne dein erstes Pack', goal:1, val: p => p.packsOpened || 0 },
   { id:'pack50', cat:'Packs', icon:'📦', name:'Pack-Jäger', desc:'Öffne 50 Packs', goal:50, val: p => p.packsOpened || 0 },
@@ -3596,6 +3598,7 @@ const ACHIEVEMENTS = [
   // ---- Tauschen ----
   { id:'trade1', cat:'Tauschen', icon:'🤝', name:'Erster Handel', desc:'Schließe einen Tausch über die Tauschbörse ab', goal:1, val: p => p.tradesDone || 0 },
   { id:'tokenEx1', cat:'Tauschen', icon:'🎃', name:'Kürbis-Kaufmann', desc:'Tausche zum ersten Mal eine Karte gegen Kürbis-Taler', goal:1, val: p => p.tokenExchanges || 0 },
+  { id:'trade10', cat:'Tauschen', icon:'🔄', name:'Tauschpartner', desc:'Schließe 10 Tauschvorgänge ab', goal:10, val: p => p.tradesDone || 0 },
   // ---- Halloween ----
   { id:'tokens10', cat:'Halloween', icon:'🪙', name:'Kürbis-Sammler', desc:'Verdiene 10 Kürbis-Taler insgesamt', goal:10, val: p => tokensEarnedTotal(p) },
   { id:'halCard1', cat:'Halloween', icon:'🌙', name:'Nächtlicher Zauber', desc:'Erwerbe deine erste Halloween-Karte', goal:1, val: p => halCardsOwned(p) },
@@ -3604,9 +3607,12 @@ const ACHIEVEMENTS = [
   { id:'band3', cat:'Album', icon:'🏰', name:'Dreifacher Meister', desc:'Vervollständige 3 Album-Bände', goal:3, val: p => completedBands(p) },
   { id:'bandAll', cat:'Album', icon:'🧙', name:'Herr der sieben Bände', desc:'Vervollständige alle 7 Bücherbände', goal:7, val: p => completedStoryBands(p) },
   { id:'magicworld', cat:'Album', icon:'🌍', name:'Entdecker der Magischen Welt', desc:'Sammle 5 Karten aus „Die Magische Welt"', goal:5, val: p => cardsFromBand(p, 9) },
+  { id:'magicworldAll', cat:'Album', icon:'🌐', name:'Weltreisender', desc:'Sammle alle 16 Karten aus „Die Magische Welt"', goal:16, val: p => cardsFromBand(p, 9) },
+  { id:'phoenixSet', cat:'Album', icon:'🔮', name:'Hüter des Phönix', desc:'Sammle alle 12 Karten des Phönix-Panoramas', goal:12, val: p => cardsFromBand(p, 10) },
   { id:'beachparty', cat:'Album', icon:'🏖️', name:'Strandparty-Gast', desc:'Erschaffe deine erste Strandparty-Edition', goal:1, val: p => funnyOwned(p) },
   { id:'funnyAll', cat:'Album', icon:'🌴', name:'Strandparty-König', desc:'Sammle ALLE Strandpartykarten', goal: () => allFunnyCount(), val: p => funnyOwned(p) },
   { id:'animated', cat:'Album', icon:'🎬', name:'Lebendiges Porträt', desc:'Erwecke ein Gründer-Porträt zum Leben', goal:1, val: p => Object.keys(p.animatedPortraits || {}).length },
+  { id:'portraitAll', cat:'Album', icon:'🖼️', name:'Lebendige Gründer', desc:'Erwecke alle 4 Gründer-Porträts zum Leben', goal:4, val: p => Object.keys(p.animatedPortraits || {}).length },
   { id:'family5', cat:'Album', icon:'👨‍👩‍👧', name:'Familien-Champion', desc:'Schaffe 5× die Familien-Challenge', goal:5, val: p => p.weekWins || 0 },
   // ---- Tränke (Alchimielabor) ----
   { id:'brew1', cat:'Tränke', icon:'🧪', name:'Der erste Sud', desc:'Braue deinen ersten Trank', goal:1, val: p => brewsTotal(p) },
@@ -4079,6 +4085,8 @@ function openBandPack(bandIdx) {
   const prof = getProfile(currentProfile);
   if (!prof || !wc.rewarded || prof.weekRewardClaimed === wc.week) return;
   if (!prof.cards) prof.cards = {};
+  // Band-Packs sind ebenfalls geöffnete Packs (Orden pack1/50/150) – Zähler wie in openPack().
+  prof.packsOpened = (prof.packsOpened || 0) + 1;
 
   // Pool: alle Karten des Bands + die 4 Relikt/Gründer-Karten
   const bandCards = band.cards.map(id => getCardById(id)).filter(Boolean);
@@ -7612,7 +7620,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v98';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v99';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
