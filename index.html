@@ -2480,6 +2480,46 @@ body{
     box-shadow:0 0 8px rgba(255,220,140,.9); animation:brauFunke .85s ease-out forwards; }
   @keyframes brauFunke { 0%{opacity:1; transform:translate(0,0) scale(1)} 100%{opacity:0; transform:translate(var(--dx),var(--dy)) scale(.2)} }
   .brau-stand { font-size:13px; color:#b8a883; margin-bottom:8px; }
+/* ===================== PORTRÄTGALERIE (Schulleiterwand) ===================== */
+#screen-portraits { padding: 14px 12px 96px; }
+.wall-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:12px; }
+.wall-head h2 { font-family: var(--font-serif); font-size:19px; margin:0 0 4px; color:var(--dark); letter-spacing:.4px; }
+.wall-sub { font-size:12.5px; color:var(--dark-light); line-height:1.45; max-width:70%; }
+.wall-back { flex:0 0 auto; border:1px solid rgba(197,165,90,.45); background:rgba(26,18,9,.75);
+  color:var(--gold-light); border-radius:10px; padding:7px 11px; font:inherit; font-size:12.5px; cursor:pointer; }
+.portrait-stage { position:relative; width:100%; aspect-ratio:4/3; border-radius:14px; overflow:hidden;
+  background-color:#241f19;
+  background-image: radial-gradient(120% 95% at 50% -10%, #4a3d2c 0%, #2b241c 45%, #12100d 100%);
+  box-shadow: inset 0 0 70px rgba(0,0,0,.8), 0 10px 26px rgba(0,0,0,.45); }
+.wall-bg { position:absolute; inset:0; background-size:cover; background-position:center; opacity:0; transition:opacity .6s ease; }
+.wall-bg.on { opacity:1; }
+.portrait-stage::after { content:""; position:absolute; inset:0; pointer-events:none;
+  background: radial-gradient(75% 60% at 50% 45%, rgba(232,205,138,.05), transparent 70%); }
+.portrait-frame { position:absolute; width:18%; aspect-ratio:9/16; transform:translate(-50%,-50%);
+  padding:5px; border-radius:4px; cursor:pointer;
+  background: linear-gradient(135deg,#7d5f2c 0%,#d9b96b 18%,#6d5024 42%,#c9a45c 70%,#54401d 100%);
+  box-shadow: 0 8px 20px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.55), 0 0 0 1px rgba(232,205,138,.18); }
+.portrait-frame.empty { cursor:default; }
+.portrait-glass { position:relative; width:100%; height:100%; overflow:hidden; border-radius:2px;
+  background:linear-gradient(180deg,#171310 0%,#0c0a08 100%);
+  box-shadow: inset 0 0 16px rgba(0,0,0,.95), inset 0 2px 6px rgba(0,0,0,.9); }
+.portrait-glass img, .portrait-glass video { width:100%; height:100%; object-fit:cover; display:block; }
+.portrait-glass img { transition: opacity .65s ease, transform .65s ease; }
+.portrait-glass img.wall-hide { opacity:0; transform:scale(.985); }
+.wall-sheen { position:absolute; inset:-45%; pointer-events:none;
+  background:linear-gradient(112deg, transparent 44%, rgba(232,205,138,.10) 50%, transparent 56%);
+  animation: wallSheen 9s ease-in-out infinite; }
+@keyframes wallSheen { 0%,100% { transform:translateX(-22%); } 50% { transform:translateX(22%); } }
+.portrait-glass.empty::after { content:""; position:absolute; inset:0;
+  background: radial-gradient(65% 45% at 50% 100%, rgba(232,205,138,.07), transparent 72%); }
+.wall-note { margin-top:12px; font-size:12.5px; color:var(--dark-light); text-align:center; line-height:1.5; }
+.album-wall-btn { display:inline-block; margin:7px auto 2px; border:1px solid rgba(197,165,90,.55);
+  background:linear-gradient(180deg, rgba(232,205,138,.16), rgba(232,205,138,.05));
+  color:var(--gold-light); border-radius:10px; padding:7px 14px; font:inherit; font-size:12.5px; cursor:pointer; }
+@media (prefers-reduced-motion: reduce) {
+  .wall-sheen { animation:none; }
+  .portrait-glass img { transition:opacity .3s ease; }
+}
 </style>
 </head>
 <body>
@@ -2734,6 +2774,21 @@ body{
       <button class="album-nav-btn" id="albumNext">▶</button>
     </div>
   </div>
+</div>
+
+<!-- ==================== SCREEN: PORTRÄTGALERIE ==================== -->
+<div class="screen" id="screen-portraits">
+  <div class="wall-head">
+    <div>
+      <h2>Die Porträtgalerie</h2>
+      <div class="wall-sub" id="wallSub">Noch kein Porträt erwacht.</div>
+    </div>
+    <button class="wall-back" onclick="navigateTo('album')">◀ Album</button>
+  </div>
+  <div class="portrait-stage" id="portraitStage">
+    <div class="wall-bg" id="wallBg"></div>
+  </div>
+  <div class="wall-note">Tippe ein Porträt an, um seine Karte zu öffnen.</div>
 </div>
 
 <!-- ==================== SCREEN: TRÄNKE / ALCHIMIELABOR ==================== -->
@@ -4232,6 +4287,7 @@ function navigateTo(screen) {
   } catch (e) {}
 
   currentScreen = screen;
+  if (screen !== 'portraits') stopWall();
   // Hide all screens
   document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = ''; });
   
@@ -4265,6 +4321,9 @@ function navigateTo(screen) {
   } else if (screen === 'potions') {
     document.getElementById('screen-potions').classList.add('active');
     renderSicher(renderPotions, 'potions');
+  } else if (screen === 'portraits') {
+    document.getElementById('screen-portraits').classList.add('active');
+    renderSicher(startWall, 'portraits');
   } else if (screen === 'welcome') {
     document.getElementById('screen-welcome').classList.add('active');
   }
@@ -4276,6 +4335,216 @@ function navigateTo(screen) {
   // Keep bottom nav hidden on welcome (and whenever nobody is logged in)
   document.getElementById('bottomNav').style.display =
     (!currentProfile || screen === 'welcome') ? 'none' : 'flex';
+}
+
+// ===================== PORTRÄTGALERIE: SCHULLEITERWAND =====================
+// Invarianten (gelten immer):
+//  1. Ein Schulleiter ist höchstens EINMAL sichtbar – wallState.heads ist die einzige Wahrheit.
+//  2. 'verlassen' nur aus besetztem Rahmen, 'betreten' nur in leeren Rahmen (Guards, kein Zufall).
+//  3. Die letzte sichtbare Figur darf nicht gehen – die Wand läuft nie leer.
+//  4. Wer unterwegs ist, tritt nach WALL_TRAVEL_MS wieder auf.
+//  5. Ein Rahmen ist während einer Bewegung 'busy'; 'ended' oder Timeout lösen sie auf.
+// Clips: WALL_CLIPS füllen ('cards/<id>-leave.mp4'), ohne Eintrag wird übergeblendet.
+// Mittelpunkte der Rahmen in % der Bühne (CSS zentriert per translate(-50%,-50%)).
+// 4 Spalten à 18 % Breite (halbe Breite 9 %), 2 Reihen: Rahmenhöhe = 0,32 · Bühnenbreite
+// = 42,7 % der Bühnenhöhe (Bühne 4:3) -> Reihen-Mittelpunkte 27,3 % und 72,7 %.
+const WALL_SLOTS = [
+  { x: 17, y: 27.3 }, { x: 39, y: 27.3 }, { x: 61, y: 27.3 }, { x: 83, y: 27.3 },
+  { x: 17, y: 72.7 }, { x: 39, y: 72.7 }, { x: 61, y: 72.7 }, { x: 83, y: 72.7 },
+];
+const WALL_CLIPS = {};          // { 'hp-209': { leave:'…mp4', enter:'…mp4' } }
+const WALL_WALL_IMG = '';       // Wandbild (4:3). Leer = CSS-Verlauf als Platzhalter.
+const WALL_MOVE_MS = 700;       // Überblenddauer, solange kein Clip existiert
+const WALL_CLIP_MS = 5600;      // Timeout-Fallback, falls 'ended' nie feuert
+const WALL_TRAVEL_MS = 4000;    // kürzeste Reisezeit "unterwegs"
+const WALL_TICK_MS = 4500;
+
+let wallState = null, wallTimer = null, wallBuilt = false;
+
+function wallHeads() {
+  const prof = getProfile(currentProfile);
+  const band = ALBUM_BANDS[8];
+  if (!prof || !band || !band.cards2) return [];
+  const owned = prof.cards || {};
+  return band.cards2.filter(id => owned[id] > 0);
+}
+function wallShuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function wallInit() {
+  const heads = wallHeads();
+  const st = { frames: WALL_SLOTS.map(() => ({ occ: null, busy: false })), heads: {} };
+  heads.forEach(h => { st.heads[h] = { frame: null, status: 'out', since: Date.now() }; });
+  const free = wallShuffle(WALL_SLOTS.map((_, i) => i));
+  const sit = (h, slot) => {
+    if (st.frames[slot].occ) { const old = st.frames[slot].occ; st.heads[old] = { frame: null, status: 'out', since: Date.now() }; }
+    st.frames[slot].occ = h;
+    st.heads[h] = { frame: slot, status: 'in' };
+  };
+  heads.forEach(h => { if (Math.random() < 0.7 && free.length) sit(h, free.pop()); });
+  if (heads.length && !heads.some(h => st.heads[h].status === 'in')) sit(heads[0], free.length ? free.pop() : 0);
+  wallState = st;
+  return st;
+}
+function wallBuild() {
+  const stage = document.getElementById('portraitStage');
+  if (!stage || wallBuilt) return;
+  WALL_SLOTS.forEach((s, i) => {
+    const f = document.createElement('div');
+    f.className = 'portrait-frame empty';
+    f.dataset.slot = i;
+    f.style.left = s.x + '%';
+    f.style.top = s.y + '%';
+    f.innerHTML = '<div class="portrait-glass empty"></div>';
+    f.onclick = () => {
+      const occ = wallState && wallState.frames[i] ? wallState.frames[i].occ : null;
+      if (occ) showCardDetail(occ);
+    };
+    stage.appendChild(f);
+  });
+  wallBuilt = true;
+}
+function wallRender() {
+  if (!wallState) return;
+  const stage = document.getElementById('portraitStage');
+  if (!stage) return;
+  const heads = wallHeads();
+  const sub = document.getElementById('wallSub');
+  if (sub) {
+    sub.textContent = heads.length === 0
+      ? 'Noch kein Porträt erwacht. Sammle Relikt-Karten aus „Die Hogwarts-Gründer · Teil 2", dann ziehen die Schulleiter ein.'
+      : heads.length + ' von 8 Porträts ' + (heads.length === 1 ? 'ist erwacht und wandert' : 'sind erwacht und wandern');
+  }
+  WALL_SLOTS.forEach((_, i) => {
+    const frameEl = stage.querySelector('.portrait-frame[data-slot="' + i + '"]');
+    if (!frameEl) return;
+    if (wallState.frames[i].busy) return;          // während einer Bewegung nicht überschreiben
+    const glass = frameEl.firstElementChild;
+    const occ = wallState.frames[i].occ;
+    if (occ) {
+      const card = getCardById(occ);
+      const src = card ? card.image : '';
+      frameEl.classList.remove('empty');
+      const img = glass.querySelector('img');
+      if (!img || glass.querySelector('video')) {
+        glass.className = 'portrait-glass';
+        glass.innerHTML = '';
+        const n = document.createElement('img');
+        n.src = src; n.alt = card ? card.name : ''; n.draggable = false;
+        glass.appendChild(n);
+      } else if (img.getAttribute('src') !== src) {
+        img.src = src;
+      }
+    } else if (!glass.classList.contains('empty') || !glass.querySelector('.wall-sheen')) {
+      frameEl.classList.add('empty');
+      glass.className = 'portrait-glass empty';
+      glass.innerHTML = '<div class="wall-sheen"></div>';
+    }
+  });
+}
+function wallBusyCount() { return wallState ? wallState.frames.filter(f => f.busy).length : 0; }
+function wallVisibleCount() { return wallState ? Object.keys(wallState.heads).filter(h => wallState.heads[h].status === 'in').length : 0; }
+function wallCanLeave(h) {
+  const st = wallState; if (!st) return false;
+  const hd = st.heads[h];
+  if (!hd || hd.status !== 'in' || hd.frame === null) return false;
+  if (st.frames[hd.frame].busy) return false;
+  return wallVisibleCount() > 1;
+}
+function wallCanEnter(h, slot) {
+  const st = wallState; if (!st) return false;
+  const hd = st.heads[h], f = st.frames[slot];
+  if (!hd || !f || hd.status !== 'out' || f.occ !== null || f.busy) return false;
+  return true;
+}
+function wallPlay(h, slot, kind, done) {
+  const frameEl = document.querySelector('.portrait-frame[data-slot="' + slot + '"]');
+  const glass = frameEl && frameEl.firstElementChild;
+  const clip = WALL_CLIPS[h] && WALL_CLIPS[h][kind];
+  let finished = false;
+  const finish = () => { if (finished) return; finished = true; done(); };
+  if (glass && clip) {
+    glass.className = 'portrait-glass';
+    glass.innerHTML = '';
+    const v = document.createElement('video');
+    v.src = clip; v.muted = true; v.playsInline = true; v.autoplay = true;
+    v.onended = finish; v.onerror = finish;
+    glass.appendChild(v);
+    const p = v.play(); if (p && p.catch) p.catch(() => {});
+    setTimeout(finish, WALL_CLIP_MS);
+    return;
+  }
+  const img = glass && glass.querySelector('img');
+  if (kind === 'leave' && img) {
+    img.classList.add('wall-hide');
+    setTimeout(finish, WALL_MOVE_MS);
+    return;
+  }
+  if (kind === 'enter' && glass) {
+    const card = getCardById(h);
+    if (card) {
+      glass.className = 'portrait-glass';
+      glass.innerHTML = '';
+      const n = document.createElement('img');
+      n.src = card.image; n.alt = card.name; n.draggable = false;
+      n.style.opacity = '0';
+      glass.appendChild(n);
+      requestAnimationFrame(() => { n.style.transition = 'opacity .7s ease'; n.style.opacity = '1'; });
+    }
+    setTimeout(finish, WALL_MOVE_MS + 150);
+    return;
+  }
+  setTimeout(finish, WALL_MOVE_MS);
+}
+function wallLeave(h) {
+  if (!wallCanLeave(h)) return false;
+  const st = wallState, hd = st.heads[h], slot = hd.frame, f = st.frames[slot];
+  f.busy = true; hd.status = 'moving';
+  wallPlay(h, slot, 'leave', () => {
+    f.occ = null; f.busy = false;
+    st.heads[h] = { frame: null, status: 'out', since: Date.now() };
+    wallRender();
+  });
+  return true;
+}
+function wallEnter(h, slot) {
+  if (!wallCanEnter(h, slot)) return false;
+  const st = wallState, f = st.frames[slot];
+  f.busy = true; st.heads[h].status = 'moving';
+  wallPlay(h, slot, 'enter', () => {
+    f.occ = h; f.busy = false;
+    st.heads[h] = { frame: slot, status: 'in' };
+    wallRender();
+  });
+  return true;
+}
+function wallTick() {
+  if (!wallState || currentScreen !== 'portraits' || document.hidden) return;
+  if (wallBusyCount() > 0) return;                       // eine Bewegung zur Zeit
+  const st = wallState, now = Date.now();
+  const freeSlots = st.frames.map((f, i) => ({ f, i })).filter(o => o.f.occ === null && !o.f.busy);
+  const wanderers = Object.keys(st.heads).filter(h => st.heads[h].status === 'out' && now - (st.heads[h].since || 0) >= WALL_TRAVEL_MS);
+  if (wanderers.length && freeSlots.length) {            // 1) jemand kehrt zurück
+    wallEnter(wanderers[Math.floor(Math.random() * wanderers.length)], freeSlots[Math.floor(Math.random() * freeSlots.length)].i);
+    return;
+  }
+  const present = Object.keys(st.heads).filter(h => st.heads[h].status === 'in');
+  if (present.length > 1) {                              // 2) jemand geht los
+    wallLeave(present[Math.floor(Math.random() * present.length)]);
+  }
+}
+function startWall() {
+  wallBuild();
+  if (!wallState) wallInit();
+  const bg = document.getElementById('wallBg');
+  if (bg && WALL_WALL_IMG) { bg.style.backgroundImage = 'url("' + WALL_WALL_IMG + '")'; bg.classList.add('on'); }
+  wallRender();
+  if (wallTimer) clearInterval(wallTimer);
+  wallTimer = setInterval(() => { try { wallTick(); } catch (e) {} }, WALL_TICK_MS);
+}
+function stopWall() {
+  if (wallTimer) { clearInterval(wallTimer); wallTimer = null; }
 }
 
 // ===================== WELCOME / PROFILES =====================
@@ -5747,6 +6016,13 @@ function buildAlbumSubPage(band, prof) {
     <div class="album-band-title">${band.title2 || (band.title + ' · Teil 2')}</div>
     <div class="album-band-sub">${band.short} · Teil 2 · ${ownedIn} von ${subIds.length} Karten</div>
   `;
+  if (band.id === 9) {
+    const wb = document.createElement('button');
+    wb.className = 'album-wall-btn';
+    wb.innerHTML = '🖼️ Porträtgalerie';
+    wb.onclick = (e) => { if (e) e.stopPropagation(); navigateTo('portraits'); };
+    head.appendChild(wb);
+  }
   el.appendChild(head);
 
   const grid = document.createElement('div');
@@ -7631,7 +7907,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v100';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v102';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
