@@ -2788,7 +2788,7 @@ body{
   <div class="portrait-stage" id="portraitStage">
     <div class="wall-bg" id="wallBg"></div>
   </div>
-  <div class="wall-note">Tippe ein Porträt an, um seine Karte zu öffnen.</div>
+  <div class="wall-note">Tippe ein Porträt an, um seine Karte zu öffnen. Ein paar Schulleiter sind immer unterwegs – sie kehren von selbst zurück.</div>
 </div>
 
 <!-- ==================== SCREEN: TRÄNKE / ALCHIMIELABOR ==================== -->
@@ -4345,12 +4345,19 @@ function navigateTo(screen) {
 //  4. Wer unterwegs ist, tritt nach WALL_TRAVEL_MS wieder auf.
 //  5. Ein Rahmen ist während einer Bewegung 'busy'; 'ended' oder Timeout lösen sie auf.
 // Clips: WALL_CLIPS füllen ('cards/<id>-leave.mp4'), ohne Eintrag wird übergeblendet.
-// Mittelpunkte der Rahmen in % der Bühne (CSS zentriert per translate(-50%,-50%)).
-// 4 Spalten à 18 % Breite (halbe Breite 9 %), 2 Reihen: Rahmenhöhe = 0,32 · Bühnenbreite
-// = 42,7 % der Bühnenhöhe (Bühne 4:3) -> Reihen-Mittelpunkte 27,3 % und 72,7 %.
+// Mittelpunkte der Rahmen in % der Bühne (CSS zentriert per translate(-50%,-50%)),
+// bewusst UNREGELMÄSSIG wie eine gewachsene Galerie: verschiedene Breiten (13-19 %),
+// verschiedene Höhen, leichte Schrägstellung. Höhe folgt aus 9:16 und ist in % der
+// Bühnenhöhe das 2,37-fache der Breite (Bühne 4:3) -> Rahmen bleiben immer im Bild.
 const WALL_SLOTS = [
-  { x: 17, y: 27.3 }, { x: 39, y: 27.3 }, { x: 61, y: 27.3 }, { x: 83, y: 27.3 },
-  { x: 17, y: 72.7 }, { x: 39, y: 72.7 }, { x: 61, y: 72.7 }, { x: 83, y: 72.7 },
+  { x: 13, y: 24, w: 16, rot: -1.2 },
+  { x: 31, y: 22, w: 14, rot:  0.8 },
+  { x: 50, y: 24, w: 17, rot: -0.6 },
+  { x: 72, y: 21, w: 14, rot:  1.3 },
+  { x: 16, y: 68, w: 15, rot:  1.0 },
+  { x: 33, y: 59, w: 15, rot: -1.1 },
+  { x: 56, y: 67, w: 14, rot:  0.7 },
+  { x: 80, y: 61, w: 18, rot: -1.4 },
 ];
 const WALL_CLIPS = {};          // { 'hp-209': { leave:'…mp4', enter:'…mp4' } }
 const WALL_WALL_IMG = '';       // Wandbild (4:3). Leer = CSS-Verlauf als Platzhalter.
@@ -4382,7 +4389,7 @@ function wallInit() {
     st.frames[slot].occ = h;
     st.heads[h] = { frame: slot, status: 'in' };
   };
-  heads.forEach(h => { if (Math.random() < 0.7 && free.length) sit(h, free.pop()); });
+  heads.forEach(h => { if (Math.random() < 0.85 && free.length) sit(h, free.pop()); });
   if (heads.length && !heads.some(h => st.heads[h].status === 'in')) sit(heads[0], free.length ? free.pop() : 0);
   wallState = st;
   return st;
@@ -4396,6 +4403,8 @@ function wallBuild() {
     f.dataset.slot = i;
     f.style.left = s.x + '%';
     f.style.top = s.y + '%';
+    f.style.width = s.w + '%';
+    f.style.transform = 'translate(-50%,-50%) rotate(' + s.rot + 'deg)';
     f.innerHTML = '<div class="portrait-glass empty"></div>';
     f.onclick = () => {
       const occ = wallState && wallState.frames[i] ? wallState.frames[i].occ : null;
@@ -4414,7 +4423,7 @@ function wallRender() {
   if (sub) {
     sub.textContent = heads.length === 0
       ? 'Noch kein Porträt erwacht. Sammle Relikt-Karten aus „Die Hogwarts-Gründer · Teil 2", dann ziehen die Schulleiter ein.'
-      : heads.length + ' von 8 Porträts ' + (heads.length === 1 ? 'ist erwacht und wandert' : 'sind erwacht und wandern');
+      : heads.length + ' von 8 Porträts erwacht';
   }
   WALL_SLOTS.forEach((_, i) => {
     const frameEl = stage.querySelector('.portrait-frame[data-slot="' + i + '"]');
@@ -7907,7 +7916,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v102';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v103';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
