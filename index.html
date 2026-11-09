@@ -3268,6 +3268,15 @@ const CARD_DB = [
   { id:'hp-082', name:'Salazar Slytherin', rarity:'relikt', type:'Charakter', subtype:'Hogwarts-Gruender', house:'Slytherin', desc:'Einer der vier grossartigsten Zauberer aller Zeiten. Gruender von Hogwarts und Erbauer der Kammer des Schreckens.', image:'cards/hp-082.jpg' },
   { id:'hp-083', name:'Helga Hufflepuff', rarity:'relikt', type:'Charakter', subtype:'Hogwarts-Gruender', house:'Hufflepuff', desc:'Einer der vier grossartigsten Zauberer aller Zeiten. Gruenderin von Hogwarts und bekannt fuer ihre Treue und ihren Gerechtigkeitssinn.', image:'cards/hp-083.jpg' },
   { id:'hp-084', name:'Rowena Ravenclaw', rarity:'relikt', type:'Charakter', subtype:'Hogwarts-Gruender', house:'Ravenclaw', desc:'Einer der vier grossartigsten Zauberer aller Zeiten. Gruenderin von Hogwarts und die kluegste Hexe ihrer Zeit.', image:'cards/hp-084.jpg' },
+  // ---- Relikt Teil 2: Die Schulleiter (hp-209…hp-216) ----
+  { id:'hp-209', name:'Edric Woodcroft', rarity:'relikt', type:'Charakter', subtype:'Schulleiter von Hogwarts', house:'—', desc:'Der erste Schulleiter Hogwarts. Er unterrichtete im Burghof, weil es noch keine Klassenzimmer gab.', image:'cards/hp-209.jpg' },
+  { id:'hp-210', name:'Valeria Blackwood', rarity:'relikt', type:'Charakter', subtype:'Schulleiterin von Hogwarts', house:'—', desc:'Reformierte den Lehrplan, verschaerfte die Aufnahme und erfand den Schulverweis. Ihre Nachfolger brauchten Jahrzehnte, um die Schule wieder zusammenzufuehren.', image:'cards/hp-210.jpg' },
+  { id:'hp-211', name:'Elias Greengrass', rarity:'relikt', type:'Charakter', subtype:'Schulleiter von Hogwarts', house:'—', desc:'Richtete 1294 das erste Trimagische Turnier aus und liess das Schulmotto in das Wappen aufnehmen.', image:'cards/hp-211.jpg' },
+  { id:'hp-212', name:'Griselda Marchbanks', rarity:'relikt', type:'Charakter', subtype:'Schulleiterin von Hogwarts', house:'—', desc:'Keine grossen Reden, dafuer funktionierende Stundenplaene. Ihr Name lebt bis heute in der Pruefungsbehoerde weiter.', image:'cards/hp-212.jpg' },
+  { id:'hp-213', name:'Dilys Derwent', rarity:'relikt', type:'Charakter', subtype:'Schulleiterin von Hogwarts', house:'—', desc:'Heilerin, Schulleiterin, Reformerin des Krankenfluegels. Unter ihr wurde aus einer Krankenstube eine eigene Station.', image:'cards/hp-213.jpg' },
+  { id:'hp-214', name:'Phineas Nigellus Black', rarity:'relikt', type:'Charakter', subtype:'Schulleiter von Hogwarts', house:'Slytherin', desc:'Beruechtigt als der unbeliebteste Schulleiter der Hogwarts-Geschichte. Sein Portraet kommentiert bis heute alles im Buero des Schulleiters.', image:'cards/hp-214.jpg' },
+  { id:'hp-215', name:'Caractacus Lestrange', rarity:'relikt', type:'Charakter', subtype:'Schulleiter von Hogwarts', house:'—', desc:'Ein Mann, der das Amt mit der Ueberzeugung antrat, dass eine Schule in erster Linie eine Frage der Ordnung sei.', image:'cards/hp-215.jpg' },
+  { id:'hp-216', name:'Armando Dippet', rarity:'relikt', type:'Charakter', subtype:'Schulleiter von Hogwarts', house:'—', desc:'Fuehrte Hogwarts durch zwei der schwierigsten Jahrzehnte der modernen magischen Welt - und uebergab die Schule in einem Zustand, der sich als funktionierend beschreiben laesst.', image:'cards/hp-216.jpg' },
   { id:'hp-085', name:'Lucius Malfoy', rarity:'rare', type:'Charakter', subtype:'Todesser', house:'Slytherin', desc:'„Die Vergangenheit ist ein Buch, das man nicht zuschlagen kann." Lucius Malfoy, Oberhaupt der Familie Malfoy und einflussreicher Todesser, ist bekannt für seinen aristokratischen Stolz, seinen Reichtum und seine undurchsichtigen Machenschaften im Dienste des Dunklen Lords.', image:'cards/hp-085.jpg' },
   { id:'hp-086', name:'Dolores Umbridge', rarity:'rare', type:'Charakter', subtype:'Senior-Undersecretary', house:'Slytherin', desc:'„Regeln sind das Fundament einer funktionierenden Gesellschaft." Dolores Umbridge, Senior-Undersecretary des Zaubereiministeriums, setzt ihre süßliche Fassade als Waffe ein. Hinter dem pinken Strickjäckchen verbirgt sich eine der gefährlichsten Bürokratinnen der Zaubererwelt.', image:'cards/hp-086-nb2l.jpg' },
   { id:'hp-087', name:'Argus Filch', rarity:'common', type:'Charakter', subtype:'Hausmeister', house:'-', desc:'„Ich krieg euch schon noch, ihr kleinen Biester." Argus Filch, der mürrische Hausmeister von Hogwarts, durchstreift die Gänge auf der Suche nach Regelbrechern. Seine treue Katze Mrs Norris ist immer an seiner Seite.', image:'cards/hp-087-nb2l.jpg' },
@@ -3511,6 +3520,8 @@ const ALBUM_BANDS = [
     reward: null },
   { id: 9, sonder: true, title: 'Die Hogwarts-Gründer', short: 'Gründer', icon: '🦡', bg: 'album/bg-founders.jpg',
     cards: ['hp-081','hp-082','hp-084','hp-083'],
+    title2: 'Die Hogwarts-Gründer · Teil 2',
+    cards2: ['hp-209','hp-210','hp-211','hp-212','hp-213','hp-214','hp-215','hp-216'],
     reward: null },
   { id: 10, title: 'Die Magische Welt', short: 'Magische Welt', icon: '🌍', bg: 'album/bg-magicalworld.jpg',
     cards: ['hp-109','hp-110','hp-111','hp-112','hp-113','hp-114','hp-115','hp-116','hp-117','hp-118','hp-119','hp-120','hp-121','hp-122','hp-123','hp-124'],
@@ -7620,7 +7631,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v99';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v100';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
