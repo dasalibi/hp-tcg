@@ -6023,7 +6023,6 @@ function buildAlbumSubPage(band, prof) {
   head.className = 'album-band-head';
   head.innerHTML = `
     <div class="album-band-title">${band.title2 || (band.title + ' · Teil 2')}</div>
-    <div class="album-band-sub">${band.short} · Teil 2 · ${ownedIn} von ${subIds.length} Karten</div>
   `;
   if (band.id === 9) {
     const wb = document.createElement('button');
@@ -6112,7 +6111,6 @@ function renderAlbumBand() {
     const ownedInBand = band.cards.filter(id => owned[id] > 0).length;
     head.innerHTML = `
       <div class="album-band-title">${band.title}</div>
-      <div class="album-band-sub">${band.short} · ${ownedInBand} von ${band.cards.length} Karten</div>
     `;
     page.appendChild(head);
 
@@ -7916,7 +7914,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v103';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v104';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
