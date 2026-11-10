@@ -4746,9 +4746,40 @@ function wallTick() {
     wallLeave(present[Math.floor(Math.random() * present.length)]);
   }
 }
+// Gleicht die Wand mit dem tatsaechlichen Besitz ab. Ohne das blieb die Wand leer, wenn eine
+// Figur erst NACH dem ersten Aufbau der Galerie dazukam (Kind bekommt eine Karte, oeffnet die
+// Galerie: Untertitel sagte "1 von 8", aber kein Rahmen war besetzt). Laeuft bei jedem Aufruf.
+function wallSyncHeads() {
+  const heads = wallHeads();
+  if (!wallState) { wallInit(); return; }
+  const st = wallState;
+  // Figuren entfernen, die nicht (mehr) im Besitz sind - z.B. nach Profilwechsel
+  Object.keys(st.heads).forEach(h => {
+    if (heads.includes(h)) return;
+    const slot = st.heads[h].frame;
+    if (slot !== null && slot !== undefined && st.frames[slot]) {
+      st.frames[slot].occ = null;
+      st.frames[slot].busy = false;
+      st.frames[slot].lastOwner = null;
+    }
+    delete st.heads[h];
+    delete wallLiveSet[h];
+  });
+  // Neue Figuren sofort in einen freien Rahmen setzen (kein Warten auf einen Tick)
+  heads.filter(h => !st.heads[h]).forEach(h => {
+    const slot = st.frames.findIndex(f => f.occ === null && !f.busy);
+    if (slot >= 0) {
+      st.frames[slot].occ = h;
+      st.frames[slot].lastOwner = null;
+      st.heads[h] = { frame: slot, status: 'in', since: Date.now() };
+    } else {
+      st.heads[h] = { frame: null, status: 'out', since: Date.now() };
+    }
+  });
+}
 function startWall() {
   wallBuild();
-  if (!wallState) wallInit();
+  wallSyncHeads();
   const bg = document.getElementById('wallBg');
   if (bg && WALL_WALL_IMG) { bg.style.backgroundImage = 'url("' + WALL_WALL_IMG + '")'; bg.classList.add('on'); }
   wallLivePick(true);
@@ -8130,7 +8161,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v106';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v107';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
