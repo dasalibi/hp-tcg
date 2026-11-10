@@ -7238,9 +7238,9 @@ function showCardDetail(cardId) {
   // oder magisches Porträt) verfügbar sein – dann erscheinen BEIDE Knöpfe.
   const hatUpgrade = (count >= 3 && FUNNY_CARDS[card.id]) ||
                      (count >= 2 && ANIMATED_PORTRAITS[card.id] && !isAnimated);
-  // Relikt-Tausch: 2 Relikte gegen 1 zufaelliges Relikt - nur mit Trank des Suchers.
+  // Relikt-Tausch: 2 Relikte gegen 1 zufaelliges Relikt - nur mit getrunkenem Trank der Verwandlung.
   const istRelikt = card.rarity === 'relikt';
-  const hatSucher = (traenkeVon(prof).sucher || 0) > 0;
+  const hatVerwandlung = !!aktivVon(prof).verwandlung;   // muss getrunken sein
   const tauschText = '2:1 Eintauschen (2x ' + card.name + ' gegen 1 zufälliges ' +
                      (istRelikt ? 'Relikt' : 'Karte') + ')';
   tradeBtn.disabled = false; tradeBtn.style.opacity = '';       // Sperre vom letzten Aufruf loeschen
@@ -7271,16 +7271,16 @@ function showCardDetail(cardId) {
   } else {
     tradeDiv.style.display = 'none';
   }
-  // Relikt-Tausch ist gesperrt, solange kein Trank des Suchers im Regal liegt
+  // Relikt-Tausch ist gesperrt, solange kein Trank der Verwandlung getrunken ist.
   if (istRelikt && count >= 2 && tradeDiv.style.display === 'block') {
     const b2 = (tradeBtn2.style.display === 'block') ? tradeBtn2
              : (tradeBtn.textContent.indexOf('2:1') === 0 ? tradeBtn : null);
     if (b2) {
-      b2.disabled = !hatSucher;
-      if (!hatSucher) b2.style.opacity = '.45';
+      b2.disabled = !hatVerwandlung;
+      if (!hatVerwandlung) b2.style.opacity = '.45';
       tradeInfo.textContent = tradeInfo.textContent +
-        (hatSucher ? ' · Verbraucht 1 Trank des Suchers.'
-                   : ' · Nur mit Trank des Suchers möglich.');
+        (hatVerwandlung ? ' · Verbraucht deinen getrunkenen Trank der Verwandlung.'
+                        : ' · Erst einen Trank der Verwandlung trinken.');
     }
   }
   
@@ -7456,15 +7456,14 @@ function executeTrade2zu1() {
   const owned = prof.cards || {};
   const count = owned[cardId] || 0;
   if (count < 2) return;
-  // Relikt-Tausch: kostet einen Trank des Suchers und liefert garantiert ein Relikt
+  // Relikt-Tausch: kostet einen getrunkenen Trank der Verwandlung und liefert garantiert ein Relikt
   const istRelikt = card.rarity === 'relikt';
-  const sucherBestand = traenkeVon(prof).sucher || 0;
-  if (istRelikt && sucherBestand <= 0) {
-    alert('Für den Relikt-Tausch brauchst du einen Trank des Suchers.');
+  if (istRelikt && !aktivVon(prof).verwandlung) {
+    alert('Für den Relikt-Tausch musst du erst einen Trank der Verwandlung trinken.');
     return;
   }
   const frage = istRelikt
-    ? '2x ' + card.name + ' gegen 1 zufälliges Relikt tauschen?\n\nDabei wird 1 Trank des Suchers verbraucht.'
+    ? '2x ' + card.name + ' gegen 1 zufälliges Relikt tauschen?\n\nDabei wird dein getrunkener Trank der Verwandlung verbraucht.'
     : '2x ' + card.name + ' gegen 1 zufällige Karte tauschen?';
   if (!confirm(frage)) return;
   owned[cardId] = owned[cardId] - 2;
@@ -7476,8 +7475,8 @@ function executeTrade2zu1() {
   const mitVerwandlung = !!aktivVon(prof).verwandlung;
   const naechsteStufe = { common:'rare', rare:'legendary', legendary:'relikt', relikt:'relikt' };
   if (istRelikt) {
-    // 2:1-Relikt-Tausch: immer ein Relikt (der Trank des Suchers bezahlt den Tausch,
-    // ein aktiver Verwandlungstrank bleibt fuer den naechsten normalen Tausch liegen)
+    // 2:1-Relikt-Tausch: immer ein Relikt; der getrunkene Trank der Verwandlung bezahlt den Tausch
+    // (er wird unten abgebucht, nicht hier - sonst waere er bei leerem Pool verloren)
     rarityTable = [{ rarity:'relikt', prob:100 }];
   } else if (mitVerwandlung) {
     // Trank der Verwandlung: garantiert die naechsthoehere Seltenheit
@@ -7509,9 +7508,8 @@ function executeTrade2zu1() {
     ? filtered[Math.floor(Math.random() * filtered.length)]
     : rarityPool[Math.floor(Math.random() * rarityPool.length)];
   if (istRelikt) {
-    const regal = traenkeVon(prof);
-    regal.sucher = (regal.sucher || 0) - 1;
-    if (regal.sucher <= 0) delete regal.sucher;
+    // erst hier abbuchen: wenn oben kein anderes Relikt im Pool liegt, bleibt der Trank erhalten
+    delete aktivVon(prof).verwandlung;
   }
   const alreadyOwned = owned[randomCard.id] > 0;
   owned[randomCard.id] = (owned[randomCard.id] || 0) + 1;
@@ -8378,7 +8376,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v109';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v110';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
