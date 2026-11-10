@@ -2496,20 +2496,39 @@ body{
 .portrait-stage::after { content:""; position:absolute; inset:0; pointer-events:none;
   background: radial-gradient(75% 60% at 50% 45%, rgba(232,205,138,.05), transparent 70%); }
 .portrait-frame { position:absolute; width:18%; aspect-ratio:9/16; transform:translate(-50%,-50%);
-  padding:5px; border-radius:4px; cursor:pointer;
-  background: linear-gradient(135deg,#7d5f2c 0%,#d9b96b 18%,#6d5024 42%,#c9a45c 70%,#54401d 100%);
-  box-shadow: 0 8px 20px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.55), 0 0 0 1px rgba(232,205,138,.18); }
+  padding:6px; border-radius:3px; cursor:pointer;
+  box-shadow: 0 9px 22px rgba(0,0,0,.62), 0 2px 6px rgba(0,0,0,.5); }
+.portrait-frame:hover { box-shadow: 0 10px 28px rgba(0,0,0,.72), 0 0 0 1px rgba(232,205,138,.4); }
+/* Rahmenstil 0: schweres Blattgold */
+.portrait-frame.fr-gold { background: linear-gradient(135deg,#6d5122 0%,#d9b96b 16%,#8a6a33 34%,#e0c878 52%,#7a5a26 68%,#c09a52 86%,#4d3a17 100%); }
+/* Rahmenstil 1: schlanker Gold-Schwarz-Rahmen */
+.portrait-frame.fr-gilt { background: linear-gradient(135deg,#2a231c 0%,#b9954f 22%,#1e1a15 50%,#c9a45c 76%,#241f18 100%); }
+/* Rahmenstil 2: dunkle Eiche */
+.portrait-frame.fr-wood { background: linear-gradient(135deg,#3a2a18 0%,#6b4e2c 20%,#4a341d 46%,#7a5a34 68%,#33240f 100%); }
+/* Sobald gemalte Rahmen-Bilder existieren: 9-Slice (border-image) statt Verlauf.
+   Ein Bild gilt für alle Größen, ohne dass Ornamente verzerrt werden. */
+.portrait-frame.has-img { background:none; box-shadow:none; padding:0 !important;
+  border-style:solid; border-color:transparent; border-width:var(--fw,6px);
+  border-image:var(--frame-src) var(--frame-slice, 7.8125%) stretch;
+  filter: drop-shadow(0 9px 14px rgba(0,0,0,.55)); }
 .portrait-frame.empty { cursor:default; }
 .portrait-glass { position:relative; width:100%; height:100%; overflow:hidden; border-radius:2px;
   background:linear-gradient(180deg,#171310 0%,#0c0a08 100%);
   box-shadow: inset 0 0 16px rgba(0,0,0,.95), inset 0 2px 6px rgba(0,0,0,.9); }
+/* Leerer Rahmen: leicht durchsichtig, damit der Putz dahinter durchscheint – wirkt wie ein
+   leeres Bild und nicht wie eine schwarze Tafel. */
+/* Leerer Rahmen: die Wand scheint durch, nur verschattet - so wie ein leerer Rahmen es
+   physikalisch täte. Kein Bild nötig, passt dadurch an JEDER Stelle der Wand. */
+/* Leerer Rahmen: zeigt genau den letzten Videoframe des Abgangs (wird inline gesetzt),
+   damit der Übergang Clip -> Standbild pixelgleich ist. */
+/* Leerer Rahmen - ein Zustand für beide Fälle (nie besessen und gerade verlassen):
+   kein Glas, kein Bild. Die Wand scheint durch, der Rahmen liegt mit weichem Randschatten darauf. */
+.portrait-glass.empty { background:none;
+  box-shadow: inset 0 0 16px rgba(0,0,0,.42), inset 0 0 3px rgba(0,0,0,.35); }
 .portrait-glass img, .portrait-glass video { width:100%; height:100%; object-fit:cover; display:block; }
 .portrait-glass img { transition: opacity .65s ease, transform .65s ease; }
 .portrait-glass img.wall-hide { opacity:0; transform:scale(.985); }
-.wall-sheen { position:absolute; inset:-45%; pointer-events:none;
-  background:linear-gradient(112deg, transparent 44%, rgba(232,205,138,.10) 50%, transparent 56%);
-  animation: wallSheen 9s ease-in-out infinite; }
-@keyframes wallSheen { 0%,100% { transform:translateX(-22%); } 50% { transform:translateX(22%); } }
+50% { transform:translateX(22%); } }
 .portrait-glass.empty::after { content:""; position:absolute; inset:0;
   background: radial-gradient(65% 45% at 50% 100%, rgba(232,205,138,.07), transparent 72%); }
 .wall-note { margin-top:12px; font-size:12.5px; color:var(--dark-light); text-align:center; line-height:1.5; }
@@ -2517,7 +2536,6 @@ body{
   background:linear-gradient(180deg, rgba(232,205,138,.16), rgba(232,205,138,.05));
   color:var(--gold-light); border-radius:10px; padding:7px 14px; font:inherit; font-size:12.5px; cursor:pointer; }
 @media (prefers-reduced-motion: reduce) {
-  .wall-sheen { animation:none; }
   .portrait-glass img { transition:opacity .3s ease; }
 }
 </style>
@@ -4349,20 +4367,45 @@ function navigateTo(screen) {
 // bewusst UNREGELMÄSSIG wie eine gewachsene Galerie: verschiedene Breiten (13-19 %),
 // verschiedene Höhen, leichte Schrägstellung. Höhe folgt aus 9:16 und ist in % der
 // Bühnenhöhe das 2,37-fache der Breite (Bühne 4:3) -> Rahmen bleiben immer im Bild.
+// fwp = Profilbreite in % der Bühnenbreite (0,55-0,95), st = Rahmenstil (siehe WALL_FRAME_STYLES)
 const WALL_SLOTS = [
-  { x: 13, y: 24, w: 16, rot: -1.2 },
-  { x: 31, y: 22, w: 14, rot:  0.8 },
-  { x: 50, y: 24, w: 17, rot: -0.6 },
-  { x: 72, y: 21, w: 14, rot:  1.3 },
-  { x: 16, y: 68, w: 15, rot:  1.0 },
-  { x: 33, y: 59, w: 15, rot: -1.1 },
-  { x: 56, y: 67, w: 14, rot:  0.7 },
-  { x: 80, y: 61, w: 18, rot: -1.4 },
+  { x: 27.5, y: 21,   w: 14,   rot: -1.3, fwp: 0.75, st: 0 },
+  { x: 43.5, y: 18.5, w: 12.5, rot:  0.9, fwp: 0.55, st: 1 },
+  { x: 59.5, y: 22,   w: 14.5, rot: -0.6, fwp: 0.90, st: 0 },
+  { x: 76,   y: 19,   w: 13,   rot:  1.4, fwp: 0.60, st: 2 },
+  { x: 28.5, y: 54,   w: 13,   rot:  1.1, fwp: 0.65, st: 1 },
+  { x: 44,   y: 52,   w: 14.5, rot: -1.0, fwp: 0.85, st: 0 },
+  { x: 60,   y: 54.5, w: 12.5, rot:  0.7, fwp: 0.55, st: 2 },
+  { x: 76,   y: 53,   w: 15,   rot: -1.4, fwp: 0.95, st: 1 },
 ];
-const WALL_CLIPS = {};          // { 'hp-209': { leave:'…mp4', enter:'…mp4' } }
-const WALL_WALL_IMG = '';       // Wandbild (4:3). Leer = CSS-Verlauf als Platzhalter.
+// Sobald die Rahmen-Bilder da sind: 'album/frame-gold.jpg' usw. eintragen und
+// `.portrait-frame` bekommt automatisch border-image (9-Slice, keine Verzerrung).
+const WALL_FRAME_STYLES = [
+  { img: 'album/frame-gold.jpg', cls: 'fr-gold' },   // 0 = Blattgold mit Perlenrand
+  { img: 'album/frame-gilt.jpg', cls: 'fr-gilt' },   // 1 = schwerer Akanthus-Goldrahmen
+  { img: 'album/frame-wood.jpg', cls: 'fr-wood' },   // 2 = geschnitzte Eiche
+];
+const WALL_CLIPS = {
+  'hp-209': { idle: 'cards/hp-209-idle.mp4', leave: 'cards/hp-209-leave.mp4', enter: 'cards/hp-209-enter.mp4' },
+  'hp-210': { idle: 'cards/hp-210-idle.mp4', leave: 'cards/hp-210-leave.mp4', enter: 'cards/hp-210-enter.mp4' },
+  'hp-214': { idle: 'cards/hp-214-idle.mp4', leave: 'cards/hp-214-leave.mp4', enter: 'cards/hp-214-enter.mp4' },
+  'hp-212': { idle: 'cards/hp-212-idle.mp4', leave: 'cards/hp-212-leave.mp4', enter: 'cards/hp-212-enter.mp4' },
+  'hp-211': { idle: 'cards/hp-211-idle.mp4', leave: 'cards/hp-211-leave.mp4', enter: 'cards/hp-211-enter.mp4' },
+  'hp-213': { idle: 'cards/hp-213-idle.mp4', leave: 'cards/hp-213-leave.mp4', enter: 'cards/hp-213-enter.mp4' },
+  'hp-215': { idle: 'cards/hp-215-idle.mp4', leave: 'cards/hp-215-leave.mp4', enter: 'cards/hp-215-enter.mp4' },
+  'hp-216': { idle: 'cards/hp-216-idle.mp4', leave: 'cards/hp-216-leave.mp4', enter: 'cards/hp-216-enter.mp4' },
+};         // { '<id>': { idle:'…mp4', notice:'…mp4', leave:'…mp4', enter:'…mp4' } }
+const WALL_WALL_IMG = 'album/bg-portraits.jpg';   // 4:3-Wandbild (deploy: .jpg)
 const WALL_MOVE_MS = 700;       // Überblenddauer, solange kein Clip existiert
-const WALL_CLIP_MS = 5600;      // Timeout-Fallback, falls 'ended' nie feuert
+const WALL_CLIP_MS = 5600;      // Fallback, wenn Metadaten fehlen
+const WALL_CLIP_MAX_MS = 17000; // Sicherheitsnetz für lange Clips
+const WALL_ACTION_COOLDOWN = 45000;  // ein Porträt "performt" höchstens alle 45 s
+const WALL_ACTION_CHANCE = 0.3;      // Anteil der Ticks, die eine Aktion auslösen
+// Lebende Besetzung: nur so viele Idle-Loops gleichzeitig, wie iOS sicher dekodiert.
+const WALL_LIVE_COUNT = 2;
+const WALL_LIVE_ROTATE_MS = 15000;   // alle 15 s tauscht genau einer aus
+let wallLiveSet = {};                // { 'hp-209': true } - wer gerade "lebt"
+let wallLiveTimer = null;
 const WALL_TRAVEL_MS = 4000;    // kürzeste Reisezeit "unterwegs"
 const WALL_TICK_MS = 4500;
 
@@ -4384,27 +4427,63 @@ function wallInit() {
   const st = { frames: WALL_SLOTS.map(() => ({ occ: null, busy: false })), heads: {} };
   heads.forEach(h => { st.heads[h] = { frame: null, status: 'out', since: Date.now() }; });
   const free = wallShuffle(WALL_SLOTS.map((_, i) => i));
+  const canMove = h => !!(WALL_CLIPS[h] && WALL_CLIPS[h].leave);
   const sit = (h, slot) => {
     if (st.frames[slot].occ) { const old = st.frames[slot].occ; st.heads[old] = { frame: null, status: 'out', since: Date.now() }; }
     st.frames[slot].occ = h;
     st.heads[h] = { frame: slot, status: 'in' };
   };
-  heads.forEach(h => { if (Math.random() < 0.85 && free.length) sit(h, free.pop()); });
-  if (heads.length && !heads.some(h => st.heads[h].status === 'in')) sit(heads[0], free.length ? free.pop() : 0);
+  // Alle Schulleiter hängen zuerst, dann sind 0-2 zufällig "unterwegs". Vorher wurde jeder
+  // einzeln mit 85 % gesetzt - im schlechtesten Fall blieben vier Rahmen leer, obwohl alle
+  // Karten im Besitz sind. Jetzt ist die Wand beim Öffnen immer voll (Ausnahme: 1-2 laufen).
+  heads.forEach(h => { if (free.length) sit(h, free.pop()); });
+  const movable = heads.filter(canMove);   // nur Figuren mit Abgang-Clip können fehlen
+  const maxOut = Math.max(0, Math.min(2, movable.length - 1));
+  const outCount = Math.floor(Math.random() * (maxOut + 1));
+  const shuffled = wallShuffle(movable.slice());
+  for (let i = 0; i < outCount; i++) {
+    const h = shuffled[i], hd = st.heads[h];
+    if (!hd || hd.frame === null) continue;
+    const slot = hd.frame;
+    st.frames[slot].occ = null;
+    st.frames[slot].lastOwner = h;         // der Rahmen zeigt die Fläche DIESER Figur
+    st.heads[h] = { frame: null, status: 'out', since: Date.now() };
+  }
   wallState = st;
   return st;
+}
+function wallProfilePx(slot) {
+  const stage = document.getElementById('portraitStage');
+  const w = stage ? stage.clientWidth : 600;
+  return Math.max(3, Math.round(w * (slot.fwp || 0.7) / 100));
+}
+function wallRelayout() {
+  const stage = document.getElementById('portraitStage');
+  if (!stage) return;
+  document.querySelectorAll('.portrait-frame').forEach(el => {
+    const s = WALL_SLOTS[+el.dataset.slot];
+    if (!s) return;
+    const px = wallProfilePx(s);
+    el.style.setProperty('--fw', px + 'px');
+    if (!el.classList.contains('has-img')) el.style.padding = px + 'px';
+  });
 }
 function wallBuild() {
   const stage = document.getElementById('portraitStage');
   if (!stage || wallBuilt) return;
   WALL_SLOTS.forEach((s, i) => {
     const f = document.createElement('div');
-    f.className = 'portrait-frame empty';
+    const style = WALL_FRAME_STYLES[s.st || 0] || WALL_FRAME_STYLES[0];
+    f.className = 'portrait-frame empty ' + style.cls + (style.img ? ' has-img' : '');
     f.dataset.slot = i;
     f.style.left = s.x + '%';
     f.style.top = s.y + '%';
     f.style.width = s.w + '%';
     f.style.transform = 'translate(-50%,-50%) rotate(' + s.rot + 'deg)';
+    const px = wallProfilePx(s);
+    f.style.setProperty('--fw', px + 'px');
+    if (style.img) f.style.setProperty('--frame-src', 'url("' + style.img + '")');
+    else f.style.padding = px + 'px';
     f.innerHTML = '<div class="portrait-glass empty"></div>';
     f.onclick = () => {
       const occ = wallState && wallState.frames[i] ? wallState.frames[i].occ : null;
@@ -4435,6 +4514,39 @@ function wallRender() {
       const card = getCardById(occ);
       const src = card ? card.image : '';
       frameEl.classList.remove('empty');
+      const hasVideo = !!glass.querySelector('video');
+      // Lebende Besetzung: Idle-Loop statt Standbild
+      if (wallLiveSet[occ] && WALL_CLIPS[occ] && WALL_CLIPS[occ].idle) {
+        frameEl.classList.add('live');
+        if (!hasVideo) {
+          glass.className = 'portrait-glass';
+          glass.innerHTML = '';
+          const v = document.createElement('video');
+          v.src = WALL_CLIPS[occ].idle;
+          v.poster = src;          // Porträt als Standbild, bis das erste Videobild da ist (sonst kurz schwarz)
+          v.loop = true; v.muted = true; v.autoplay = true; v.draggable = false;
+          v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+          glass.appendChild(v);
+          const pl = v.play(); if (pl && pl.catch) pl.catch(() => {});
+        }
+        return;
+      }
+      frameEl.classList.remove('live');
+      if (hasVideo) {
+        // Jeder Abgang endet auf SEINER leeren Wand (die Töne unterscheiden sich leicht).
+        // Deshalb das Standbild über das letzte Videobild einblenden statt hart umzuschalten.
+        const oldV = glass.querySelector('video');
+        const fade = document.createElement('img');
+        fade.src = src; fade.alt = card ? card.name : ''; fade.draggable = false;
+        fade.style.position = 'absolute'; fade.style.inset = '0';
+        fade.style.width = '100%'; fade.style.height = '100%';
+        fade.style.objectFit = 'cover'; fade.style.opacity = '0';
+        fade.style.transition = 'opacity .35s ease';
+        glass.appendChild(fade);
+        requestAnimationFrame(() => { fade.style.opacity = '1'; });
+        setTimeout(() => { if (oldV && oldV.parentNode) oldV.remove(); }, 400);
+        return;
+      }
       const img = glass.querySelector('img');
       if (!img || glass.querySelector('video')) {
         glass.className = 'portrait-glass';
@@ -4445,11 +4557,62 @@ function wallRender() {
       } else if (img.getAttribute('src') !== src) {
         img.src = src;
       }
-    } else if (!glass.classList.contains('empty') || !glass.querySelector('.wall-sheen')) {
-      frameEl.classList.add('empty');
-      glass.className = 'portrait-glass empty';
-      glass.innerHTML = '<div class="wall-sheen"></div>';
+    } else {
+      // Leerer Rahmen - egal ob das Porträt nie im Besitz war oder gerade gegangen ist:
+      // die Wand scheint durch, nur ein weicher Randschatten. Kein Bild, kein Glas.
+      const vid = glass.querySelector('video');
+      const setEmpty = () => {
+        if (wallState.frames[i].busy) return;              // gerade jemand unterwegs hierher
+        const cur = glass.querySelector('video');
+        if (cur && cur !== vid) return;                    // inzwischen taucht hier ein Porträt auf
+        frameEl.classList.add('empty');
+        glass.className = 'portrait-glass empty';
+        glass.dataset.leer = 'none';
+        glass.style.backgroundImage = 'none';
+        glass.innerHTML = '';
+      };
+      if (vid && !glass.dataset.fading) {
+        // Ende eines Abgangs-Clips: dessen letztes Bild ausblenden, damit die Wand weich durchkommt
+        glass.dataset.fading = '1';
+        vid.style.transition = 'opacity .5s ease';
+        requestAnimationFrame(() => { vid.style.opacity = '0'; });
+        setTimeout(() => { delete glass.dataset.fading; setEmpty(); }, 520);
+        return;
+      }
+      if (!glass.classList.contains('empty') || glass.dataset.leer !== 'none' || vid) setEmpty();
     }
+  });
+}
+// Wählt, wer gerade "lebt" (Idle-Loop). Beim Rotieren wird genau EINER getauscht,
+// damit die Wand nicht bei jedem Wechsel komplett umspringt.
+function wallLivePick(first) {
+  const st = wallState; if (!st) { wallLiveSet = {}; return; }
+  const present = Object.keys(st.heads).filter(h =>
+    st.heads[h].status === 'in' && WALL_CLIPS[h] && WALL_CLIPS[h].idle);
+  Object.keys(wallLiveSet).forEach(h => { if (!present.includes(h)) delete wallLiveSet[h]; });
+  if (!present.length) { wallLiveSet = {}; return; }
+  if (first || !Object.keys(wallLiveSet).length) {
+    wallLiveSet = {};
+    wallShuffle(present.slice()).slice(0, WALL_LIVE_COUNT).forEach(h => { wallLiveSet[h] = true; });
+    return;
+  }
+  const live = Object.keys(wallLiveSet);
+  const rest = present.filter(h => !wallLiveSet[h]);
+  if (rest.length) {
+    const out = live[Math.floor(Math.random() * live.length)];
+    delete wallLiveSet[out];
+    wallLiveSet[rest[Math.floor(Math.random() * rest.length)]] = true;
+  }
+}
+function wallLiveRotate() {
+  if (!wallState || currentScreen !== 'portraits' || document.hidden) return;
+  wallLivePick(false);
+  wallRender();
+}
+function wallStopVideo() {
+  document.querySelectorAll('#portraitStage video').forEach(v => {
+    try { v.pause(); } catch (e) {}
+    v.removeAttribute('src'); try { v.load(); } catch (e) {}
   });
 }
 function wallBusyCount() { return wallState ? wallState.frames.filter(f => f.busy).length : 0; }
@@ -4458,6 +4621,8 @@ function wallCanLeave(h) {
   const st = wallState; if (!st) return false;
   const hd = st.heads[h];
   if (!hd || hd.status !== 'in' || hd.frame === null) return false;
+  // Ohne Abgang-Clip gäbe es keine leere Fläche (letzter Videoframe) für den Rahmen.
+  if (!WALL_CLIPS[h] || !WALL_CLIPS[h].leave) return false;
   if (st.frames[hd.frame].busy) return false;
   return wallVisibleCount() > 1;
 }
@@ -4477,11 +4642,22 @@ function wallPlay(h, slot, kind, done) {
     glass.className = 'portrait-glass';
     glass.innerHTML = '';
     const v = document.createElement('video');
+    const card = getCardById(h);
     v.src = clip; v.muted = true; v.playsInline = true; v.autoplay = true;
+    if (card) v.poster = card.image;   // kein schwarzes Aufblitzen vor dem ersten Videobild
     v.onended = finish; v.onerror = finish;
+    // Einblenden: der Aufgang startet auf der Wand des jeweiligen Bildes, im Rahmen steht
+    // aber die gemeinsame Leinwand - ohne Blende würde das umspringen.
+    v.style.opacity = '0'; v.style.transition = 'opacity .3s ease';
     glass.appendChild(v);
+    requestAnimationFrame(() => { v.style.opacity = '1'; });
+    // Fallback an die ECHTE Clipdauer binden (Clips sind 5-15 s lang), nicht an eine Konstante.
+    v.addEventListener('loadedmetadata', () => {
+      const ms = (isFinite(v.duration) && v.duration > 0 ? v.duration : (WALL_CLIP_MS / 1000)) * 1000;
+      setTimeout(finish, ms + 800);
+    });
     const p = v.play(); if (p && p.catch) p.catch(() => {});
-    setTimeout(finish, WALL_CLIP_MS);
+    setTimeout(finish, WALL_CLIP_MAX_MS);   // Sicherheitsnetz, falls Metadaten nie kommen
     return;
   }
   const img = glass && glass.querySelector('img');
@@ -4506,12 +4682,32 @@ function wallPlay(h, slot, kind, done) {
   }
   setTimeout(finish, WALL_MOVE_MS);
 }
+// 'action': die Figur bleibt im Rahmen und tut etwas (Kopf drehen, Stab heben ...).
+// Kein Zustandswechsel - nur busy, damit während des Clips nichts anderes passiert.
+function wallAction(h) {
+  const st = wallState; if (!st) return false;
+  const hd = st.heads[h];
+  if (!hd || hd.status !== 'in' || hd.frame === null) return false;
+  const clip = WALL_CLIPS[h] && WALL_CLIPS[h].action;
+  if (!clip) return false;
+  const f = st.frames[hd.frame];
+  if (f.busy) return false;
+  if (hd.lastAction && Date.now() - hd.lastAction < WALL_ACTION_COOLDOWN) return false;
+  f.busy = true;
+  wallPlay(h, hd.frame, 'action', () => {
+    f.busy = false;
+    hd.lastAction = Date.now();
+    wallRender();
+  });
+  return true;
+}
 function wallLeave(h) {
   if (!wallCanLeave(h)) return false;
   const st = wallState, hd = st.heads[h], slot = hd.frame, f = st.frames[slot];
   f.busy = true; hd.status = 'moving';
   wallPlay(h, slot, 'leave', () => {
     f.occ = null; f.busy = false;
+    f.lastOwner = h;        // dieser Rahmen zeigt danach SEINE leere Fläche (letzter Videoframe)
     st.heads[h] = { frame: null, status: 'out', since: Date.now() };
     wallRender();
   });
@@ -4539,7 +4735,14 @@ function wallTick() {
     return;
   }
   const present = Object.keys(st.heads).filter(h => st.heads[h].status === 'in');
-  if (present.length > 1) {                              // 2) jemand geht los
+  // 2) jemand im Rahmen tut etwas (nur wenn ein Action-Clip existiert und der Cooldown abgelaufen ist)
+  if (Math.random() < WALL_ACTION_CHANCE) {
+    const able = present.filter(h => WALL_CLIPS[h] && WALL_CLIPS[h].action &&
+      (!st.heads[h].lastAction || now - st.heads[h].lastAction > WALL_ACTION_COOLDOWN));
+    if (able.length) { wallAction(able[Math.floor(Math.random() * able.length)]); return; }
+  }
+  // 3) jemand geht los
+  if (present.length > 1) {
     wallLeave(present[Math.floor(Math.random() * present.length)]);
   }
 }
@@ -4548,12 +4751,21 @@ function startWall() {
   if (!wallState) wallInit();
   const bg = document.getElementById('wallBg');
   if (bg && WALL_WALL_IMG) { bg.style.backgroundImage = 'url("' + WALL_WALL_IMG + '")'; bg.classList.add('on'); }
+  wallLivePick(true);
   wallRender();
   if (wallTimer) clearInterval(wallTimer);
   wallTimer = setInterval(() => { try { wallTick(); } catch (e) {} }, WALL_TICK_MS);
+  if (wallLiveTimer) clearInterval(wallLiveTimer);
+  wallLiveTimer = setInterval(() => { try { wallLiveRotate(); } catch (e) {} }, WALL_LIVE_ROTATE_MS);
+  if (!window.__wallResizeBound) {
+    window.__wallResizeBound = true;
+    window.addEventListener('resize', () => { try { wallRelayout(); } catch (e) {} });
+  }
 }
 function stopWall() {
   if (wallTimer) { clearInterval(wallTimer); wallTimer = null; }
+  if (wallLiveTimer) { clearInterval(wallLiveTimer); wallLiveTimer = null; }
+  wallStopVideo();      // sonst laufen die Loops im Hintergrund weiter
 }
 
 // ===================== WELCOME / PROFILES =====================
@@ -7914,7 +8126,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v104';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v105';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
