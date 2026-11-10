@@ -7060,8 +7060,15 @@ function showCardDetail(cardId) {
   // oder magisches Porträt) verfügbar sein – dann erscheinen BEIDE Knöpfe.
   const hatUpgrade = (count >= 3 && FUNNY_CARDS[card.id]) ||
                      (count >= 2 && ANIMATED_PORTRAITS[card.id] && !isAnimated);
+  // Relikt-Tausch: 2 Relikte gegen 1 zufaelliges Relikt - nur mit Trank des Suchers.
+  const istRelikt = card.rarity === 'relikt';
+  const hatSucher = (traenkeVon(prof).sucher || 0) > 0;
+  const tauschText = '2:1 Eintauschen (2x ' + card.name + ' gegen 1 zufälliges ' +
+                     (istRelikt ? 'Relikt' : 'Karte') + ')';
+  tradeBtn.disabled = false; tradeBtn.style.opacity = '';       // Sperre vom letzten Aufruf loeschen
+  tradeBtn2.disabled = false; tradeBtn2.style.opacity = '';
   if (hatUpgrade && count >= 2) {
-    tradeBtn2.textContent = '2:1 Eintauschen (2x ' + card.name + ' gegen 1 zufällige Karte)';
+    tradeBtn2.textContent = tauschText;
     tradeBtn2.style.display = 'block';
   } else {
     tradeBtn2.style.display = 'none';
@@ -7078,12 +7085,25 @@ function showCardDetail(cardId) {
     tradeBtn.className = 'btn-magic-upgrade';
     tradeDiv.style.display = 'block';
   } else if (count >= 2) {
-    tradeBtn.textContent = '2:1 Eintauschen';
-    tradeInfo.textContent = 'Tausche 2x ' + card.name + ' gegen eine zufällige neue Karte';
+    tradeBtn.textContent = istRelikt ? tauschText : '2:1 Eintauschen';
+    tradeInfo.textContent = 'Tausche 2x ' + card.name + ' gegen ' +
+      (istRelikt ? 'ein zufälliges Relikt' : 'eine zufällige neue Karte');
     tradeBtn.className = 'btn-primary btn-small';
     tradeDiv.style.display = 'block';
   } else {
     tradeDiv.style.display = 'none';
+  }
+  // Relikt-Tausch ist gesperrt, solange kein Trank des Suchers im Regal liegt
+  if (istRelikt && count >= 2 && tradeDiv.style.display === 'block') {
+    const b2 = (tradeBtn2.style.display === 'block') ? tradeBtn2
+             : (tradeBtn.textContent.indexOf('2:1') === 0 ? tradeBtn : null);
+    if (b2) {
+      b2.disabled = !hatSucher;
+      if (!hatSucher) b2.style.opacity = '.45';
+      tradeInfo.textContent = tradeInfo.textContent +
+        (hatSucher ? ' · Verbraucht 1 Trank des Suchers.'
+                   : ' · Nur mit Trank des Suchers möglich.');
+    }
   }
   
   // Trade offer button (for any owned card – NICHT für Belohnungskarten)
@@ -7258,7 +7278,17 @@ function executeTrade2zu1() {
   const owned = prof.cards || {};
   const count = owned[cardId] || 0;
   if (count < 2) return;
-  if (!confirm('2x ' + card.name + ' gegen 1 zufällige Karte tauschen?')) return;
+  // Relikt-Tausch: kostet einen Trank des Suchers und liefert garantiert ein Relikt
+  const istRelikt = card.rarity === 'relikt';
+  const sucherBestand = traenkeVon(prof).sucher || 0;
+  if (istRelikt && sucherBestand <= 0) {
+    alert('Für den Relikt-Tausch brauchst du einen Trank des Suchers.');
+    return;
+  }
+  const frage = istRelikt
+    ? '2x ' + card.name + ' gegen 1 zufälliges Relikt tauschen?\n\nDabei wird 1 Trank des Suchers verbraucht.'
+    : '2x ' + card.name + ' gegen 1 zufällige Karte tauschen?';
+  if (!confirm(frage)) return;
   owned[cardId] = owned[cardId] - 2;
   if (owned[cardId] <= 0) delete owned[cardId];
   // Zufaellige Karte mit Pack-Raritaetsverteilung
@@ -7267,7 +7297,11 @@ function executeTrade2zu1() {
   let rarityTable;
   const mitVerwandlung = !!aktivVon(prof).verwandlung;
   const naechsteStufe = { common:'rare', rare:'legendary', legendary:'relikt', relikt:'relikt' };
-  if (mitVerwandlung) {
+  if (istRelikt) {
+    // 2:1-Relikt-Tausch: immer ein Relikt (der Trank des Suchers bezahlt den Tausch,
+    // ein aktiver Verwandlungstrank bleibt fuer den naechsten normalen Tausch liegen)
+    rarityTable = [{ rarity:'relikt', prob:100 }];
+  } else if (mitVerwandlung) {
     // Trank der Verwandlung: garantiert die naechsthoehere Seltenheit
     rarityTable = [{ rarity: naechsteStufe[card.rarity] || 'rare', prob: 100 }];
     delete aktivVon(prof).verwandlung;
@@ -7296,6 +7330,11 @@ function executeTrade2zu1() {
   const randomCard = filtered.length > 0
     ? filtered[Math.floor(Math.random() * filtered.length)]
     : rarityPool[Math.floor(Math.random() * rarityPool.length)];
+  if (istRelikt) {
+    const regal = traenkeVon(prof);
+    regal.sucher = (regal.sucher || 0) - 1;
+    if (regal.sucher <= 0) delete regal.sucher;
+  }
   const alreadyOwned = owned[randomCard.id] > 0;
   owned[randomCard.id] = (owned[randomCard.id] || 0) + 1;
   const freshAch = checkAchievements(prof);
@@ -8161,7 +8200,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v107';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v108';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
