@@ -2341,6 +2341,27 @@ body{
 .pack-closed{border:1px dashed var(--g-line);}
 .modal-box .pack-hint,.pack-screen p{color:var(--g-dim);}
 
+/* ---- Adventssee-Knopf auf der Startseite ---- */
+.advent-entry {
+  position: relative; display: flex; align-items: center; gap: 12px; width: 100%;
+  margin: 0 0 14px; padding: 13px 15px; border-radius: 16px; cursor: pointer;
+  text-align: left; font: inherit; color: #f2e6cd; overflow: hidden;
+  background:
+    radial-gradient(120% 160% at 88% 10%, rgba(255,178,96,.22) 0%, rgba(255,150,60,0) 58%),
+    linear-gradient(150deg, #0a1526 0%, #0d1f36 55%, #132a45 100%);
+  border: 1px solid rgba(255,205,140,.30);
+  box-shadow: 0 6px 20px rgba(3,7,14,.45), inset 0 1px 0 rgba(255,235,200,.10);
+}
+.advent-entry-glow { position: absolute; right: -26px; top: -34px; width: 130px; height: 130px;
+  border-radius: 50%; background: radial-gradient(circle, rgba(255,190,110,.30) 0%, rgba(255,150,60,0) 66%);
+  pointer-events: none; }
+.advent-entry-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.advent-entry-title { font-size: 15px; letter-spacing: .06em; }
+.advent-entry-sub { font-size: 12px; color: rgba(234,223,201,.62); }
+.advent-entry-lamp { flex-shrink: 0; width: 34px; height: 34px; color: #ffcf8a; opacity: .92; }
+.advent-entry-lamp svg { width: 34px; height: 34px; display: block;
+  filter: drop-shadow(0 0 9px rgba(255,180,100,.55)); }
+
 /* ---- Elternbereich (dunkel, sachlich) ---- */
 .parent-login h2,.parent-area h2{font-family:var(--font-serif);color:var(--g-hi);}
 .parent-section{background:rgba(243,234,217,.05);border:1px solid var(--g-line-soft);border-radius:14px;color:var(--g-tx);}
@@ -2607,6 +2628,21 @@ body{
     </div>
   </div>
 
+  <!-- Adventssee: nur im Dezember (1.-24.) sichtbar -->
+  <button class="advent-entry" id="adventEntry" type="button" style="display:none;" onclick="navigateTo('advent')">
+    <span class="advent-entry-glow"></span>
+    <span class="advent-entry-txt">
+      <span class="advent-entry-title">Der See mit den Lampions</span>
+      <span class="advent-entry-sub" id="adventEntrySub">Ein Licht wartet auf dich</span>
+    </span>
+    <span class="advent-entry-lamp">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 2v2M8 5h8l1.6 9.5a4 4 0 0 1-3.9 4.6h-3.4a4 4 0 0 1-3.9-4.6L8 5z"/>
+        <path d="M9.5 22h5"/><path d="M12 8.5c1 1 1 2 0 3s-1 2 0 3"/>
+      </svg>
+    </span>
+  </button>
+
   <!-- Serie-Zeitleiste: aktueller 7-Tage-Block mit Belohnungs-Markern -->
   <div class="serie-panel" id="seriePanel">
     <div class="serie-head">
@@ -2790,6 +2826,207 @@ body{
       <button class="album-nav-btn" id="albumPrev">◀</button>
       <span class="album-indicator" id="albumIndicator">1 / 1</span>
       <button class="album-nav-btn" id="albumNext">▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: ADVENTSKALENDER „DER SEE" ==================== -->
+<style>
+  .screen.advent-screen { position: relative; padding: 0 !important; overflow: hidden; }
+  .adv-stage { position: absolute; inset: 0 0 70px 0; overflow: hidden; background: #03060c; }
+
+  .adv-sky { position: absolute; inset: 0 0 42% 0;
+    background:
+      radial-gradient(80% 60% at 46% 108%, rgba(34,64,104,.60) 0%, rgba(6,10,18,0) 64%),
+      linear-gradient(180deg, #02050a 0%, #050d1a 45%, #0b1b30 100%); }
+  .adv-moon { position: absolute; left: 19%; top: 10%; width: 9%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 40% 36%, #f7f9fd, #d6dfeb 52%, #a8b8cb 100%);
+    box-shadow: 0 0 46px 12px rgba(200,215,240,.13), 0 0 120px 50px rgba(150,180,220,.09);
+    filter: blur(.4px); opacity: .78; }
+  .adv-hills { position: absolute; left: -2%; right: -2%; top: 29%; height: 15%;
+    background: linear-gradient(180deg, #050a13 0%, #060c15 70%, #070e18 100%);
+    clip-path: polygon(0% 78%, 7% 58%, 14% 66%, 22% 44%, 30% 57%, 38% 38%, 46% 52%, 55% 41%, 63% 55%, 71% 46%, 79% 60%, 87% 50%, 94% 62%, 100% 55%, 100% 100%, 0% 100%);
+    filter: blur(.7px); }
+  .adv-castle { position: absolute; left: 28%; top: 20.5%; width: 30%; height: 17%; opacity: .97; }
+  .adv-castle::before { content: ""; position: absolute; left: -22%; right: -22%; bottom: -14%; height: 62%;
+    background: radial-gradient(58% 60% at 50% 100%, #050a13 0%, rgba(5,10,19,.9) 44%, rgba(5,10,19,0) 78%);
+    filter: blur(5px); z-index: -1; }
+  .adv-castle svg { width: 100%; height: 100%; display: block; }
+  .adv-fenster { fill: #ffcf8a; opacity: 0; transition: opacity 2.4s ease; }
+  .adv-fenster.on { opacity: .9; }
+
+  .adv-water { position: absolute; inset: 42% 0 0 0;
+    background:
+      repeating-linear-gradient(180deg, rgba(130,168,215,.032) 0 1px, rgba(0,0,0,0) 1px 16px),
+      linear-gradient(180deg, #0a1526 0%, #071020 42%, #03070e 100%); }
+  .adv-water::after { content: ""; position: absolute; left: 34%; top: 0; width: 34%; height: 52%;
+    background: radial-gradient(50% 58% at 50% 0%, rgba(175,205,240,.09), transparent 76%); filter: blur(14px); }
+  .adv-wasserlinie { position: absolute; left: 0; right: 0; top: 38.5%; height: 8%;
+    background: linear-gradient(180deg, rgba(160,190,225,0) 0%, rgba(150,180,220,.10) 45%, rgba(120,160,205,.05) 75%, rgba(0,0,0,0) 100%);
+    filter: blur(6px); pointer-events: none; }
+  .adv-mist { position: absolute; left: -12%; right: -12%; pointer-events: none; }
+  .adv-mist.a { top: 40%; height: 24%; background: radial-gradient(58% 50% at 34% 50%, rgba(205,220,238,.085), transparent 72%); animation: advdrift 54s ease-in-out infinite alternate; }
+  .adv-mist.b { top: 58%; height: 26%; background: radial-gradient(52% 50% at 70% 50%, rgba(205,220,238,.065), transparent 72%); animation: advdrift 73s ease-in-out infinite alternate-reverse; }
+  @keyframes advdrift { from { transform: translateX(-3.5%); } to { transform: translateX(3.5%); } }
+  .adv-fore { position: absolute; left: 0; right: 0; bottom: 0; height: 16%; pointer-events: none; z-index: 7;
+    background: linear-gradient(180deg, transparent 0%, rgba(2,5,10,.55) 55%, rgba(2,5,10,.92) 100%); }
+
+  .adv-lake { position: absolute; inset: 42% 0 0 0; }
+  .adv-lantern { position: absolute; width: var(--w); aspect-ratio: 1 / 1.16;
+    transform: translate(-50%, -50%); cursor: pointer; z-index: 2;
+    animation: advbob var(--dur) ease-in-out var(--delay) infinite alternate; }
+  @keyframes advbob { from { margin-top: -2px; } to { margin-top: 2px; } }
+  .adv-fuss { position: absolute; left: 50%; bottom: -3%; width: 86%; height: 10%; transform: translateX(-50%);
+    background: radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.55), rgba(0,0,0,.22) 58%, transparent 78%);
+    filter: blur(3px); pointer-events: none; }
+  .adv-refl { position: absolute; left: 50%; top: 99%; width: 56%; height: 165%; transform: translateX(-50%);
+    background: linear-gradient(180deg, rgba(255,180,100,.5) 0%, rgba(255,150,60,.16) 40%, transparent 78%);
+    filter: blur(4px); border-radius: 50% 50% 46% 46% / 26% 26% 74% 74%;
+    opacity: 0; transition: opacity 1.7s ease; pointer-events: none; }
+  .adv-halo { position: absolute; left: 50%; top: 50%; width: 520%; height: 520%; transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255,190,118,.34) 0%, rgba(255,150,60,.12) 30%, transparent 64%);
+    opacity: 0; transition: opacity 1.6s ease; pointer-events: none; }
+  .adv-sprite { position: absolute; left: 50%; bottom: 0; width: 150%; transform: translateX(-50%);
+    pointer-events: none; transition: opacity 1.2s ease; }
+  .adv-sprite.lit { opacity: 0; }
+  .adv-sprite.dark { filter: sepia(.55) saturate(1.05) brightness(1.15) contrast(.95); }
+  .adv-lantern.lit .adv-sprite.lit { opacity: 1; animation: advglow 6.5s ease-in-out infinite; }
+  .adv-lantern.lit .adv-halo { opacity: 1; animation: advbreathe 6.5s ease-in-out infinite; }
+  .adv-lantern.lit .adv-refl { opacity: .88; animation: advflicker 5.5s ease-in-out infinite; }
+  @keyframes advglow { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.06); } }
+  @keyframes advbreathe { 0%, 100% { opacity: .8; } 50% { opacity: 1; } }
+  @keyframes advflicker { 0%, 100% { opacity: .85; } 40% { opacity: .7; } 62% { opacity: .95; } }
+  .adv-lantern.heute::after { content: ""; position: absolute; left: 50%; top: 52%; width: 230%; aspect-ratio: 1;
+    transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid rgba(255,210,150,.28);
+    animation: advpuls 4s ease-out infinite; pointer-events: none; }
+  @keyframes advpuls { 0% { opacity: .45; transform: translate(-50%,-50%) scale(.8); }
+    70%, 100% { opacity: 0; transform: translate(-50%,-50%) scale(1.45); } }
+  .adv-lantern.zu { opacity: .5; }
+  .adv-lantern.zu::after { display: none; }
+  .adv-lantern.denied { animation: advshake .42s ease; }
+  @keyframes advshake {
+    0%, 100% { transform: translate(-50%, -50%) rotate(0); }
+    30% { transform: translate(-51.5%, -50%) rotate(-2.5deg); }
+    70% { transform: translate(-48.5%, -50%) rotate(2.5deg); } }
+
+  .adv-snow { position: absolute; inset: 0; pointer-events: none; z-index: 8; }
+  .adv-flake { position: absolute; top: -6%; width: var(--s); height: var(--s); border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,1), rgba(255,255,255,.55) 52%, transparent 74%);
+    filter: blur(var(--b)); animation: advfall var(--d) linear var(--delay) infinite; opacity: 0; }
+  @keyframes advfall { 0% { transform: translate3d(0,0,0); opacity: 0; }
+    12% { opacity: var(--o); }
+    100% { transform: translate3d(var(--dx), 110vh, 0); opacity: calc(var(--o) * .7); } }
+  .adv-snow.dense .adv-flake { animation-duration: calc(var(--d) * .45); }
+
+  .adv-topbar { position: absolute; inset: 0 0 auto 0; padding: 3% 3.6% 0;
+    display: flex; align-items: flex-start; justify-content: space-between; z-index: 10; pointer-events: none; }
+  .adv-back { pointer-events: auto; width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid rgba(234,223,201,.22); background: rgba(8,14,24,.5);
+    color: #eadfc9; font-size: 17px; line-height: 36px; text-align: center; cursor: pointer;
+    backdrop-filter: blur(5px); }
+  .adv-title { text-align: right; }
+  .adv-title h1 { margin: 0; font-size: clamp(15px, 4.2vw, 20px); font-weight: 500;
+    letter-spacing: .3em; text-transform: uppercase; color: #f2e6cd; text-shadow: 0 2px 20px rgba(0,0,0,.95); }
+  .adv-title p { margin: .5em 0 0; font-size: clamp(10px, 3vw, 12.5px); letter-spacing: .07em; color: rgba(234,223,201,.55); }
+
+  /* Die Weihnachtskarte als Folie auf der Basiskarte + Sternschnuppe */
+  .album-slot.xmas-folie { box-shadow: 0 0 0 2px rgba(255,214,150,.75), 0 0 22px 4px rgba(255,190,110,.35); }
+  .album-slot.xmas-folie::after, .album-slot-reward.xmas-folie::after { content: "✦";
+    position: absolute; top: 4px; right: 4px; font-size: 17px; line-height: 1;
+    color: #ffe4b0; text-shadow: 0 0 10px rgba(255,200,120,.95), 0 0 3px rgba(0,0,0,.9);
+    animation: advstarpuls 1.8s ease-in-out infinite; pointer-events: none; z-index: 3; }
+  @keyframes advstarpuls { 0%, 100% { opacity: .55; transform: scale(.9) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1.15) rotate(12deg); } }
+  .xmas-stern { position: fixed; left: 0; top: 0; width: 24px; height: 24px; pointer-events: none;
+    z-index: 9999; color: #ffe6b8; font-size: 24px; line-height: 24px;
+    text-shadow: 0 0 12px rgba(255,205,130,.95), 0 0 30px rgba(255,170,80,.6); }
+  .xmas-funke { position: fixed; left: 0; top: 0; width: 3px; height: 3px; border-radius: 50%;
+    background: #fff2d2; box-shadow: 0 0 7px 1px rgba(255,200,120,.85); pointer-events: none;
+    z-index: 9998; animation: xfunke .95s ease-out forwards; }
+  @keyframes xfunke {
+    0% { opacity: .95; transform: translate(-50%,-50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%,-140%) scale(.35); } }
+
+  /* Wegweiser-Stern im Album: zeigt nur die Richtung, springt nirgends hin */
+  .xmas-guide { position: absolute; z-index: 12; pointer-events: none; width: 74px; height: 66px;
+    display: flex; align-items: center; justify-content: center; gap: 2px; }
+  .xmas-guide::before { content: ""; position: absolute; inset: -12px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,196,120,.32) 0%, rgba(255,170,80,0) 70%);
+    animation: xgHalo 2.8s ease-in-out infinite; pointer-events: none; }
+  @keyframes xgHalo { 0%,100% { opacity: .55; transform: scale(.9); } 50% { opacity: .95; transform: scale(1.08); } }
+  .xmas-guide .kern { font-size: 29px; line-height: 1; color: #fff0d2;
+    text-shadow: 0 0 12px rgba(255,210,140,1), 0 0 34px rgba(255,170,80,.65);
+    animation: xgPuls 2.6s ease-in-out infinite; }
+  .xmas-guide .pfeil { font-size: 23px; font-weight: 700; line-height: 1;
+    color: rgba(255,240,206,.96);
+    text-shadow: 0 0 10px rgba(255,190,110,1), 0 1px 3px rgba(0,0,0,.85);
+    animation: xgPfeil 2.2s ease-in-out infinite; }
+  @keyframes xgPuls { 0%,100% { opacity: .78; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.08); } }
+  @keyframes xgPfeil { 0%,100% { opacity: .45; } 50% { opacity: .95; } }
+  .xmas-guide.rechts { right: 9px; top: 40%; animation: xgRechts 2.8s ease-in-out infinite; }
+  .xmas-guide.links  { left: 9px;  top: 40%; flex-direction: row-reverse; animation: xgLinks 2.8s ease-in-out infinite; }
+  .xmas-guide.seite-rechts { right: 12px; bottom: 12px; animation: xgRechts 2.2s ease-in-out infinite; }
+  .xmas-guide.seite-links  { left: 12px;  bottom: 12px; flex-direction: row-reverse; animation: xgLinks 2.2s ease-in-out infinite; }
+  @keyframes xgRechts { 0%,100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+  @keyframes xgLinks  { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-5px); } }
+  .xmas-guide .funk { position: absolute; width: 3px; height: 3px; border-radius: 50%;
+    background: #fff4d8; box-shadow: 0 0 6px 1px rgba(255,205,130,.85);
+    animation: xgFunke 2.4s ease-out infinite; opacity: 0; }
+  @keyframes xgFunke {
+    0% { opacity: 0; transform: translate(0,0) scale(.6); }
+    25% { opacity: .85; }
+    100% { opacity: 0; transform: translate(var(--fx), var(--fy)) scale(.3); }
+  }
+  .album-slot.xmas-gelandet, .album-slot-reward.xmas-gelandet {
+    animation: xgLandung 1.2s ease-out; }
+  @keyframes xgLandung {
+    0% { box-shadow: 0 0 0 2px rgba(255,214,150,.95), 0 0 34px 12px rgba(255,200,120,.75); }
+    100% { box-shadow: 0 0 0 2px rgba(255,214,150,.75), 0 0 22px 4px rgba(255,190,110,.35); }
+  }
+</style>
+
+<div class="screen advent-screen" id="screen-advent">
+  <div class="adv-stage">
+    <div class="adv-sky"></div>
+    <div class="adv-moon"></div>
+    <div class="adv-hills"></div>
+    <div class="adv-castle">
+      <svg viewBox="0 0 260 100" preserveAspectRatio="none">
+        <g fill="#04070d">
+          <path d="M0,100 L0,74 L10,74 L10,60 L26,60 L26,74 L38,74 L38,100 Z"/>
+          <path d="M34,100 L34,52 L42,52 L42,34 L50,34 L50,52 L58,52 L58,100 Z"/>
+          <path d="M40,34 L46,20 L52,34 Z"/>
+          <path d="M56,100 L56,44 L74,44 L74,26 L86,26 L86,44 L100,44 L100,100 Z"/>
+          <path d="M74,26 L80,8 L86,26 Z"/>
+          <path d="M100,100 L100,58 L118,58 L118,40 L130,40 L130,58 L150,58 L150,100 Z"/>
+          <path d="M118,40 L124,22 L130,40 Z"/>
+          <path d="M150,100 L150,66 L172,66 L172,52 L192,52 L192,66 L214,66 L214,100 Z"/>
+          <path d="M172,52 L182,32 L192,52 Z"/>
+          <path d="M214,100 L214,72 L232,72 L232,60 L246,60 L246,72 L260,72 L260,100 Z"/>
+        </g>
+        <g id="advFensterGruppe">
+          <rect class="adv-fenster" x="44" y="44" width="4" height="7"/>
+          <rect class="adv-fenster" x="66" y="60" width="4" height="7"/>
+          <rect class="adv-fenster" x="79" y="36" width="4" height="6"/>
+          <rect class="adv-fenster" x="108" y="70" width="4" height="7"/>
+          <rect class="adv-fenster" x="124" y="48" width="4" height="6"/>
+          <rect class="adv-fenster" x="160" y="78" width="4" height="7"/>
+        </g>
+      </svg>
+    </div>
+    <div class="adv-water"></div>
+    <div class="adv-wasserlinie"></div>
+    <div class="adv-mist a"></div>
+    <div class="adv-mist b"></div>
+    <div class="adv-lake" id="advLake"></div>
+    <div class="adv-fore"></div>
+    <div class="adv-snow" id="advSnow"></div>
+    <div class="adv-topbar">
+      <button class="adv-back" onclick="navigateTo('dashboard')" title="weiter">›</button>
+      <div class="adv-title">
+        <h1>Der See</h1>
+        <p id="advSub">24 Lampions warten im Dunkeln</p>
+      </div>
     </div>
   </div>
 </div>
@@ -3533,6 +3770,430 @@ const HALLOWEEN_CARDS = {
   'hp-hal-013': { id:'hp-hal-013', name:'Der Blutige Baron', type:'Charakter', subtype:'Hausgeist von Slytherin', house:'Slytherin', desc:'Durch den dunklen steinernen Gang schwebt er, das zerschlissene graue Gewand mit den ornamentalen Mustern weht im Fackelschein, und der Boden liegt im Nebel. Der Baron sagt kein Wort – doch wer ihn sieht, vergisst ihn nie wieder.', image:'cards/hp-hal-013.jpg' }
 };
 
+// ===================== WEIHNACHTSEITION (Adventskalender) =====================
+// Ein Licht pro Tag (1.-24. Dezember), freie Wahl, verpasste Tage verfallen.
+const XMAS_SEASON = { jahr: 2026, von: '12-01', bis: '12-24' };
+
+// Licht n (1..24) -> Weihnachtskarte. Feste Liste, damit Licht und Karte nie auseinanderlaufen.
+const XMAS_LICHTER = [
+  'hp-xmas-001','hp-xmas-002','hp-xmas-003','hp-xmas-004','hp-xmas-005','hp-xmas-006',
+  'hp-xmas-007','hp-xmas-008','hp-xmas-009','hp-xmas-010','hp-xmas-011','hp-xmas-012',
+  'hp-xmas-013','hp-xmas-014','hp-xmas-015','hp-xmas-016','hp-xmas-017','hp-xmas-018',
+  'hp-xmas-019','hp-xmas-020','hp-xmas-021','hp-xmas-022','hp-xmas-023','hp-xmas-024'
+];
+
+// Originalkarte -> Weihnachtskarte (bestimmt gleichzeitig die Ablage im Album)
+const XMAS_UPGRADES = {
+  'hp-004': 'hp-xmas-001',   // Lord Voldemort
+  'hp-063': 'hp-xmas-002',   // Bellatrix Lestrange
+  'hp-085': 'hp-xmas-003',   // Lucius Malfoy
+  'hp-194': 'hp-xmas-004',   // Narcissa Malfoy
+  'hp-089': 'hp-xmas-005',   // Peter Pettigrew
+  'hp-086': 'hp-xmas-006',   // Dolores Umbridge
+  'hp-139': 'hp-xmas-007',   // Professor Quirrell
+  'hp-152': 'hp-xmas-008',   // Tom Riddle als Schueler
+  'hp-184': 'hp-xmas-009',   // Arthur Weasley
+  'hp-003': 'hp-xmas-010',   // Albus Dumbledore
+  'hp-008': 'hp-xmas-011',   // Minerva McGonagall
+  'hp-001': 'hp-xmas-012',   // Severus Snape
+  'hp-007': 'hp-xmas-013',   // Rubeus Hagrid
+  'hp-002': 'hp-xmas-014',   // Harry Potter
+  'hp-006': 'hp-xmas-015',   // Ron Weasley
+  'hp-005': 'hp-xmas-016',   // Hermine Granger
+  'hp-010': 'hp-xmas-017',   // Draco Malfoy
+  'hp-017': 'hp-xmas-018',   // Dobby
+  'hp-166': 'hp-xmas-019',   // Cornelius Fudge
+  'hp-014': 'hp-xmas-020',   // Neville Longbottom
+  'hp-012': 'hp-xmas-021',   // Luna Lovegood
+  'hp-013': 'hp-xmas-022',   // Ginny Weasley
+  'hp-158': 'hp-xmas-023',   // Molly Weasley
+  'hp-088': 'hp-xmas-024'    // Sybill Trelawney
+};
+
+const XMAS_CARDS = {
+  'hp-xmas-001': { id:'hp-xmas-001', name:'Weihnachts-Voldemort', rarity:'legendary', type:'Charakter', subtype:'Weihnachts-Edition', house:'Slytherin', desc:'Der Dunkle Lord sitzt im Sessel vor dem Kamin, die Hände um einen Becher, und schaut in die Flammen. Draußen ist es still, drinnen brennt der Baum – heute hat er es nicht eilig.', image:'cards/hp-xmas-001.jpg' },
+  'hp-xmas-002': { id:'hp-xmas-002', name:'Weihnachts-Bellatrix', rarity:'legendary', type:'Charakter', subtype:'Weihnachts-Edition', house:'Slytherin', desc:'Rentiergeweih auf den zerzausten Haaren, ein grellroter Pullover mit Rentier auf der Brust und eine Kugel in der Hand: Bellatrix hat Weihnachten für sich entdeckt. Und sie findet es großartig.', image:'cards/hp-xmas-002.jpg' },
+  'hp-xmas-003': { id:'hp-xmas-003', name:'Weihnachts-Lucius', rarity:'rare', type:'Charakter', subtype:'Weihnachts-Edition', house:'Slytherin', desc:'Der Baum ist makellos, die Kugeln sitzen in Reih und Glied, und Lucius hält die kleine Handtasche, als wäre sie ein Staatsgeheimnis. Weihnachten ist für ihn vor allem eine Frage des Stils.', image:'cards/hp-xmas-003.jpg' },
+  'hp-xmas-004': { id:'hp-xmas-004', name:'Weihnachts-Narcissa', rarity:'rare', type:'Charakter', subtype:'Weihnachts-Edition', house:'Slytherin', desc:'Cremefarbener Pullover mit Schneeflocken, grauer Rock, Geschenke in exakter Reihe. Narcissa prüft die Etiketten zweimal – Ordnung ist bei ihr eine Form von Zuneigung.', image:'cards/hp-xmas-004.jpg' },
+  'hp-xmas-005': { id:'hp-xmas-005', name:'Weihnachts-Pettigrew', rarity:'common', type:'Charakter', subtype:'Weihnachts-Edition', house:'Gryffindor', desc:'Mit einem Geschenk unterm Arm, das größer ist als er selbst, steht Pettigrew im Gang und überlegt, wem es gehört. Wahrscheinlich ihm selbst. Wahrscheinlich nicht.', image:'cards/hp-xmas-005.jpg' },
+  'hp-xmas-006': { id:'hp-xmas-006', name:'Weihnachts-Umbridge', rarity:'rare', type:'Charakter', subtype:'Weihnachts-Edition', house:'Slytherin', desc:'Rosa Tweed, flauschige Strickjacke und ein Tablett voller Katzenkekse, jeder mit einem eigenen Etikett. Hinter ihr steht ein rosa Baum, an dem ausschließlich Kätzchen hängen.', image:'cards/hp-xmas-006.jpg' },
+  'hp-xmas-007': { id:'hp-xmas-007', name:'Weihnachts-Quirrell', rarity:'common', type:'Charakter', subtype:'Weihnachts-Edition', house:'Ravenclaw', desc:'Turban, Zuckerstange und ein Blick, der verrät, dass im Hinterkopf gerade jemand anderes mitdenkt. Quirrell wünscht frohe Weihnachten – mit wem, bleibt unklar.', image:'cards/hp-xmas-007.jpg' },
+  'hp-xmas-008': { id:'hp-xmas-008', name:'Weihnachts-Tom Riddle', rarity:'legendary', type:'Charakter', subtype:'Weihnachts-Edition', house:'Slytherin', desc:'Unter dem Baum, zwischen zerrissenem Geschenkpapier, hält Tom Riddle sein neues Tagebuch. Es ist das einzige Geschenk, das ihn wirklich interessiert.', image:'cards/hp-xmas-008.jpg' },
+  'hp-xmas-009': { id:'hp-xmas-009', name:'Weihnachts-Arthur', rarity:'rare', type:'Charakter', subtype:'Weihnachts-Edition', house:'Gryffindor', desc:'Arthur wollte nur die Lichterkette entwirren – und hängt jetzt selbst darin. Er findet das äußerst lehrreich und will es den Kindern später genau erklären.', image:'cards/hp-xmas-009.jpg' },
+  'hp-xmas-010': { id:'hp-xmas-010', name:'Weihnachts-Dumbledore', rarity:'legendary', type:'Charakter', subtype:'Weihnachts-Edition', house:'Gryffindor', desc:'Mit ausgestrecktem Arm hängt Dumbledore den letzten Stern an die Spitze. Er braucht dafür keinen Zauberstab, nur Geduld – und die hat er.', image:'cards/hp-xmas-010.jpg' },
+  'hp-xmas-011': { id:'hp-xmas-011', name:'Weihnachts-McGonagall', rarity:'rare', type:'Charakter', subtype:'Weihnachts-Edition', house:'Gryffindor', desc:'Zwei Dutzend daumengroße Schneemänner stehen stramm auf dem Pult, jeder mit einer winzigen Brille. Einer kippt – und McGonagall sieht ihn an wie einen schlechten Aufsatz.', image:'cards/hp-xmas-011.jpg' },
+  'hp-xmas-012': { id:'hp-xmas-012', name:'Weihnachts-Snape', rarity:'legendary', type:'Charakter', subtype:'Weihnachts-Edition', house:'Slytherin', desc:'Zimt, Orangenschalen, ein Kessel voller Glühwein. Snape behauptet, es sei ein medizinisches Dekokt. Sein Gesicht sagt etwas anderes.', image:'cards/hp-xmas-012.jpg' },
+  'hp-xmas-013': { id:'hp-xmas-013', name:'Weihnachts-Hagrid', rarity:'common', type:'Charakter', subtype:'Weihnachts-Edition', house:'Gryffindor', desc:'In der Tür seiner Hütte, den Schnee auf den Schultern, eine Girlande schief über dem Eingang: Hagrid hat alles vorbereitet, was groß genug ist.', image:'cards/hp-xmas-013.jpg' },
+  'hp-xmas-014': { id:'hp-xmas-014', name:'Weihnachts-Harry', rarity:'legendary', type:'Charakter', subtype:'Weihnachts-Edition', house:'Gryffindor', desc:'Am Fenster, einen Becher in der Hand, schaut Harry in den Schnee. Für einen Moment muss er an nichts denken.', image:'cards/hp-xmas-014.jpg' },
+  'hp-xmas-015': { id:'hp-xmas-015', name:'Weihnachts-Ron', rarity:'rare', type:'Charakter', subtype:'Weihnachts-Edition', house:'Gryffindor', desc:'Der dritte Pullover des Abends, ausgepackt und auf Armeslänge gehalten. Rons Gesicht sagt: na toll. Zwei weitere liegen schon gefaltet neben ihm.', image:'cards/hp-xmas-015.jpg' },
+  'hp-xmas-016': { id:'hp-xmas-016', name:'Weihnachts-Hermine', rarity:'rare', type:'Charakter', subtype:'Weihnachts-Edition', house:'Gryffindor', desc:'Geschenke in einer Reihe, Etiketten in einer Reihe, die Liste daneben. Hermine hakt ab – und ist sich sicher, dass niemand etwas vergessen hat.', image:'cards/hp-xmas-016.jpg' },
+  'hp-xmas-017': { id:'hp-xmas-017', name:'Weihnachts-Draco', rarity:'rare', type:'Charakter', subtype:'Weihnachts-Edition', house:'Slytherin', desc:'Einen rot-goldenen Schal hält Draco von sich weg, als wäre er giftig. Ein Geschenk kann man nicht ablehnen. Genau das ist das Problem.', image:'cards/hp-xmas-017.jpg' },
+  'hp-xmas-018': { id:'hp-xmas-018', name:'Weihnachts-Dobby', rarity:'common', type:'Charakter', subtype:'Weihnachts-Edition', house:'-', desc:'Dobby hat Pullover und Socken fein säuberlich gestapelt und kann sich nicht entscheiden, welchen er zuerst anziehen soll. Am Ende zieht er alle an.', image:'cards/hp-xmas-018.jpg' },
+  'hp-xmas-019': { id:'hp-xmas-019', name:'Weihnachts-Fudge', rarity:'rare', type:'Charakter', subtype:'Weihnachts-Edition', house:'Slytherin', desc:'Im roten Mantel, der eindeutig zu eng ist, mit der eigenen grünen Melone statt der Weihnachtsmütze: Fudge sitzt da, ein Kind auf dem Schoß, und lächelt für ein Foto, das er nicht wollte.', image:'cards/hp-xmas-019.jpg' },
+  'hp-xmas-020': { id:'hp-xmas-020', name:'Weihnachts-Neville', rarity:'common', type:'Charakter', subtype:'Weihnachts-Edition', house:'Gryffindor', desc:'Neville hat die Teufelsschlinge geschmückt – Kugeln, Lametta, ein schiefer Stern. Die Pflanze hält dabei seinen Arm fest. Er findet das völlig normal.', image:'cards/hp-xmas-020.jpg' },
+  'hp-xmas-021': { id:'hp-xmas-021', name:'Weihnachts-Luna', rarity:'rare', type:'Charakter', subtype:'Weihnachts-Edition', house:'Ravenclaw', desc:'Auf dem Eis, die Arme ausgebreitet, neben ihr ein Thestral. Luna läuft Schlittschuh mit jemandem, den sonst niemand sieht.', image:'cards/hp-xmas-021.jpg' },
+  'hp-xmas-022': { id:'hp-xmas-022', name:'Weihnachts-Ginny', rarity:'common', type:'Charakter', subtype:'Weihnachts-Edition', house:'Gryffindor', desc:'Der Schneemann ist fertig, der Schal sitzt, und Ginny klopft ihm den Schnee von der Schulter. Er steht stramm wie ein Gryffindor.', image:'cards/hp-xmas-022.jpg' },
+  'hp-xmas-023': { id:'hp-xmas-023', name:'Weihnachts-Molly', rarity:'rare', type:'Charakter', subtype:'Weihnachts-Edition', house:'Gryffindor', desc:'Pullover über Pullover, und der Stapel wächst weiter. Molly strickt noch, während die Wolle schon über ihren Kopf wächst – sie hört erst auf, wenn alle warm sind.', image:'cards/hp-xmas-023.jpg' },
+  'hp-xmas-024': { id:'hp-xmas-024', name:'Weihnachts-Trelawney', rarity:'common', type:'Charakter', subtype:'Weihnachts-Edition', house:'Ravenclaw', desc:'Die Schneekugel in der Hand, die Brille beschlagen: Trelawney sieht im Weihnachtsschmuck ein Omen. Was genau, verrät sie lieber nicht.', image:'cards/hp-xmas-024.jpg' },
+};
+
+// ===================== ADVENTSKALENDER: LOGIK =====================
+function heuteKey() {
+  const n = new Date();
+  return n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0');
+}
+// 1..24 im Dezember des Saisonjahres, sonst 0 (See ist dann ganz weg)
+function adventHeute() {
+  const n = new Date();
+  if (n.getFullYear() !== XMAS_SEASON.jahr) return 0;
+  if (n.getMonth() + 1 !== 12) return 0;
+  const d = n.getDate();
+  return (d >= 1 && d <= 24) ? d : 0;
+}
+function adventAktiv() { return adventHeute() > 0; }
+function xmasState(prof) { return (prof && prof.adventskalender) || null; }
+function xmasGeschenkt(prof, id) { return !!(id && (prof.cards || {})[id] > 0); }
+
+// Adventsaufgaben: im Advent (1.-24.12.) erledigte Aufgaben. Sie sind ein Guthaben -
+// eine Aufgabe von gestern darf heute ein Licht entzünden.
+function adventsAufgaben(prof) {
+  const von = XMAS_SEASON.jahr + '-12-01', bis = XMAS_SEASON.jahr + '-12-24';
+  return ((prof && prof.tasks) || []).filter(t => t && t.date >= von && t.date <= bis).length;
+}
+function adventsGuthaben(prof) {
+  const st = xmasState(prof);
+  const genutzt = (st && st.jahr === XMAS_SEASON.jahr) ? (st.lichter || []).length : 0;
+  return Math.max(0, adventsAufgaben(prof) - genutzt);
+}
+let advSubTimer = null;
+function advHinweis(text) {
+  const sub = document.getElementById('advSub');
+  if (!sub) return;
+  sub.textContent = text;
+  clearTimeout(advSubTimer);
+  advSubTimer = setTimeout(() => { advSubTimer = null; renderAdvent(); }, 2600);
+}
+function xmasHeuteBelegt(prof) {
+  const st = xmasState(prof);
+  return !!(st && st.jahr === XMAS_SEASON.jahr && st.tag === heuteKey());
+}
+
+// Wo liegt die Weihnachtskarte? Auf ihrer Basiskarte - oder, wenn die in einem noch
+// gesperrten Teil 2 sitzt, auf der Belohnungskarte des Bandes.
+function xmasAblage(variantId, prof) {
+  for (let i = 0; i < ALBUM_BANDS.length; i++) {
+    const band = ALBUM_BANDS[i];
+    for (const origId in XMAS_UPGRADES) {
+      if (XMAS_UPGRADES[origId] !== variantId) continue;
+      if ((band.cards || []).indexOf(origId) >= 0) return { band: i, baseId: origId };
+      if ((band.cards2 || []).indexOf(origId) >= 0) {
+        if (bandRewardOwned(band, prof)) return { band: i, baseId: origId };
+        const r = REWARD_CARDS[band.reward];
+        return { band: i, baseId: r ? r.id : null };
+      }
+    }
+  }
+  return null;
+}
+// Liegt auf DIESEM Platz eine noch nicht abgeholte Weihnachtskarte?
+function xmasFolie(bandIndex, slotId, prof) {
+  const st = xmasState(prof);
+  if (!st || !st.karte || st.jahr !== XMAS_SEASON.jahr) return null;
+  if (xmasGeschenkt(prof, st.karte)) return null;
+  const ab = xmasAblage(st.karte, prof);
+  if (!ab || ab.band !== bandIndex || ab.baseId !== slotId) return null;
+  return XMAS_CARDS[st.karte] || null;
+}
+
+// Lage der 24 Lampions (vier Tiefen, bewusst unregelmäßig)
+const ADV_SETZEN = [
+  [ 7.5,  7.0, 2.4], [ 19, 10.0, 2.5], [ 31,  6.4, 2.3], [ 44,  9.4, 2.5],
+  [ 57,  7.2, 2.4], [ 70, 10.2, 2.6], [ 83,  6.8, 2.3], [ 94,  9.6, 2.5],
+  [12, 24.5, 3.2], [ 26, 28.5, 3.3], [ 40, 22.8, 3.1], [ 54, 27.2, 3.3],
+  [ 68, 23.6, 3.2], [ 82, 28.0, 3.4],
+  [ 5, 42.0, 4.1], [ 19, 47.5, 4.2], [ 33, 41.0, 4.0], [ 47, 46.0, 4.2], [ 61, 42.5, 4.1],
+  [15, 65.0, 5.2], [34, 70.5, 5.4], [53, 63.5, 5.1], [72, 69.0, 5.3], [90, 64.0, 5.2]
+];
+const ADV_POSEN = [2,5,0,3,1,4, 2,0,5,3,4,1, 0,2,3,5,1,4, 3,0,2,4,5,2];
+const ADV_SPRITE = 'advent/lantern3d/sprite/';
+const ADV_EXT = '.' + 'png';
+let advGebaut = false;
+
+function buildAdventScene() {
+  const lake = document.getElementById('advLake');
+  const snowEl = document.getElementById('advSnow');
+  if (!lake || !snowEl || advGebaut) return;
+  advGebaut = true;
+  lake.innerHTML = '';
+  ADV_SETZEN.forEach((pos, i) => {
+    const x = pos[0], y = pos[1], w = pos[2];
+    const el = document.createElement('div');
+    el.className = 'adv-lantern';
+    el.dataset.day = i + 1;
+    el.style.left = x + '%';
+    el.style.top = y + '%';
+    el.style.setProperty('--w', w + '%');
+    el.style.setProperty('--dur', (5.5 + Math.random() * 4).toFixed(2) + 's');
+    el.style.setProperty('--delay', (-Math.random() * 6).toFixed(2) + 's');
+    el.style.zIndex = 2 + Math.round(y / 25);
+    const pose = ADV_POSEN[i % ADV_POSEN.length];
+    el.innerHTML =
+      '<div class="adv-fuss"></div><div class="adv-refl"></div><div class="adv-halo"></div>' +
+      '<img class="adv-sprite dark" src="' + ADV_SPRITE + 'lampion_' + pose + '_dark' + ADV_EXT + '" alt="">' +
+      '<img class="adv-sprite lit" src="' + ADV_SPRITE + 'lampion_' + pose + '_lit' + ADV_EXT + '" alt="">';
+    el.addEventListener('click', () => adventLichtTippen(i + 1));
+    lake.appendChild(el);
+  });
+  snowEl.innerHTML = '';
+  for (let i = 0; i < 70; i++) {
+    const f = document.createElement('div');
+    f.className = 'adv-flake';
+    const nah = Math.random() < .22;
+    f.style.left = (Math.random() * 104 - 2).toFixed(2) + '%';
+    f.style.setProperty('--s', (nah ? 3.4 + Math.random() * 2.4 : 1.2 + Math.random() * 1.8).toFixed(1) + 'px');
+    f.style.setProperty('--b', (nah ? 1.4 : .5) + 'px');
+    f.style.setProperty('--o', (nah ? .95 : .7).toFixed(2));
+    f.style.setProperty('--d', (11 + Math.random() * 14).toFixed(1) + 's');
+    f.style.setProperty('--dx', (Math.random() * 80 - 40).toFixed(0) + 'px');
+    f.style.setProperty('--delay', (-Math.random() * 22).toFixed(1) + 's');
+    snowEl.appendChild(f);
+  }
+}
+
+function renderAdvent() {
+  buildAdventScene();
+  if (!currentProfile) return;
+  const prof = getProfile(currentProfile);
+  const heute = adventHeute();
+  const st = xmasState(prof);
+  const lichter = (st && st.jahr === XMAS_SEASON.jahr) ? (st.lichter || []) : [];
+  const belegt = xmasHeuteBelegt(prof);
+
+  document.querySelectorAll('#advLake .adv-lantern').forEach(el => {
+    const t = +el.dataset.day;
+    const an = lichter.indexOf(t) >= 0;
+    el.classList.toggle('lit', an);
+    el.classList.toggle('zu', t > heute);
+    el.classList.toggle('heute', t === heute && !belegt);
+  });
+
+  const k = lichter.length;
+  const guthaben = adventsGuthaben(prof);
+  const sub = document.getElementById('advSub');
+  if (sub && !advSubTimer) {
+    if (belegt) sub.textContent = 'Heute brennt dein Licht · ' + k + ' von 24';
+    else if (guthaben <= 0) sub.textContent = 'Erst eine Aufgabe erledigen, dann brennt ein Licht';
+    else sub.textContent = k + ' von 24 brennen · ' + guthaben
+      + (guthaben === 1 ? ' Aufgabe übrig' : ' Aufgaben übrig');
+  }
+  document.querySelectorAll('#advFensterGruppe .adv-fenster').forEach((f, i) => {
+    f.classList.toggle('on', (i + 1) <= Math.round(k / 4));
+  });
+}
+
+// Knopf auf der Startseite: nur im Dezember (1.-24.) sichtbar
+function renderAdventEntry() {
+  const btn = document.getElementById('adventEntry');
+  if (!btn) return;
+  if (!adventAktiv() || !currentProfile) { btn.style.display = 'none'; return; }
+  const prof = getProfile(currentProfile);
+  if (!prof) { btn.style.display = 'none'; return; }
+  btn.style.display = 'flex';
+  const st = xmasState(prof);
+  const lichter = (st && st.jahr === XMAS_SEASON.jahr) ? (st.lichter || []) : [];
+  const guthaben = adventsGuthaben(prof);
+  const sub = document.getElementById('adventEntrySub');
+  if (!sub) return;
+  if (xmasHeuteBelegt(prof)) {
+    sub.textContent = lichter.length + ' von 24 Lichtern brennen · dein Licht für heute ist entzündet';
+  } else if (guthaben <= 0) {
+    sub.textContent = 'Eine Aufgabe erledigen, dann brennt ein Licht';
+  } else {
+    sub.textContent = lichter.length + ' von 24 Lichtern · ' + guthaben
+      + (guthaben === 1 ? ' Aufgabe übrig' : ' Aufgaben übrig');
+  }
+}
+
+// Licht antippen: heute genau eines, danach ist der See für heute zu.
+function adventLichtTippen(n) {
+  if (!currentProfile) return;
+  const prof = getProfile(currentProfile);
+  const heute = adventHeute();
+  if (!heute) return;
+  const el = document.querySelector('#advLake .adv-lantern[data-day="' + n + '"]');
+  const belegt = xmasHeuteBelegt(prof);
+
+  if (belegt) {
+    const st = xmasState(prof);
+    if (st.licht === n) { xmasSternZumAlbum(el); return; }   // heute schon entzündet: Stern zeigt den Weg
+    if (el) { el.classList.add('denied'); setTimeout(() => el.classList.remove('denied'), 460); }
+    return;
+  }
+  if (n > heute) {
+    if (el) { el.classList.add('denied'); setTimeout(() => el.classList.remove('denied'), 460); }
+    return;
+  }
+  // Ein Licht kostet eine im Advent erledigte Aufgabe (Guthaben, nicht Tagespflicht)
+  if (adventsGuthaben(prof) <= 0) {
+    if (el) { el.classList.add('denied'); setTimeout(() => el.classList.remove('denied'), 460); }
+    advHinweis('Für ein Licht fehlt noch eine erledigte Aufgabe');
+    return;
+  }
+
+  const karte = XMAS_LICHTER[n - 1];
+  if (!karte) return;
+  const st = xmasState(prof);
+  if (!st || st.jahr !== XMAS_SEASON.jahr) {
+    prof.adventskalender = { jahr: XMAS_SEASON.jahr, tag: heuteKey(), licht: n, karte: karte, lichter: [n] };
+  } else {
+    st.tag = heuteKey();
+    st.licht = n;
+    st.karte = karte;
+    st.lichter = st.lichter || [];
+    if (st.lichter.indexOf(n) < 0) st.lichter.push(n);
+  }
+  save();
+  if (el) el.classList.add('lit');
+  renderAdvent();                       // Zeile "X von 24 · Y Aufgaben übrig" sofort nachziehen
+  const snow = document.getElementById('advSnow');
+  if (snow) { snow.classList.add('dense'); setTimeout(() => snow.classList.remove('dense'), 2400); }
+  // nur Licht - kein Satz, keine Feier. Der Stern fliegt zum Album-Tab und weist dort die Richtung.
+  setTimeout(function () { xmasSternZumAlbum(el); }, 900);
+}
+
+// Funkenschweif: kleiner Punkt, der kurz aufglüht und verweht
+function xmasFunke(x, y) {
+  const f = document.createElement('i');
+  f.className = 'xmas-funke';
+  f.style.left = x + 'px';
+  f.style.top = y + 'px';
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 1000);
+}
+
+// Stern fliegt einen Bogen von A nach B und lässt einen dezenten Funkenschweif hinter sich
+function xmasSternFliege(sx, sy, zx, zy, dauer, danach) {
+  const stern = document.createElement('div');
+  stern.className = 'xmas-stern';
+  stern.textContent = '\u2726';
+  document.body.appendChild(stern);
+  const t0 = performance.now();
+  const cx = (sx + zx) / 2;
+  const cy = Math.min(sy, zy) - Math.max(60, Math.abs(zx - sx) * 0.18);
+  let letzterFunke = 0;
+  function schritt(t) {
+    const p = Math.min(1, (t - t0) / dauer);
+    const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+    const x = (1 - e) * (1 - e) * sx + 2 * (1 - e) * e * cx + e * e * zx;
+    const y = (1 - e) * (1 - e) * sy + 2 * (1 - e) * e * cy + e * e * zy;
+    stern.style.transform = 'translate(' + (x - 12) + 'px,' + (y - 12) + 'px) scale(' + (1 - 0.28 * e) + ')';
+    if (t - letzterFunke > 85) {
+      letzterFunke = t;
+      xmasFunke(x + (Math.random() * 8 - 4), y + 10);
+    }
+    if (p < 1) requestAnimationFrame(schritt);
+    else { stern.remove(); if (typeof danach === 'function') danach(); }
+  }
+  requestAnimationFrame(schritt);
+}
+
+// Der Stern führt: er fliegt zum Album-Tab, im Album zeigt er die Blätterrichtung.
+function xmasSternZumAlbum(startEl) {
+  const r = startEl ? startEl.getBoundingClientRect() : null;
+  const nav = document.querySelector('.nav-item[data-screen="album"]');
+  const zr = nav ? nav.getBoundingClientRect() : null;
+  const sx = r ? r.left + r.width / 2 : window.innerWidth * 0.5;
+  const sy = r ? r.top + r.height * 0.35 : window.innerHeight * 0.45;
+  const zx = zr ? zr.left + zr.width / 2 : window.innerWidth - 60;
+  const zy = zr ? zr.top + zr.height / 2 : window.innerHeight - 40;
+  xmasSternFliege(sx, sy, zx, zy, 2200);
+}
+
+// Im Album: Richtung anzeigen - oder, wenn die Karte sichtbar ist, auf sie legen
+function xmasGuideUpdate() {
+  const area = document.getElementById('albumArea');
+  if (!area) return;
+  let g = document.getElementById('xmasGuide');
+  const prof = currentProfile ? getProfile(currentProfile) : null;
+  const st = xmasState(prof);
+  const offen = !!(st && st.karte && st.jahr === XMAS_SEASON.jahr && !xmasGeschenkt(prof, st.karte));
+  if (!offen) { if (g) g.remove(); return; }
+  const ab = xmasAblage(st.karte, prof);
+  if (!ab) { if (g) g.remove(); return; }
+
+  // Liegt die Folie schon auf dieser Seite? Dann legt sich der Stern darauf.
+  // Nur die SICHTBARE Seite zaehlt - die anderen Albumseiten liegen ebenfalls im DOM
+  const ziel = area.querySelector('.album-page.active .album-slot.xmas-folie,'
+    + ' .album-page.active .album-slot-reward.xmas-folie,'
+    + ' #albumSubPage.open .album-slot.xmas-folie');
+  if (ziel) { xmasLanden(g, ziel); return; }
+
+  const band = ALBUM_BANDS[ab.band];
+  const perPage = window.innerWidth >= 768 ? 17 : 14;
+  const karten = (band && band.cards) || [];
+  const idx = karten.indexOf(ab.baseId);
+  const seite = idx >= 0 ? Math.floor(idx / perPage)
+                         : Math.max(0, Math.ceil(karten.length / perPage) - 1);
+
+  let cls;
+  if (albumCurrentBand < ab.band) cls = 'rechts';
+  else if (albumCurrentBand > ab.band) cls = 'links';
+  else if (albumCurrentPage < seite) cls = 'seite-rechts';
+  else cls = 'seite-links';
+
+  if (!g) { g = document.createElement('div'); g.id = 'xmasGuide'; area.appendChild(g); }
+  g.className = 'xmas-guide ' + cls;
+  g.innerHTML = '<span class="kern">✦</span><span class="pfeil">'
+    + (cls.indexOf('links') >= 0 ? '\u00ab' : '\u00bb') + '</span>' + xmasFunkenHTML();
+}
+
+function xmasFunkenHTML() {
+  let h = '';
+  for (let i = 0; i < 4; i++) {
+    const fx = (Math.random() * 26 - 13).toFixed(0);
+    const fy = (Math.random() * 30 + 14).toFixed(0);
+    h += '<i class="funk" style="left:' + (16 + Math.random() * 22).toFixed(0) + 'px;top:'
+      + (14 + Math.random() * 24).toFixed(0) + 'px;--fx:' + fx + 'px;--fy:' + fy
+      + 'px;animation-delay:' + (i * 0.6 + Math.random() * 0.35).toFixed(2) + 's"></i>';
+  }
+  return h;
+}
+
+// Stern setzt sich auf die Karte und verglüht dort
+function xmasLanden(guide, ziel) {
+  const r = ziel.getBoundingClientRect();
+  const start = guide ? guide.getBoundingClientRect() : null;
+  if (guide) guide.remove();
+  const zx = r.left + r.width / 2;
+  const zy = r.top + r.height * 0.18;
+  const sx = start ? start.left + start.width / 2 : zx + 110;
+  const sy = start ? start.top + start.height / 2 : zy - 50;
+  xmasSternFliege(sx, sy, zx, zy, 1100, function () {
+    ziel.classList.add('xmas-gelandet');
+    setTimeout(function () { ziel.classList.remove('xmas-gelandet'); }, 1300);
+    for (let i = 0; i < 5; i++) xmasFunke(zx + (Math.random() * 38 - 19), zy + (Math.random() * 26 - 6));
+  });
+}
+
+// Die Folie antippen: Karte aufklappen, sie wandert ins Weihnachtsalbum (Band 13)
+function xmasAbholen() {
+  if (!currentProfile) return;
+  const prof = getProfile(currentProfile);
+  const st = xmasState(prof);
+  if (!st || !st.karte || xmasGeschenkt(prof, st.karte)) return;
+  const card = XMAS_CARDS[st.karte];
+  if (!card) return;
+  prof.cards = prof.cards || {};
+  prof.cards[card.id] = (prof.cards[card.id] || 0) + 1;
+  if (typeof checkAchievements === 'function') checkAchievements(prof);
+  save();
+  showCardReveal([card], () => {
+    const bandIdx = ALBUM_BANDS.findIndex(b => b.id === 13);
+    if (bandIdx >= 0) { albumCurrentBand = bandIdx; albumCurrentPage = 0; }
+    navigateTo('album');
+  });
+}
+
 // ===================== ALBUM REWARD CARDS =====================
 // Exklusive Karten, die nur durch Vervollständigen eines Album-Bandes freigeschaltet werden.
 // Keine Rarität - sie haben einen eigenen Belohnungs-Mechanismus.
@@ -3604,7 +4265,10 @@ const ALBUM_BANDS = [
     reward: 9 },
   { id: 12, sonder: true, title: 'Halloween-Edition', short: 'Halloween', icon: '🎃', bg: 'album/bg-halloween.jpg',
     cards: ['hp-hal-001','hp-hal-002','hp-hal-003','hp-hal-004','hp-hal-005','hp-hal-006','hp-hal-007','hp-hal-008','hp-hal-009','hp-hal-010','hp-hal-011','hp-hal-012'],
-    reward: 10 }
+    reward: 10 },
+  { id: 13, sonder: true, title: 'Weihnachtsedition', short: 'Weihnachten', icon: '🎄', bg: 'album/bg-xmas.jpg',
+    cards: XMAS_LICHTER.slice(),
+    reward: null }
 ];
 
 // ===================== FUNNY VARIANT CARDS (WIP) =====================
@@ -3684,8 +4348,13 @@ const ACHIEVEMENTS = [
   { id:'tokenEx1', cat:'Tauschen', icon:'🎃', name:'Kürbis-Kaufmann', desc:'Tausche zum ersten Mal eine Karte gegen Kürbis-Taler', goal:1, val: p => p.tokenExchanges || 0 },
   { id:'trade10', cat:'Tauschen', icon:'🔄', name:'Tauschpartner', desc:'Schließe 10 Tauschvorgänge ab', goal:10, val: p => p.tradesDone || 0 },
   // ---- Halloween ----
-  { id:'tokens10', cat:'Halloween', icon:'🪙', name:'Kürbis-Sammler', desc:'Verdiene 10 Kürbis-Taler insgesamt', goal:10, val: p => tokensEarnedTotal(p) },
-  { id:'halCard1', cat:'Halloween', icon:'🌙', name:'Nächtlicher Zauber', desc:'Erwerbe deine erste Halloween-Karte', goal:1, val: p => halCardsOwned(p) },
+  // ---- Saisonal: Weihnachtsedition (v112) ----
+  { id:'xmas1', cat:'Saisonal', icon:'🎄', name:'Weihnachtspost', desc:'Hol dir deine erste Weihnachtskarte', goal:1, val: p => xmasOwned(p) },
+  { id:'xmas12', cat:'Saisonal', icon:'🎄', name:'Zwölf Gaben', desc:'Sammle 12 Weihnachtskarten', goal:12, val: p => xmasOwned(p) },
+  { id:'xmasAll', cat:'Saisonal', icon:'🎁', name:'Weihnachtswunder', desc:'Sammle alle 24 Weihnachtskarten', goal:24, val: p => xmasOwned(p) },
+
+  { id:'tokens10', cat:'Saisonal', icon:'🪙', name:'Kürbis-Sammler', desc:'Verdiene 10 Kürbis-Taler insgesamt', goal:10, val: p => tokensEarnedTotal(p) },
+  { id:'halCard1', cat:'Saisonal', icon:'🌙', name:'Nächtlicher Zauber', desc:'Erwerbe deine erste Halloween-Karte', goal:1, val: p => halCardsOwned(p) },
   // ---- Album & Familie ----
   { id:'band1', cat:'Album', icon:'📖', name:'Band-Meister', desc:'Vervollständige dein erstes Album-Band', goal:1, val: p => completedBands(p) },
   { id:'band3', cat:'Album', icon:'🏰', name:'Dreifacher Meister', desc:'Vervollständige 3 Album-Bände', goal:3, val: p => completedBands(p) },
@@ -3693,8 +4362,8 @@ const ACHIEVEMENTS = [
   { id:'magicworld', cat:'Album', icon:'🌍', name:'Entdecker der Magischen Welt', desc:'Sammle 5 Karten aus „Die Magische Welt"', goal:5, val: p => cardsFromBand(p, 9) },
   { id:'magicworldAll', cat:'Album', icon:'🌐', name:'Weltreisender', desc:'Sammle alle 16 Karten aus „Die Magische Welt"', goal:16, val: p => cardsFromBand(p, 9) },
   { id:'phoenixSet', cat:'Album', icon:'🔮', name:'Hüter des Phönix', desc:'Sammle alle 12 Karten des Phönix-Panoramas', goal:12, val: p => cardsFromBand(p, 10) },
-  { id:'beachparty', cat:'Album', icon:'🏖️', name:'Strandparty-Gast', desc:'Erschaffe deine erste Strandparty-Edition', goal:1, val: p => funnyOwned(p) },
-  { id:'funnyAll', cat:'Album', icon:'🌴', name:'Strandparty-König', desc:'Sammle ALLE Strandpartykarten', goal: () => allFunnyCount(), val: p => funnyOwned(p) },
+  { id:'beachparty', cat:'Saisonal', icon:'🏖️', name:'Strandparty-Gast', desc:'Erschaffe deine erste Strandparty-Edition', goal:1, val: p => funnyOwned(p) },
+  { id:'funnyAll', cat:'Saisonal', icon:'🌴', name:'Strandparty-König', desc:'Sammle ALLE Strandpartykarten', goal: () => allFunnyCount(), val: p => funnyOwned(p) },
   { id:'animated', cat:'Album', icon:'🎬', name:'Lebendiges Porträt', desc:'Erwecke ein Gründer-Porträt zum Leben', goal:1, val: p => Object.keys(p.animatedPortraits || {}).length },
   { id:'portraitAll', cat:'Album', icon:'🖼️', name:'Lebendige Gründer', desc:'Erwecke alle 4 Gründer-Porträts zum Leben', goal:4, val: p => Object.keys(p.animatedPortraits || {}).length },
   { id:'family5', cat:'Album', icon:'👨‍👩‍👧', name:'Familien-Champion', desc:'Schaffe 5× die Familien-Challenge', goal:5, val: p => p.weekWins || 0 },
@@ -3707,7 +4376,7 @@ const ACHIEVEMENTS = [
   { id:'famBonus5', cat:'Tränke', icon:'🎁', name:'Familien-Belohnung', desc:'Erhalte 5 Tränke aus dem Familien-Bonus', goal:5, val: p => p.familienTraenke || 0 },
 ];
 
-const ACH_CATS = ['Sammlung', 'Fleiß', 'Ausdauer', 'Packs', 'Tauschen', 'Tränke', 'Halloween', 'Album'];
+const ACH_CATS = ['Sammlung', 'Fleiß', 'Ausdauer', 'Packs', 'Tauschen', 'Tränke', 'Album', 'Saisonal'];
 
 // ---- Hilfszähler für die Orden ----
 // Zutaten-Karten (hp-zut-*) sind KEINE Sammelkarten – sie zaehlen nicht in Sammlung/Zaehlern
@@ -3739,6 +4408,7 @@ function allCardsCount() {
   CARD_DB.forEach(c => { if (!c.zutat) ids.add(c.id); });   // Zutaten sind keine Sammelkarten
   Object.values(FUNNY_CARDS).forEach(c => ids.add(c.id));
   Object.values(HALLOWEEN_CARDS).forEach(c => ids.add(c.id));
+  Object.values(XMAS_CARDS).forEach(c => ids.add(c.id));
   Object.values(REWARD_CARDS).forEach(c => ids.add(c.id));
   return ids.size;
 }
@@ -3788,6 +4458,10 @@ function bestDayTasks(p) {
 // Anzahl besessener Halloween-Karten
 function halCardsOwned(p) {
   return Object.keys(p.cards || {}).filter(id => HALLOWEEN_CARDS[id]).length;
+}
+// Anzahl besessener Weihnachtskarten
+function xmasOwned(p) {
+  return Object.keys((p && p.cards) || {}).filter(id => !!XMAS_CARDS[id]).length;
 }
 // Profil-Objekt → Name (für den Taler-Rückfall-Reader)
 function profileName(p) {
@@ -4320,6 +4994,7 @@ function navigateTo(screen) {
   } else if (screen === 'dashboard') {
     document.getElementById('screen-dashboard').classList.add('active');
     renderSicher(renderDashboard, 'dashboard');
+    renderSicher(renderAdventEntry, 'advent-entry');
   } else if (screen === 'packs') {
     document.getElementById('screen-packs').classList.add('active');
     document.getElementById('screen-packs').style.display = '';
@@ -4339,6 +5014,9 @@ function navigateTo(screen) {
   } else if (screen === 'potions') {
     document.getElementById('screen-potions').classList.add('active');
     renderSicher(renderPotions, 'potions');
+  } else if (screen === 'advent') {
+    document.getElementById('screen-advent').classList.add('active');
+    renderSicher(renderAdvent, 'advent');
   } else if (screen === 'portraits') {
     document.getElementById('screen-portraits').classList.add('active');
     renderSicher(startWall, 'portraits');
@@ -6211,6 +6889,12 @@ function renderCollection(filter) {
         cards.push({ ...hc, count: owned[hc.id] });
       }
     });
+    // Owned Weihnachtskarten ebenso
+    Object.values(XMAS_CARDS).forEach(xc => {
+      if (owned[xc.id]) {
+        cards.push({ ...xc, count: owned[xc.id] });
+      }
+    });
   }
 
   if (filter) currentFilter = filter;
@@ -6462,6 +7146,14 @@ function buildAlbumSubPage(band, prof) {
     const card = getCardById(id);
     if (!card) return;
     const slot = document.createElement('div');
+    const folie = xmasFolie(albumCurrentBand, id, prof);
+    if (folie) {
+      slot.className = 'album-slot xmas-folie';
+      slot.innerHTML = `<img src="${folie.image}" alt="${folie.name}" loading="lazy">`;
+      slot.onclick = () => xmasAbholen();
+      grid.appendChild(slot);
+      return;
+    }
     if (owned[id] > 0) {
       slot.className = 'album-slot' + (WIDE_MEDIA[id] ? ' wide' : '');
       const vid = animatedVideoSrc(id, prof);
@@ -6568,6 +7260,15 @@ function renderAlbumBand() {
       const card = getCardById(s.id);
       if (!card) return;
       const slot = document.createElement('div');
+      // Weihnachtskarte liegt als Folie auf ihrer Basiskarte (auch wenn die noch fehlt)
+      const folie = xmasFolie(albumCurrentBand, s.id, prof);
+      if (folie) {
+        slot.className = 'album-slot xmas-folie';
+        slot.innerHTML = `<img src="${folie.image}" alt="${folie.name}" loading="lazy">`;
+        slot.onclick = () => xmasAbholen();
+        grid.appendChild(slot);
+        return;
+      }
       if (s.owned) {
         slot.className = 'album-slot' + (WIDE_MEDIA[s.id] ? ' wide' : '');
         const vid = animatedVideoSrc(s.id, prof);
@@ -6643,7 +7344,13 @@ function renderAlbumBand() {
       } else {
         const rewardSlot = document.createElement('div');
         const rewardOwned = owned[reward.id] > 0;
-        if (rewardOwned) {
+        // Teil-2-Sonderfall: Original sitzt in einem noch gesperrten Teil 2
+        const rewardFolie = xmasFolie(albumCurrentBand, reward.id, prof);
+        if (rewardFolie) {
+          rewardSlot.className = 'album-slot-reward xmas-folie';
+          rewardSlot.innerHTML = `<img src="${rewardFolie.image}" alt="${rewardFolie.name}" loading="lazy">`;
+          rewardSlot.onclick = () => xmasAbholen();
+        } else if (rewardOwned) {
           rewardSlot.className = 'album-slot-reward' + (WIDE_MEDIA[reward.id] ? ' wide' : '');
           const rvid = animatedVideoSrc(reward.id, prof);
           rewardSlot.innerHTML = rvid
@@ -6680,6 +7387,9 @@ function renderAlbumBand() {
   } else {
     nav.style.display = 'none';
   }
+
+  // Wegweiser-Stern (Adventskarte noch nicht abgeholt)
+  try { xmasGuideUpdate(); } catch (e) {}
 
   // Einmalige Verschmelzungs-Animation (nur Panorama-Bänder, einmal pro Profil)
   maybePhoenixRitual();
@@ -6815,6 +7525,7 @@ function albumFlip(dir) {
   document.getElementById('albumIndicator').textContent = `${albumCurrentPage + 1} / ${albumPageCount}`;
   document.getElementById('albumPrev').classList.toggle('disabled', albumCurrentPage === 0);
   document.getElementById('albumNext').classList.toggle('disabled', albumCurrentPage === albumPageCount - 1);
+  try { xmasGuideUpdate(); } catch (e) {}     // Wegweiser-Stern mit der Seite mitziehen
 }
 
 // Belohnung erst beim KLICK auf das leere Feld prüfen und gewähren
@@ -7670,6 +8381,13 @@ function renderParentArea() {
       opt.textContent = '🎃 ' + hc.name + ' (Halloween)';
       cardSel.appendChild(opt);
     });
+    // Weihnachtskarten
+    Object.values(XMAS_CARDS).forEach(xc => {
+      const opt = document.createElement('option');
+      opt.value = xc.id;
+      opt.textContent = '🎄 ' + xc.name + ' (Weihnachten)';
+      cardSel.appendChild(opt);
+    });
   }
   // Traenke-Dropdown
   const trankSel = document.getElementById('assignTrankSelect');
@@ -7923,6 +8641,10 @@ function getCardById(id) {
     if (hal) c = hal;
   }
   if (!c) {
+    const xm = Object.values(XMAS_CARDS).find(cr => cr.id === id);
+    if (xm) c = xm;
+  }
+  if (!c) {
     const reward = Object.values(REWARD_CARDS).find(cr => cr.id === id);
     if (reward) c = reward;
   }
@@ -8143,7 +8865,7 @@ function openCreateTradeModal(cardId) {
   const container = document.getElementById('tradeWantCards');
   container.innerHTML = '';
   const owned = getProfile(currentProfile).cards || {};
-  const allCards = [...CARD_DB, ...Object.values(FUNNY_CARDS), ...Object.values(HALLOWEEN_CARDS)];
+  const allCards = [...CARD_DB, ...Object.values(FUNNY_CARDS), ...Object.values(HALLOWEEN_CARDS), ...Object.values(XMAS_CARDS)];
   // Sort: unowned first, then owned
   const sorted = [...allCards].sort((a, b) => {
     const aOwned = owned[a.id] ? 1 : 0;
@@ -8282,6 +9004,7 @@ function assignCard() {
     if (found) card = found;
   }
   if (!card && HALLOWEEN_CARDS[cardId]) card = HALLOWEEN_CARDS[cardId];
+  if (!card && XMAS_CARDS[cardId]) card = XMAS_CARDS[cardId];
   if (!card) return;
   const prof = getProfile(name);
   if (!prof.cards) prof.cards = {};
@@ -8305,7 +9028,7 @@ function updateRemoveCardList() {
   const owned = prof.cards || {};
   selCard.innerHTML = '';
   // Build list of owned cards (base + funny + halloween)
-  const allCards = [...CARD_DB, ...Object.values(FUNNY_CARDS), ...Object.values(HALLOWEEN_CARDS)];
+  const allCards = [...CARD_DB, ...Object.values(FUNNY_CARDS), ...Object.values(HALLOWEEN_CARDS), ...Object.values(XMAS_CARDS)];
   allCards.forEach(c => {
     const count = owned[c.id] || 0;
     if (count > 0) {
@@ -8376,7 +9099,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v110';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v111';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).

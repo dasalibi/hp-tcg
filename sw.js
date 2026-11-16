@@ -2,7 +2,7 @@
    Magische Belohnungen – Service Worker
    Cached animierte Porträt-Videos für sofortige Wiedergabe
    ============================================================ */
-const CACHE_NAME = 'hp-tcg-v110';
+const CACHE_NAME = 'hp-tcg-v111';
 const BASE = '.';
 
 const PRECACHE_URLS = [
@@ -121,6 +121,32 @@ const PRECACHE_URLS = [
   `${BASE}/album/bg-founders.jpg`,
   `${BASE}/album/bg-order.jpg`,
   `${BASE}/album/bg-halloween.jpg`,
+
+  `${BASE}/album/bg-xmas.jpg`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_0_dark.png`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_0_lit.png`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_1_dark.png`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_1_lit.png`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_2_dark.png`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_2_lit.png`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_3_dark.png`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_3_lit.png`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_4_dark.png`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_4_lit.png`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_5_dark.png`,
+
+  `${BASE}/advent/lantern3d/sprite/lampion_5_lit.png`,
 ];
 
 // Install: Pre-Cache alle wichtigen Dateien
