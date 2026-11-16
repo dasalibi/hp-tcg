@@ -2587,8 +2587,10 @@ body{
    damit der Übergang Clip -> Standbild pixelgleich ist. */
 /* Leerer Rahmen - ein Zustand für beide Fälle (nie besessen und gerade verlassen):
    kein Glas, kein Bild. Die Wand scheint durch, der Rahmen liegt mit weichem Randschatten darauf. */
-.portrait-glass.empty { background:none;
-  box-shadow: inset 0 0 16px rgba(0,0,0,.42), inset 0 0 3px rgba(0,0,0,.35); }
+.portrait-glass.empty {
+  background: #241a12 url('album/leer-gemaelde.jpg') center / cover no-repeat;
+  box-shadow: inset 0 0 16px rgba(0,0,0,.42), inset 0 0 3px rgba(0,0,0,.35);
+}
 .portrait-glass img, .portrait-glass video { width:100%; height:100%; object-fit:cover; display:block; }
 .portrait-glass img { transition: opacity .65s ease, transform .65s ease; }
 .portrait-glass img.wall-hide { opacity:0; transform:scale(.985); }
@@ -5163,7 +5165,7 @@ let wallLiveTimer = null;
 const WALL_TRAVEL_MS = 4000;    // kürzeste Reisezeit "unterwegs"
 const WALL_TICK_MS = 4500;
 
-let wallState = null, wallTimer = null, wallBuilt = false;
+let wallState = null, wallTimer = null, wallBuilt = false, wallStillTimer = null;
 
 function wallHeads() {
   const prof = getProfile(currentProfile);
@@ -5293,8 +5295,28 @@ function wallRender() {
           v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
           glass.appendChild(v);
           const pl = v.play(); if (pl && pl.catch) pl.catch(() => {});
-        } else if (cur.paused) {
+        } else if (cur.paused && !f.still) {
           const pl = cur.play(); if (pl && pl.catch) pl.catch(() => {});
+        }
+        // Wach, aber gerade still: das Kartenbild (Augen offen) über den Loop legen.
+        // Die Dauerschleife desselben kurzen Clips wirkt sonst künstlich.
+        const ov = glass.querySelector('img.awake-still');
+        if (f.still && !ov) {
+          const n = document.createElement('img');
+          n.className = 'awake-still';
+          n.src = card ? card.image : stillSrc;
+          n.alt = card ? card.name : '';
+          n.draggable = false;
+          n.style.position = 'absolute'; n.style.inset = '0';
+          n.style.width = '100%'; n.style.height = '100%';
+          n.style.objectFit = 'cover'; n.style.opacity = '0';
+          n.style.transition = 'opacity .35s ease';
+          glass.appendChild(n);
+          requestAnimationFrame(() => { n.style.opacity = '1'; });
+        } else if (!f.still && ov) {
+          ov.style.transition = 'opacity .3s ease';
+          ov.style.opacity = '0';
+          setTimeout(() => { if (ov.parentNode) ov.remove(); }, 320);
         }
         return;
       }
@@ -5356,7 +5378,7 @@ function wallRender() {
         frameEl.classList.add('empty');
         glass.className = 'portrait-glass empty';
         glass.dataset.leer = 'none';
-        glass.style.backgroundImage = 'none';
+        glass.style.backgroundImage = '';      // Hintergrund kommt aus der CSS-Regel .empty
         glass.innerHTML = '';
       };
       if (vid && !glass.dataset.fading) {
@@ -5371,6 +5393,45 @@ function wallRender() {
     }
   });
 }
+// Ein waches Porträt soll nicht endlos denselben kurzen Clip abspulen: nach ein paar Sekunden
+// Loop wird das Kartenbild (Augen offen) eingeblendet, ein paar Sekunden später läuft der Loop
+// wieder an - am Ruhepunkt des Clips umgeschaltet, damit die Pose nicht springt.
+function wallStillTick() {
+  const st = wallState;
+  if (!st || currentScreen !== 'portraits' || document.hidden) return;
+  const now = Date.now();
+  st.frames.forEach((f, i) => {
+    const h = f.occ;
+    if (!h || f.busy) return;
+    if (!wallLiveSet[h]) { f.still = false; f.liveSince = 0; f.stillAfter = 0; return; }
+    const frameEl = document.querySelector('.portrait-frame[data-slot="' + i + '"]');
+    const glass = frameEl && frameEl.firstElementChild;
+    if (!glass) return;
+    if (!f.still) {
+      if (!f.liveSince) { f.liveSince = now; f.stillAfter = now + 6000 + Math.random() * 6000; }
+      if (now < (f.stillAfter || 0)) return;
+      const v = glass.querySelector('video');
+      if (!v) return;
+      f.busy = true;
+      wallAtRest(v, () => {
+        if (!wallLiveSet[h]) { f.busy = false; return; }     // inzwischen eingeschlafen oder weg
+        try { v.pause(); } catch (e) {}
+        f.busy = false;
+        f.still = true;
+        f.stillUntil = Date.now() + 4000 + Math.random() * 4000;
+        wallRender();
+      });
+    } else if (now >= (f.stillUntil || 0)) {
+      const v = glass.querySelector('video');
+      f.still = false;
+      f.liveSince = now;
+      f.stillAfter = now + 6000 + Math.random() * 6000;
+      if (v) { try { v.currentTime = 0; v.play(); } catch (e) {} }
+      wallRender();
+    }
+  });
+}
+
 // Wählt, wer gerade "lebt" (Idle-Loop). Beim Rotieren wird genau EINER getauscht,
 // damit die Wand nicht bei jedem Wechsel komplett umspringt.
 function wallLivePick(first) {
@@ -5396,7 +5457,22 @@ function wallLivePick(first) {
     delete wallAwake[alt];
     return;
   }
-  if (!rest.length) return;
+  // Sind ALLE Anwesenden schon wach (wenige Figuren, z. B. nur eine freigeschaltet), gibt es
+  // niemanden zum Tauschen. Früher kehrte die Funktion hier zurück - die Wand stand still und
+  // das eine Porträt war dauerhaft wach. Jetzt wird einer schlafen gelegt; die nächste Runde
+  // weckt wieder jemanden. So atmet die Wand auch mit einer einzigen Figur.
+  if (!rest.length) {
+    if (st.frames.some(f => f.busy)) return;
+    const moeglich = live.filter(h => {
+      const hd = st.heads[h];
+      return hd && hd.status === 'in' && hd.frame !== null && !st.frames[hd.frame].busy;
+    });
+    if (!moeglich.length) return;
+    const schlaeft = moeglich.slice().sort((a, b) => (wallAwake[a] || 0) - (wallAwake[b] || 0))[0];
+    delete wallLiveSet[schlaeft];
+    delete wallAwake[schlaeft];
+    return;
+  }
   // Immer nur ein Übergang zur Zeit: läuft gerade ein Schlaf- oder Aufwach-Clip, wird diese
   // Runde übersprungen. Sonst dekodiert das iPad vier Videos gleichzeitig.
   if (st.frames.some(f => f.busy)) return;
@@ -5497,6 +5573,7 @@ function wallWake(h) {
       g.innerHTML = '';
     }
     f.busy = false; f.sleeping = false;
+    f.still = false; f.liveSince = 0; f.stillAfter = 0;      // Still-Rhythmus neu starten
     Object.keys(wallLiveSet).forEach(x => { if (!wallAwake[x]) wallAwake[x] = 0; });
     wallLiveSet[h] = true;
     wallAwake[h] = Date.now();
@@ -5517,7 +5594,6 @@ function wallStopVideo() {
   });
 }
 function wallBusyCount() { return wallState ? wallState.frames.filter(f => f.busy).length : 0; }
-function wallVisibleCount() { return wallState ? Object.keys(wallState.heads).filter(h => wallState.heads[h].status === 'in').length : 0; }
 function wallCanLeave(h) {
   const st = wallState; if (!st) return false;
   const hd = st.heads[h];
@@ -5527,7 +5603,10 @@ function wallCanLeave(h) {
   // Schlafende Porträts bleiben liegen - sie können nicht einfach aufstehen und weggehen.
   if (!wallLiveSet[h]) return false;
   if (st.frames[hd.frame].busy) return false;
-  return wallVisibleCount() > 1;
+  // Früher: nur gehen, wenn mindestens eine zweite Figur hängt. Bei einem einzigen Porträt
+  // stand die Wand dadurch für immer still. Ein leeres Bild für ein paar Sekunden ist gewollt -
+  // es kehrt nach WALL_TRAVEL_MS zurück.
+  return true;
 }
 function wallCanEnter(h, slot) {
   const st = wallState; if (!st) return false;
@@ -5626,6 +5705,7 @@ function wallEnter(h, slot) {
   f.busy = true; st.heads[h].status = 'moving';
   wallPlay(h, slot, 'enter', () => {
     f.occ = h; f.busy = false; f.sleeping = false;
+    f.still = false; f.liveSince = 0; f.stillAfter = 0;
     st.heads[h] = { frame: slot, status: 'in' };
     // Rückkehrer kommt WACH herein und schläft erst nach ein paar Sekunden wieder ein.
     if (WALL_CLIPS[h] && WALL_CLIPS[h].idle) {
@@ -5643,11 +5723,13 @@ function wallTick() {
   if (!wallState || currentScreen !== 'portraits' || document.hidden) return;
   if (wallBusyCount() > 0) return;                       // eine Bewegung zur Zeit
   const st = wallState, now = Date.now();
-  // Sicherheitsnetz: es sollen immer WALL_LIVE_COUNT Porträts wach sein. Ohne das kann die
-  // Wand durch Abgänge und verpasste Weckversuche nach und nach komplett einschlafen.
+  // Sicherheitsnetz: die Wand darf nie dauerhaft komplett erschlafen. Früher wurde hier auf
+  // WALL_LIVE_COUNT aufgefüllt - bei nur einer freigeschalteten Figur hieß das: sie wird sofort
+  // wieder geweckt und ist dadurch NIE am Schlafen. Jetzt weckt das Netz nur eine vollständig
+  // schlafende Wand, und auch das nicht bei jedem Takt (sonst gäbe es keine Schlafphase).
   const da = Object.keys(st.heads).filter(h => st.heads[h].status === 'in' && st.heads[h].frame !== null);
   const wachDa = da.filter(h => wallLiveSet[h]);
-  if (wachDa.length < WALL_LIVE_COUNT) {
+  if (wachDa.length === 0 && da.length && Math.random() < 0.35) {
     const schlafend = da.filter(h => !wallLiveSet[h] && !st.frames[st.heads[h].frame].busy);
     if (schlafend.length && wallWake(schlafend[Math.floor(Math.random() * schlafend.length)])) return;
   }
@@ -5664,9 +5746,13 @@ function wallTick() {
       (!st.heads[h].lastAction || now - st.heads[h].lastAction > WALL_ACTION_COOLDOWN));
     if (able.length) { wallAction(able[Math.floor(Math.random() * able.length)]); return; }
   }
-  // 3) jemand geht los
-  if (present.length > 1) {
-    wallLeave(present[Math.floor(Math.random() * present.length)]);
+  // 3) jemand geht los - höchstens alle 20 s einer. Ohne diese Pause ist die Wand bei wenigen
+  // Figuren eine Drehtür (bei zwei Porträts war praktisch immer eines unterwegs).
+  if (now - (st.lastLeave || 0) > 20000) {
+    let ziel = null;
+    if (present.length > 1) ziel = present[Math.floor(Math.random() * present.length)];
+    else if (present.length === 1 && Math.random() < 0.15) ziel = present[0];
+    if (ziel && wallLeave(ziel)) st.lastLeave = now;
   }
 }
 // Gleicht die Wand mit dem tatsaechlichen Besitz ab. Ohne das blieb die Wand leer, wenn eine
@@ -5711,6 +5797,8 @@ function startWall() {
   wallTimer = setInterval(() => { try { wallTick(); } catch (e) {} }, WALL_TICK_MS);
   if (wallLiveTimer) clearInterval(wallLiveTimer);
   wallLiveTimer = setInterval(() => { try { wallLiveRotate(); } catch (e) {} }, WALL_LIVE_ROTATE_MS);
+  if (wallStillTimer) clearInterval(wallStillTimer);
+  wallStillTimer = setInterval(() => { try { wallStillTick(); } catch (e) {} }, 2000);
   if (!window.__wallResizeBound) {
     window.__wallResizeBound = true;
     window.addEventListener('resize', () => { try { wallRelayout(); } catch (e) {} });
@@ -5719,6 +5807,7 @@ function startWall() {
 function stopWall() {
   if (wallTimer) { clearInterval(wallTimer); wallTimer = null; }
   if (wallLiveTimer) { clearInterval(wallLiveTimer); wallLiveTimer = null; }
+  if (wallStillTimer) { clearInterval(wallStillTimer); wallStillTimer = null; }
   wallTimers.forEach(t => clearTimeout(t)); wallTimers = [];   // wartende Übergänge abbestellen
   wallStopVideo();      // sonst laufen die Loops im Hintergrund weiter
 }
@@ -9404,7 +9493,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v112';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v113';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
