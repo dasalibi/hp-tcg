@@ -5133,6 +5133,7 @@ const WALL_FRAME_STYLES = [
   { img: 'album/frame-gilt.jpg', cls: 'fr-gilt' },   // 1 = schwerer Akanthus-Goldrahmen
   { img: 'album/frame-wood.jpg', cls: 'fr-wood' },   // 2 = geschnitzte Eiche
 ];
+const WALL_IDLE2 = ['hp-209','hp-210','hp-211','hp-212','hp-213','hp-214','hp-216'];   // hp-215 fehlt: Zauberstab verdoppelt sich bei jeder Armbewegung
 const WALL_CLIPS = (() => {
   const ids = ['hp-209','hp-210','hp-211','hp-212','hp-213','hp-214','hp-215','hp-216'];
   const o = {};
@@ -5145,9 +5146,17 @@ const WALL_CLIPS = (() => {
       wake:  'cards/' + id + '-wake.mp4',       // derselbe Clip rückwärts = Augen auf
       sleepStill: 'cards/' + id + '-sleep.jpg'  // der Schlafzustand (Endbild, 768 px)
     };
+    // Zweite Wachsequenz nur bei Figuren, für die sie wirklich existiert (Liste pflegen!).
+    if (WALL_IDLE2.indexOf(id) >= 0) o[id].idle2 = 'cards/' + id + '-idle2.mp4';
   });
   return o;
 })();      // { '<id>': { idle, leave, enter, sleep, wake, sleepStill } }
+// Wachsequenzen einer Figur: idle = erste, idle2 = optionale zweite. Der Live-Zweig spielt sie
+// abwechselnd (immer ein Kartenbild dazwischen), damit eine Figur nicht dauerhaft dasselbe tut.
+function wallIdleList(id) {
+  const c = WALL_CLIPS[id] || {};
+  return [c.idle, c.idle2].filter(Boolean);
+}
 const WALL_WALL_IMG = 'album/bg-portraits.jpg';   // 4:3-Wandbild (deploy: .jpg)
 const WALL_MOVE_MS = 700;       // Überblenddauer, solange kein Clip existiert
 const WALL_CLIP_MS = 5600;      // Fallback, wenn Metadaten fehlen
@@ -5279,17 +5288,19 @@ function wallRender() {
       frameEl.classList.remove('empty');
       const hasVideo = !!glass.querySelector('video');
       // Lebende Besetzung: Idle-Loop statt Standbild
-      if (wallLiveSet[occ] && clip.idle) {
+      if (wallLiveSet[occ] && wallIdleList(occ).length) {
         frameEl.classList.add('live');
         f.sleeping = false;
         const cur = glass.querySelector('video');
         // Steht hier noch ein fremder Clip (z. B. der beendete Auftritt), muss der
         // Idle-Loop hin - sonst friert der Rahmen auf dem letzten Bild ein.
-        if (!cur || cur.getAttribute('src') !== clip.idle) {
+        const idles = wallIdleList(occ);
+        const wunsch = idles[(f.idleIdx || 0) % idles.length];
+        if (!cur || cur.getAttribute('src') !== wunsch) {
           glass.className = 'portrait-glass';
           glass.innerHTML = '';
           const v = document.createElement('video');
-          v.src = clip.idle;
+          v.src = wunsch;
           v.poster = stillSrc;     // Schlafbild als Poster, bis das erste Videobild da ist
           // KEIN loop mehr: die Naht des Clips ist bei einigen Figuren sichtbar (die Pose am Ende
           // ist nicht exakt die vom Anfang). Statt hart zurückzuspringen wird am Clipende das
@@ -5449,11 +5460,17 @@ function wallStillTick() {
         wallRender();
       });
     } else if (now >= (f.stillUntil || 0)) {
-      const v = glass.querySelector('video');
       f.still = false;
       f.liveSince = now;
       f.stillAfter = now + 6000 + Math.random() * 6000;
-      if (v) { try { v.currentTime = 0; v.play(); } catch (e) {} }
+      const anzahl = wallIdleList(h).length;
+      if (anzahl > 1) {
+        // zweite Wachsequenz: wallRender baut das Video mit der anderen Quelle neu auf
+        f.idleIdx = ((f.idleIdx || 0) + 1) % anzahl;
+      } else {
+        const v = glass.querySelector('video');
+        if (v) { try { v.currentTime = 0; v.play(); } catch (e) {} }
+      }
       wallRender();
     }
   });
@@ -5606,6 +5623,7 @@ function wallWake(h) {
     }
     f.busy = false; f.sleeping = false;
     f.still = false; f.liveSince = 0; f.stillAfter = 0;      // Still-Rhythmus neu starten
+    f.idleIdx = 0;
     Object.keys(wallLiveSet).forEach(x => { if (!wallAwake[x]) wallAwake[x] = 0; });
     wallLiveSet[h] = true;
     wallAwake[h] = Date.now();
@@ -5745,6 +5763,7 @@ function wallEnter(h, slot) {
     f.occ = h; f.busy = false; f.sleeping = false;
     f.lastOwner = h;        // die leere Fläche dieses Rahmens ist ab jetzt SEINE Leinwand
     f.still = false; f.liveSince = 0; f.stillAfter = 0;
+    f.idleIdx = 0;
     st.heads[h] = { frame: slot, status: 'in' };
     // Rückkehrer kommt WACH herein und schläft erst nach ein paar Sekunden wieder ein.
     if (WALL_CLIPS[h] && WALL_CLIPS[h].idle) {
@@ -9532,7 +9551,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v114';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v115';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
