@@ -5291,8 +5291,22 @@ function wallRender() {
           const v = document.createElement('video');
           v.src = clip.idle;
           v.poster = stillSrc;     // Schlafbild als Poster, bis das erste Videobild da ist
-          v.loop = true; v.muted = true; v.autoplay = true; v.draggable = false;
+          // KEIN loop mehr: die Naht des Clips ist bei einigen Figuren sichtbar (die Pose am Ende
+          // ist nicht exakt die vom Anfang). Statt hart zurückzuspringen wird am Clipende das
+          // Kartenbild eingeblendet (0,35 s über den letzten Frame) und nach ein paar Sekunden
+          // startet der Clip wieder bei 0 - dort steht exakt die Pose des Kartenbildes.
+          v.loop = false; v.muted = true; v.autoplay = true; v.draggable = false;
           v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+          v.addEventListener('ended', () => {
+            const st2 = wallState;
+            if (!st2 || !st2.frames[i] || st2.frames[i].occ !== occ) return;
+            if (!wallLiveSet[occ]) return;
+            const fr = st2.frames[i];
+            if (fr.busy || fr.still) return;
+            fr.still = true;
+            fr.stillUntil = Date.now() + 3000 + Math.random() * 3000;   // 3-6 s Kartenbild
+            wallRender();
+          });
           glass.appendChild(v);
           const pl = v.play(); if (pl && pl.catch) pl.catch(() => {});
         } else if (cur.paused && !f.still) {
@@ -5370,20 +5384,33 @@ function wallRender() {
     } else {
       // Leerer Rahmen - egal ob das Porträt nie im Besitz war oder gerade gegangen ist:
       // die Wand scheint durch, nur ein weicher Randschatten. Kein Bild, kein Glas.
-      const vid = glass.querySelector('video');
+      const vids0 = glass.querySelectorAll('video');
+      const vid = vids0[vids0.length - 1];
+      // Achtung: die Anführungszeichen müssen DIREKT hinter .png stehen - der Deploy-Sed
+      // schreibt nur ".jpg'" und '.jpg"' auf .jpg um.
+      const leerBild = (owner) => (owner && WALL_CLIPS[owner])
+        ? "url('album/leer-" + owner + ".jpg')" : "url('album/leer-gemaelde.jpg')";
       const setEmpty = () => {
         if (wallState.frames[i].busy) return;              // gerade jemand unterwegs hierher
-        const cur = glass.querySelector('video');
+        const vids = glass.querySelectorAll('video');
+        const cur = vids[vids.length - 1];
         if (cur && cur !== vid) return;                    // inzwischen taucht hier ein Porträt auf
         frameEl.classList.add('empty');
         glass.className = 'portrait-glass empty';
         glass.dataset.leer = 'none';
-        glass.style.backgroundImage = '';      // Hintergrund kommt aus der CSS-Regel .empty
+        // Jeder Rahmen zeigt die Leinwand des Porträts, das zuletzt hier hing: der Abgang-Clip
+        // endet genau auf diesem Bild, dadurch ist der Wechsel Clip -> leer unsichtbar statt
+        // ein Farbwechsel (hp-211 ist z. B. hellbeige, hp-216 dunkelbraun - Diff bis 31/255).
+        glass.style.backgroundImage = leerBild(wallState.frames[i].lastOwner);
         glass.innerHTML = '';
       };
       if (vid && !glass.dataset.fading) {
-        // Ende eines Abgangs-Clips: dessen letztes Bild ausblenden, damit die Wand weich durchkommt
+        // Ende eines Abgangs-Clips: dessen letztes Bild ausblenden UND dabei schon die Leinwand
+        // des Rahmens setzen. Wurde sie erst nach 0,52 s gesetzt, blitzte kurz der Glasgrund durch.
         glass.dataset.fading = '1';
+        frameEl.classList.add('empty');
+        glass.classList.add('empty');
+        glass.style.backgroundImage = leerBild(wallState.frames[i].lastOwner);
         vid.style.transition = 'opacity .5s ease';
         requestAnimationFrame(() => { vid.style.opacity = '0'; });
         setTimeout(() => { delete glass.dataset.fading; setEmpty(); }, 520);
@@ -5502,7 +5529,7 @@ function wallAtRest(video, cb) {
 }
 // wallOverlayClip: legt einen Übergangs-Clip ÜBER das laufende Bild und blendet ihn ein.
 // Das bisherige Bild bleibt darunter stehen - ein Poster würde die falsche Pose zeigen.
-function wallOverlayClip(h, slot, kind, done) {
+function wallOverlayClip(h, slot, kind, done, fadeMs) {
   const frameEl = document.querySelector('.portrait-frame[data-slot="' + slot + '"]');
   const glass = frameEl && frameEl.firstElementChild;
   const clip = WALL_CLIPS[h] && WALL_CLIPS[h][kind];
@@ -5515,7 +5542,10 @@ function wallOverlayClip(h, slot, kind, done) {
   v.autoplay = true; v.draggable = false;
   v.style.position = 'absolute'; v.style.inset = '0';
   v.style.width = '100%'; v.style.height = '100%'; v.style.objectFit = 'cover';
-  v.style.opacity = '0'; v.style.transition = 'opacity .2s linear';
+  // Aufwachen braucht eine längere Blende: die Wake-Clips starten bereits mit halb geöffneten
+  // Lidern, das Schlafbild davor hat sie geschlossen - sonst reißen die Augen auf.
+  const fadeS = Math.max(0.12, (fadeMs || (kind === 'wake' ? 500 : 200)) / 1000);
+  v.style.opacity = '0'; v.style.transition = 'opacity ' + fadeS.toFixed(2) + 's linear';
   v.onended = finish; v.onerror = finish;
   glass.appendChild(v);
   requestAnimationFrame(() => { v.style.opacity = '1'; });
@@ -5565,6 +5595,8 @@ function wallWake(h) {
   const f = st.frames[hd.frame];
   if (f.busy) return false;                       // gerade im Übergang
   f.busy = true;
+  // 0,5 s statt 0,2 s: die Wake-Clips starten schon mit halb geöffneten Lidern, das Schlafbild
+  // hat sie geschlossen - ein kurzer Blende lässt die Augen aufgleiten statt aufzureißen.
   wallOverlayClip(h, hd.frame, 'wake', () => {
     const frameEl = document.querySelector('.portrait-frame[data-slot="' + hd.frame + '"]');
     const g = frameEl && frameEl.firstElementChild;
@@ -5621,8 +5653,14 @@ function wallPlay(h, slot, kind, done) {
   let finished = false;
   const finish = () => { if (finished) return; finished = true; done(); };
   if (glass && clip) {
-    glass.className = 'portrait-glass';
+    // Bisheriges Bild als Unterlage behalten: glass.innerHTML = '' ließ für die Dauer der
+    // Einblendung (~0,3 s) den schwarzen Glasgrund durchscheinen - als harte Blende sichtbar.
+    const alt = Array.prototype.slice.call(glass.children);
+    const warLeer = glass.classList.contains('empty');
+    glass.className = 'portrait-glass' + (alt.length || !warLeer ? '' : ' empty');
     glass.innerHTML = '';
+    alt.forEach(n => { n.style.pointerEvents = 'none'; glass.appendChild(n); });
+    if (alt.length) setTimeout(() => alt.forEach(n => { if (n.parentNode === glass) n.remove(); }), 420);
     const v = document.createElement('video');
     const card = getCardById(h);
     v.src = clip; v.muted = true; v.playsInline = true; v.autoplay = true;
@@ -5705,6 +5743,7 @@ function wallEnter(h, slot) {
   f.busy = true; st.heads[h].status = 'moving';
   wallPlay(h, slot, 'enter', () => {
     f.occ = h; f.busy = false; f.sleeping = false;
+    f.lastOwner = h;        // die leere Fläche dieses Rahmens ist ab jetzt SEINE Leinwand
     f.still = false; f.liveSince = 0; f.stillAfter = 0;
     st.heads[h] = { frame: slot, status: 'in' };
     // Rückkehrer kommt WACH herein und schläft erst nach ein paar Sekunden wieder ein.
@@ -9493,7 +9532,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v113';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v114';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
