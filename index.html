@@ -306,10 +306,6 @@ html, body {
 .sonder-btn.go { background: linear-gradient(180deg,#c5a55a,#a8842c); color: #2a1c07; }
 .sonder-btn.no { background: rgba(122,26,26,.09); color: #7a1a1a; }
 .album-slot-extra { outline: 2px solid rgba(197,165,90,.7); outline-offset: -2px; }
-.album-slot-extra.extra-locked { display: flex; align-items: center; justify-content: center;
-  background: rgba(18,12,6,.55); border: 1px solid rgba(197,165,90,.55);
-  color: rgba(232,205,138,.9); font-size: 26px; font-weight: 700;
-  text-shadow: 0 0 10px rgba(232,205,138,.5); }
 
 .task-grid {
   display: flex;
@@ -1095,15 +1091,7 @@ html, body {
 .album-slot.empty-rare { border: 2px dashed #2e7d32; background: rgba(20,50,20,0.35); }
 .album-slot.empty-legendary { border: 2px dashed #c5a55a; background: rgba(50,40,15,0.35); }
 .album-slot.empty-relikt { border: 2px dashed #9b59b6; background: rgba(50,20,60,0.35); }
-/* Sonderaktions-Kachel (Knuddelmuff): gesperrt als dunkle Platte mit Fragezeichen.
-   Muss NACH den empty-Regeln stehen, sonst gewinnt empty-common (gleiche Spezifität). */
-.album-slot.empty-common.album-slot-extra.extra-locked {
-  border: 1px solid rgba(197,165,90,.55);
-  background: rgba(12,7,3,.62);
-  color: rgba(232,205,138,.92);
-  font-size: 26px; font-weight: 700;
-  text-shadow: 0 0 10px rgba(232,205,138,.5);
-}
+
 .album-slot img,
 .album-slot video {
   width: 100%;
@@ -6674,9 +6662,13 @@ function renderSonderPanel(prof) {
   if (!box) return;
   const karte = sonderKarteInfo();
   const st = prof.sonder;
-  if (!karte || (st && st.done)) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  // Karte schon da (erspielt oder vom Elternbereich geschenkt)? Dann keine Aktion mehr anbieten.
+  const schonDa = !!(karte && (prof.cards || {})[karte.id] > 0);
+  if (!karte || (st && st.done) || schonDa) { box.style.display = 'none'; box.innerHTML = ''; return; }
   box.style.display = '';
-  const thumb = `<img class="sonder-thumb" src="${karte.image}" alt="${karte.name}">`;
+  // Vorschaubild ist bewusst eine Silhouette: die Karte soll bis zum Erwerb nicht zu sehen sein,
+  // nur der Name. Das echte Bild erscheint erst mit der Karte selbst.
+  const thumb = `<img class="sonder-thumb" src="album/sonder-silhouette.jpg" alt="">`;
 
   if (!st) {
     if (sonderWahlOffen) {
@@ -7723,19 +7715,15 @@ function renderAlbumBand() {
       }
     }
 
-    // Zusatzkarte der Sonderaktion (Knuddelmuff): eigene Kachel, zählt NICHT in den Band-Fortschritt
-    if (pi === pages.length - 1 && band.extra) {
+    // Zusatzkarte der Sonderaktion (Knuddelmuff): eigene Kachel, zählt NICHT in den Band-Fortschritt.
+    // Solange die Karte nicht erspielt ist, gibt es die Kachel NICHT - sie soll eine Überraschung sein.
+    if (pi === pages.length - 1 && band.extra && owned[band.extra] > 0) {
       const extra = getCardById(band.extra);
       if (extra) {
         const exSlot = document.createElement('div');
-        if (owned[band.extra] > 0) {
-          exSlot.className = 'album-slot album-slot-extra';
-          exSlot.innerHTML = `<img src="${extra.image}" alt="${extra.name}" loading="lazy">`;
-          exSlot.onclick = () => showCardDetail(extra.id);
-        } else {
-          exSlot.className = 'album-slot empty-common album-slot-extra extra-locked';
-          exSlot.innerHTML = '<span>?</span>';
-        }
+        exSlot.className = 'album-slot album-slot-extra';
+        exSlot.innerHTML = `<img src="${extra.image}" alt="${extra.name}" loading="lazy">`;
+        exSlot.onclick = () => showCardDetail(extra.id);
         grid.appendChild(exSlot);
       }
     }
@@ -9721,7 +9709,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v116';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v117';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
