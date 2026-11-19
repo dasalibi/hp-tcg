@@ -276,6 +276,41 @@ html, body {
   align-items: center;
   gap: 8px;
 }
+/* ---- Sonderaktion: Der Knuddelmuff ---- */
+/* Optik wie die Familien-Quest: helle Pergamentkarte, goldener Rahmen, Weintitel */
+.sonder-panel {
+  margin: 16px 0 6px; padding: 14px 14px 15px; border-radius: 16px;
+  background: linear-gradient(160deg, #fffaf0, #f3e3c0);
+  border: 1px solid rgba(197,165,90,.75);
+  box-shadow: 0 3px 14px rgba(0,0,0,.16);
+}
+.sonder-head { display: flex; gap: 13px; align-items: center; }
+.sonder-thumb { width: 52px; height: 93px; border-radius: 7px; object-fit: cover; flex-shrink: 0;
+  border: 1px solid rgba(122,26,26,.35); box-shadow: 0 3px 9px rgba(0,0,0,.22); }
+.sonder-txt { min-width: 0; }
+.sonder-title { font-family: var(--font-serif); font-size: 15px; font-weight: 700;
+  color: var(--wine, #7a1a1a); letter-spacing: .03em; }
+.sonder-sub { font-size: 12.5px; line-height: 1.45; color: #6d5741; margin-top: 4px; }
+.sonder-bar { height: 12px; border-radius: 7px; background: rgba(122,26,26,.14);
+  border: 1px solid rgba(197,165,90,.55); overflow: hidden; margin-top: 12px; }
+.sonder-bar-fill { height: 100%; width: 0%; border-radius: 7px;
+  background: linear-gradient(90deg,#a8842c,#e8cd8a);
+  box-shadow: 0 0 10px rgba(201,169,97,.5); transition: width .6s ease; }
+.sonder-choices { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.sonder-choice { display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 10px 13px; border-radius: 11px; border: 1px solid rgba(197,165,90,.55);
+  background: #fffdf8; font-size: 13.5px; color: #4a3517; text-align: left; }
+.sonder-choice:active { background: #f8eed6; }
+.sonder-confirm { display: flex; gap: 8px; margin-top: 12px; }
+.sonder-btn { flex: 1; padding: 11px; border-radius: 11px; font-size: 13px; font-weight: 600; border: none; }
+.sonder-btn.go { background: linear-gradient(180deg,#c5a55a,#a8842c); color: #2a1c07; }
+.sonder-btn.no { background: rgba(122,26,26,.09); color: #7a1a1a; }
+.album-slot-extra { outline: 2px solid rgba(197,165,90,.7); outline-offset: -2px; }
+.album-slot-extra.extra-locked { display: flex; align-items: center; justify-content: center;
+  background: rgba(18,12,6,.55); border: 1px solid rgba(197,165,90,.55);
+  color: rgba(232,205,138,.9); font-size: 26px; font-weight: 700;
+  text-shadow: 0 0 10px rgba(232,205,138,.5); }
+
 .task-grid {
   display: flex;
   flex-direction: column;
@@ -1060,6 +1095,15 @@ html, body {
 .album-slot.empty-rare { border: 2px dashed #2e7d32; background: rgba(20,50,20,0.35); }
 .album-slot.empty-legendary { border: 2px dashed #c5a55a; background: rgba(50,40,15,0.35); }
 .album-slot.empty-relikt { border: 2px dashed #9b59b6; background: rgba(50,20,60,0.35); }
+/* Sonderaktions-Kachel (Knuddelmuff): gesperrt als dunkle Platte mit Fragezeichen.
+   Muss NACH den empty-Regeln stehen, sonst gewinnt empty-common (gleiche Spezifität). */
+.album-slot.empty-common.album-slot-extra.extra-locked {
+  border: 1px solid rgba(197,165,90,.55);
+  background: rgba(12,7,3,.62);
+  color: rgba(232,205,138,.92);
+  font-size: 26px; font-weight: 700;
+  text-shadow: 0 0 10px rgba(232,205,138,.5);
+}
 .album-slot img,
 .album-slot video {
   width: 100%;
@@ -2773,6 +2817,9 @@ body{
   <div class="section-title">Aufgabe eintragen</div>
   <div class="task-grid" id="taskGrid"></div>
 
+  <!-- Sonderaktion: einmalige Aufgabe -> Knuddelmuff -->
+  <div class="sonder-panel" id="sonderPanel" style="display:none;"></div>
+
   <!-- Halloween-Edition (nur während der Saison sichtbar) -->
   <div id="halShop" style="display:none;"></div>
 </div>
@@ -4277,6 +4324,7 @@ const REWARD_CARDS = {
   7: { id:'hp-108', name:'Die Schlacht von Hogwarts', type:'Ereignis', subtype:'Das große Finale', house:'-', desc:'„Alle für einen, einer für alle.“ Der letzte Kampf: Schüler, Lehrer, Hauselfen und Phönixorden gegen Voldemorts Armee. Die Mauern von Hogwarts wanken, aber der Mut seiner Verteidiger nicht.', image:'cards/hp-108.jpg' },
   8: { id:'hp-125', name:'Der Goldene Schnatz', type:'Gegenstand', subtype:'Das Herz des Quidditch', house:'-', desc:'„Der Schnatz hat Fleisch und Blut.“ Ein winziger goldener Ball mit silbernen Flügeln, der nur denjenigen berührt, der ihn zuerst fängt. Wer den Schnatz fängt, beendet das Spiel - und gewinnt 150 Punkte. Das schönste Objekt der Zauberwelt, und jetzt gehört er dir.', image:'cards/hp-125.jpg' },
   9: { id:'hp-138', name:'Das lebendige Ordensfoto', type:'Gegenstand', subtype:'Das Foto der ersten Gruppe', house:'-', desc:'„Das ist der Orden des Phönix – das Foto der ersten Gruppe.“ Zwölf Menschen blicken aus dem Rahmen, als wäre gerade eben noch gelacht worden. Wer genau hinsieht, merkt: Sie bewegen sich noch immer – als hätte der Krieg nie begonnen.', image:'cards/hp-138.jpg' },
+  11: { id:'hp-217', name:'Knuddelmuff', type:'Wesen', subtype:'Kuschelgefährte', house:'-', desc:'„Er passt in zwei Hände und in jedes Herz." Der Knuddelmuff ist kein Wesen aus einem Zauberbuch - er ist das, was übrig bleibt, wenn ein Schloss sehr lange sehr freundlich war: ein Fellknäuel mit großen Augen, das sich an einen legt, als hätte es den ganzen Tag gewartet. Wer ihn hochhebt, merkt: er ist warm. Und er schnurrt, ganz leise, wie ein Kamin, der noch glimmt.', image:'cards/hp-217.jpg' },
   10: { id:'hp-hal-013', name:'Der Blutige Baron', type:'Charakter', subtype:'Hausgeist von Slytherin', house:'Slytherin', desc:'Durch den dunklen steinernen Gang schwebt er, das zerschlissene graue Gewand mit den ornamentalen Mustern weht im Fackelschein, und der Boden liegt im Nebel. Der Baron sagt kein Wort – doch wer ihn sieht, vergisst ihn nie wieder.', image:'cards/hp-hal-013.jpg' }
 };
 
@@ -4329,6 +4377,7 @@ const ALBUM_BANDS = [
     reward: null },
   { id: 10, title: 'Die Magische Welt', short: 'Magische Welt', icon: '🌍', bg: 'album/bg-magicalworld.jpg',
     cards: ['hp-109','hp-110','hp-111','hp-112','hp-113','hp-114','hp-115','hp-116','hp-117','hp-118','hp-119','hp-120','hp-121','hp-122','hp-123','hp-124'],
+    extra: 'hp-217',
     reward: 8 },
   { id: 11, title: 'Der Orden des Phönix', short: 'Orden', icon: '🔥', bg: 'album/bg-order.jpg',
     cards: ['hp-126','hp-127','hp-128','hp-129','hp-130','hp-131','hp-132','hp-133','hp-134','hp-135','hp-136','hp-137'],
@@ -6470,6 +6519,9 @@ function renderDashboard() {
     grid.appendChild(btn);
   });
 
+  // Sonderaktion (Knuddelmuff)
+  renderSonderPanel(prof);
+
   // Halloween-Edition (Taler-Stand, Countdown, Kacheln) aktualisieren
   if (typeof renderHalloweenShop === 'function') renderHalloweenShop();
 }
@@ -6590,6 +6642,72 @@ function submitParentConfirm() {
   }
 }
 
+// ===================== SONDERAKTION: DER KNUDDELMUFF =====================
+// Einmalig pro Profil: das Kind wählt EINE seiner Aufgaben und bekommt die Karte,
+// sobald es sie 25-mal erledigt hat. Gezählt wird ab der Wahl (nicht rückwirkend),
+// die Wahl bleibt bestehen, "Sonstiges" ist nicht wählbar (freie Aufgabe ohne Ziel).
+const SONDER_ZIEL = 25;
+const SONDER_KARTE = 'hp-217';
+let sonderWahlOffen = null;       // angetippte, noch nicht bestätigte Aufgabe (nicht gespeichert)
+
+function sonderKarteInfo() { return REWARD_CARDS[11] || getCardById(SONDER_KARTE); }
+
+function sonderAufgaben(prof) {
+  const isAdult = prof.type === 'adult';
+  return TASKS.filter(t => (isAdult ? t.adultOnly : !t.adultOnly) && t.id !== 'sonstiges');
+}
+
+function sonderWahlAntippen(label) { sonderWahlOffen = label; renderDashboard(); }
+function sonderWahlAbbrechen() { sonderWahlOffen = null; renderDashboard(); }
+
+function sonderWahlBestaetigen() {
+  if (!sonderWahlOffen || !currentProfile) return;
+  const prof = getProfile(currentProfile);
+  prof.sonder = { label: sonderWahlOffen, since: Date.now(), count: 0, done: false };
+  sonderWahlOffen = null;
+  save();
+  renderDashboard();
+}
+
+function renderSonderPanel(prof) {
+  const box = document.getElementById('sonderPanel');
+  if (!box) return;
+  const karte = sonderKarteInfo();
+  const st = prof.sonder;
+  if (!karte || (st && st.done)) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = '';
+  const thumb = `<img class="sonder-thumb" src="${karte.image}" alt="${karte.name}">`;
+
+  if (!st) {
+    if (sonderWahlOffen) {
+      box.innerHTML = `<div class="sonder-head">${thumb}<div class="sonder-txt">
+          <div class="sonder-title">Deine Aufgabe: ${sonderWahlOffen}</div>
+          <div class="sonder-sub">${SONDER_ZIEL} Mal - dann gehört der Knuddelmuff dir. Diese Wahl bleibt.</div>
+        </div></div>
+        <div class="sonder-confirm">
+          <button class="sonder-btn go" onclick="sonderWahlBestaetigen()">Ja, das ist meine Aufgabe</button>
+          <button class="sonder-btn no" onclick="sonderWahlAbbrechen()">Anders wählen</button>
+        </div>`;
+      return;
+    }
+    const liste = sonderAufgaben(prof).map(t =>
+      `<button class="sonder-choice" onclick="sonderWahlAntippen('${t.label}')">
+         <span>${t.label}</span><span>›</span></button>`).join('');
+    box.innerHTML = `<div class="sonder-head">${thumb}<div class="sonder-txt">
+        <div class="sonder-title">Der Knuddelmuff wartet</div>
+        <div class="sonder-sub">Wähle eine Aufgabe, die du ${SONDER_ZIEL} Mal schaffst - dann gehört er dir.</div>
+      </div></div><div class="sonder-choices">${liste}</div>`;
+    return;
+  }
+
+  const pct = Math.min(100, ((st.count || 0) / SONDER_ZIEL) * 100);
+  box.innerHTML = `<div class="sonder-head">${thumb}<div class="sonder-txt">
+      <div class="sonder-title">${st.label}</div>
+      <div class="sonder-sub">${st.count || 0} von ${SONDER_ZIEL} - dann gehört der Knuddelmuff dir.</div>
+    </div></div>
+    <div class="sonder-bar"><div class="sonder-bar-fill" style="width:${pct}%"></div></div>`;
+}
+
 function completeTask(label) {
   let halStreakBonus = false;
   const prof = getProfile(currentProfile);
@@ -6602,6 +6720,21 @@ function completeTask(label) {
     date: today,
     time: Date.now()
   });
+
+  // ---- Sonderaktion: dieselbe Aufgabe 25x -> Knuddelmuff ----
+  let sonderFertigKarte = null;
+  if (prof.sonder && !prof.sonder.done && prof.sonder.label === label) {
+    prof.sonder.count = (prof.sonder.count || 0) + 1;
+    if (prof.sonder.count >= SONDER_ZIEL) {
+      prof.sonder.done = true;
+      const karte = REWARD_CARDS[11];
+      if (karte) {
+        if (!prof.cards) prof.cards = {};
+        prof.cards[karte.id] = (prof.cards[karte.id] || 0) + 1;
+        sonderFertigKarte = karte;
+      }
+    }
+  }
   prof.packs = (prof.packs || 0) + 1;
 
   // Familien-Wochenchallenge: jede Aufgabe zählt (auch Erwachsene)
@@ -6677,7 +6810,9 @@ function completeTask(label) {
 
   // Show success flash
   let flashText = '⭐ Aufgabe erledigt! Du erhältst ein Pack!';
-  if (familyPackAwarded) {
+  if (sonderFertigKarte) {
+    flashText = '✨ ' + SONDER_ZIEL + ' Mal ' + prof.sonder.label + ' - der Knuddelmuff gehört dir!';
+  } else if (familyPackAwarded) {
     flashText = '🎉 Familien-Challenge geschafft! Jedes Familienmitglied kann sich jetzt ein Band-Pack abholen!';
   } else if (bonusCard && bonusAwarded) {
     flashText = '🎉 ' + prof.instrumentStreak + ' Tage am Stück! Bonus-Pack + 🎁 Extra-Karte: ' + bonusCard.name;
@@ -6701,6 +6836,7 @@ function completeTask(label) {
     const revealCards = [];
     if (streakCard) revealCards.push({ ...streakCard, isNew: prof.cards[streakCard.id] === 1 });
     if (bonusCard) revealCards.push({ ...bonusCard, isNew: prof.cards[bonusCard.id] === 1 });
+    if (sonderFertigKarte) revealCards.push({ ...sonderFertigKarte, isNew: prof.cards[sonderFertigKarte.id] === 1 });
     if (revealCards.length > 0) {
       setTimeout(() => showCardReveal(revealCards, () => { renderDashboard(); }), 300);
     }
@@ -7112,6 +7248,11 @@ function renderCollection(filter) {
         cards.push({ ...xc, count: owned[xc.id] });
       }
     });
+    // Knuddelmuff: zählt in der Gesamtzahl mit, also in der Sammlung zeigen, sobald erspielt
+    const sonderKarteColl = REWARD_CARDS[11];
+    if (sonderKarteColl && owned[sonderKarteColl.id]) {
+      cards.push({ ...sonderKarteColl, count: owned[sonderKarteColl.id] });
+    }
   }
 
   if (filter) currentFilter = filter;
@@ -7579,6 +7720,23 @@ function renderAlbumBand() {
           rewardSlot.onclick = () => claimBandReward(band);
         }
         grid.appendChild(rewardSlot);
+      }
+    }
+
+    // Zusatzkarte der Sonderaktion (Knuddelmuff): eigene Kachel, zählt NICHT in den Band-Fortschritt
+    if (pi === pages.length - 1 && band.extra) {
+      const extra = getCardById(band.extra);
+      if (extra) {
+        const exSlot = document.createElement('div');
+        if (owned[band.extra] > 0) {
+          exSlot.className = 'album-slot album-slot-extra';
+          exSlot.innerHTML = `<img src="${extra.image}" alt="${extra.name}" loading="lazy">`;
+          exSlot.onclick = () => showCardDetail(extra.id);
+        } else {
+          exSlot.className = 'album-slot empty-common album-slot-extra extra-locked';
+          exSlot.innerHTML = '<span>?</span>';
+        }
+        grid.appendChild(exSlot);
       }
     }
 
@@ -8605,6 +8763,14 @@ function renderParentArea() {
       opt.textContent = '🎄 ' + xc.name + ' (Weihnachten)';
       cardSel.appendChild(opt);
     });
+    // Belohnungskarten (Band-Belohnungen + Sonderaktion Knuddelmuff) - gekennzeichnet,
+    // weil sie sonst nur durch Band-Abschluss bzw. Sonderaktion zu bekommen sind
+    Object.values(REWARD_CARDS).forEach(rc => {
+      const opt = document.createElement('option');
+      opt.value = rc.id;
+      opt.textContent = '🏆 ' + rc.name + ' (Belohnung)';
+      cardSel.appendChild(opt);
+    });
   }
   // Traenke-Dropdown
   const trankSel = document.getElementById('assignTrankSelect');
@@ -9457,6 +9623,8 @@ function assignCard() {
   }
   if (!card && HALLOWEEN_CARDS[cardId]) card = HALLOWEEN_CARDS[cardId];
   if (!card && XMAS_CARDS[cardId]) card = XMAS_CARDS[cardId];
+  // Belohnungskarten (Band-Belohnungen + Knuddelmuff) - sonst stiller Abbruch
+  if (!card) card = Object.values(REWARD_CARDS).find(c => c.id === cardId);
   if (!card) return;
   const prof = getProfile(name);
   if (!prof.cards) prof.cards = {};
@@ -9480,13 +9648,15 @@ function updateRemoveCardList() {
   const owned = prof.cards || {};
   selCard.innerHTML = '';
   // Build list of owned cards (base + funny + halloween)
-  const allCards = [...CARD_DB, ...Object.values(FUNNY_CARDS), ...Object.values(HALLOWEEN_CARDS), ...Object.values(XMAS_CARDS)];
+  const allCards = [...CARD_DB, ...Object.values(FUNNY_CARDS), ...Object.values(HALLOWEEN_CARDS),
+                    ...Object.values(XMAS_CARDS), ...Object.values(REWARD_CARDS)];
   allCards.forEach(c => {
     const count = owned[c.id] || 0;
     if (count > 0) {
       const opt = document.createElement('option');
       opt.value = c.id;
-      const prefix = c.id.startsWith('hp-hal-') ? '🎃 ' : (c.id.startsWith('hp-fun-') ? '🏖️ ' : '');
+      const prefix = c.id.startsWith('hp-hal-') ? '🎃 ' : (c.id.startsWith('hp-fun-') ? '🏖️ ' : '')
+        + (Object.values(REWARD_CARDS).some(r => r.id === c.id) ? '🏆 ' : '');
       opt.textContent = `${prefix}${c.name} (${count}x)`;
       selCard.appendChild(opt);
     }
@@ -9551,7 +9721,7 @@ init();
 
 // ===================== APP-VERSION & UPDATES =====================
 const APP_VERSION = '2.7';        // bei jedem Deploy erhöhen
-const APP_BUILD = 'v115';          // muss mit CACHE_NAME in sw.js übereinstimmen
+const APP_BUILD = 'v116';          // muss mit CACHE_NAME in sw.js übereinstimmen
 const APP_DATE = '21.09.2026';
 
 // Versions-Anzeige auf der Startseite (zeigt, welcher Stand geladen ist).
